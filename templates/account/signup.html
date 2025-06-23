@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n account socialaccount widget_tweaks %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4 class="mb-0">Registrarse</h4>
+                </div>
+                <div class="card-body">
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Corrige los errores:</strong>
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'account_signup' %}" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field|add_class:"form-control" }}
+                                {% if field.help_text %}
+                                    <div class="form-text small text-muted">{{ field.help_text|safe }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="d-grid">
+                            <button type="submit" class="btn gradient-btn">Registrarse</button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-2">O usa una cuenta de terceros:</p>
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2">
+                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" style="width:20px;">
+                            <span>Continuar con Google</span>
+                        </a>
+                    </div>
+
+                    <p class="mt-4 text-center text-muted">
+                        ¿Ya tienes una cuenta? <a href="{% url 'account_login' %}">Inicia sesión</a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% providers_media_js %}
+{% endblock %}
