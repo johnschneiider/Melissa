@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h4>¿Estás seguro que deseas desactivar a <strong>{{ peluquero.nombre }}</strong>?</h4>
+    <p>Podrás reactivarlo más adelante desde la configuración del negocio.</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button name="confirmar" value="SI" class="btn btn-danger">Sí, desactivarlo</button>
+        <button name="confirmar" value="NO" class="btn btn-secondary">Cancelar</button>
+    </form>
+</div>
+{% endblock %}

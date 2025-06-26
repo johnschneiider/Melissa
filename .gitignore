@@ -1,0 +1,16 @@
+# Ignorar entorno virtual
+venv/
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Base de datos local
+db.sqlite3
+
+# Archivos ocultos y logs
+*.log
+*.env
+
+# Archivos de usuario
+/media/

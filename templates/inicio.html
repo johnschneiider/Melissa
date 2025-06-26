@@ -77,9 +77,14 @@
             <div class="logo me-3"></div>
             <h4 class="mb-0">Melissa</h4>
         </div>
-        <div>
+        <div class="d-flex align-items-center">
             {% if user.is_authenticated %}
                 <span class="me-3"><i class="bi bi-person-circle"></i> {{ user.username }}</span>
+                <a href="{% url 'crear_negocio' %}" class="btn btn-outline-secondary me-2">Crear negocio</a>
+
+                {% if user.is_authenticated and user.negocios.exists %}
+                    <a href="{% url 'mis_negocios' %}" class="btn btn-outline-primary me-2">Ver mis negocios</a>
+                {% endif %}
                 <form method="post" action="{% url 'account_logout' %}" style="display: inline;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline-danger">Cerrar sesión</button>
@@ -89,6 +94,7 @@
                 <a href="{% url 'account_signup' %}" class="btn gradient-btn">Registrarse</a>
             {% endif %}
         </div>
+
     </header>
 
     <section class="hero">

@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -63,7 +64,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 LOGIN_REDIRECT_URL = '/'  # redirige al home tras login
-ACCOUNT_LOGOUT_REDIRECT_URL = '/accounts/login/'  # opcional
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'  # opcional
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
@@ -74,6 +75,18 @@ SOCIALACCOUNT_LOGIN_ON_GET = True
 
 CLIENT_ID = "1021577441313-n5qjqhrdiptb5hqk4lvb504tevpih70d.apps.googleusercontent.com"
 sECRET_cLIENT = "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"
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'vital.mix324@gmail.com'
+EMAIL_HOST_PASSWORD = 'yhhlmtxggcdkivay'  # sin espacios
+DEFAULT_FROM_EMAIL = 'Melissa <vital.mix324@gmail.com>'
+
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -158,3 +171,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+import os
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+

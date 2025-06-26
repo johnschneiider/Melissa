@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h3>Mis negocios</h3>
+    <div class="row">
+        {% for negocio in negocios %}
+    {% if negocio.id %}
+<div class="col-md-4">
+    <div class="card mb-4 shadow position-relative">
+        <!-- Ícono de eliminar -->
+        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                data-bs-toggle="modal"
+                data-bs-target="#modalEliminarNegocio{{ negocio.id }}">
+            <i class="bi bi-trash"></i>
+        </button>
+
+        <a href="{% url 'panel_negocio' negocio.id %}" class="text-decoration-none text-dark">
+            {% if negocio.logo %}
+                <img src="{{ negocio.logo.url }}" class="card-img-top" alt="Logo del negocio" style="height: 180px; object-fit: cover;">
+            {% else %}
+                <div class="card-img-top bg-secondary text-white text-center py-5">
+                    Sin logo
+                </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ negocio.nombre }}</h5>
+                <p class="card-text">{{ negocio.direccion }}</p>
+                <p class="text-muted">Creado: {{ negocio.creado_en|date:"d/m/Y" }}</p>
+            </div>
+        </a>
+    </div>
+</div>
+
+
+        <!-- Modal de confirmación -->
+        <div class="modal fade" id="modalEliminarNegocio{{ negocio.id }}" tabindex="-1" aria-labelledby="modalLabel{{ negocio.id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{% url 'eliminar_negocio' negocio.id %}">
+                    {% csrf_token %}
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title" id="modalLabel{{ negocio.id }}">¿Eliminar este negocio?</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>¿Estás seguro de que deseas eliminar el negocio <strong>{{ negocio.nombre }}</strong>?</p>
+                            <p class="text-muted small">
+                                Esta acción ocultará el negocio, pero no eliminará los datos permanentemente.
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+{% endfor %}
+{% endblock %}

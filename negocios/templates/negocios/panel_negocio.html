@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load dict_utils %}
+{% block content %}
+
+
+<div class="container mt-5">
+    <h2>{{ negocio.nombre }}</h2>
+    <p><strong>Dirección:</strong> {{ negocio.direccion }}</p>
+
+  {% if negocio.logo %}
+      <div class="position-relative d-inline-block mb-3">
+          <img src="{{ negocio.logo.url }}" class="img-fluid rounded shadow" style="max-height: 150px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
+          <div class="position-absolute bottom-0 end-0 p-1">
+              <i class="bi bi-pencil-fill bg-dark text-white rounded-circle p-1" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editarLogoModal"></i>
+          </div>
+      </div>
+  {% else %}
+      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
+          Subir logo de negocio
+      </button>
+  {% endif %}
+
+
+{% if horario_guardado %}
+  <p><strong>Horario de atención:</strong></p>
+  <div class="d-flex flex-wrap gap-3 mb-3">
+    {% for dia in dias %}
+      {% with dia_activo=dia|add:"_activo" dia_inicio=dia|add:"_inicio" dia_fin=dia|add:"_fin" %}
+        {% if horario_guardado|get:dia_activo %}
+          <div class="horario-card text-white">
+            <strong>{{ dia }}</strong><br>
+            <small>{{ horario_guardado|get:dia_inicio }} - {{ horario_guardado|get:dia_fin }}</small>
+          </div>
+        {% else %}
+          <div class="horario-card text-white bg-secondary">
+            <strong>{{ dia }}</strong><br>
+            <small>Cerrado</small>
+          </div>
+        {% endif %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+{% endif %}
+
+
+
+
+
+
+
+    <h4>Peluqueros del negocio</h4>
+    <p>Estos son los peluqueros que trabajan en tu negocio. Puedes crear nuevos
+
+
+    <hr>
+    <h5>Peluqueros registrados: {{ peluqueros|length }}</h5>
+
+<div class="row mt-4">
+  {% for p in peluqueros %}
+    <div class="col-md-4 mb-3">
+      <a href="{% url 'detalle_peluquero' negocio.id p.id %}" class="text-decoration-none">
+        <div class="horario-card h-100 d-flex align-items-center justify-content-between gap-3 text-white">
+          {% if p.avatar %}
+            <img src="{{ p.avatar.url }}" class="rounded-circle" style="width: 50px; height: 50px;">
+          {% else %}
+            <i class="bi bi-person-circle fs-2"></i>
+          {% endif %}
+          <div class="flex-grow-1">
+            <strong>{{ p.nombre }}</strong><br>
+            <small>{{ p.horario }}</small>
+          </div>
+          <a href="{% url 'eliminar_peluquero' negocio.id p.id %}" onclick="event.stopPropagation();" class="text-white" title="Eliminar">
+            <i class="bi bi-trash fs-5"></i>
+          </a>
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+
+
+
+    <hr>
+
+    <h4>Acciones</h4>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <a href="#">🖼 Editar información del negocio</a>
+        </li>
+        <li class="list-group-item">
+            <a href="{% url 'crear_peluquero' negocio.id %}">👥 Crear peluquero</a>
+        </li>
+        <li class="list-group-item">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#horarioModal">🕒 Asignar horario de atención</a>
+
+        </li>
+    </ul>
+</div>
+
+
+
+
+
+
+
+<!-- Modal para asignar horario -->
+<div class="modal fade" id="horarioModal" tabindex="-1" aria-labelledby="horarioModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="{% url 'asignar_horario_negocio' negocio.id %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Asignar horario de atención</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Asignar todos los días -->
+          <div class="mb-4 border rounded p-3 bg-light">
+            <h6>Horario general para todos los días</h6>
+            <div class="row">
+              <div class="col-md-5">
+                <input type="time" id="horaInicioGlobal" class="form-control" placeholder="Inicio">
+              </div>
+              <div class="col-md-5">
+                <input type="time" id="horaFinGlobal" class="form-control" placeholder="Fin">
+              </div>
+              <div class="col-md-2">
+                <button type="button" class="btn btn-outline-primary w-100" onclick="aplicarHorarioGeneral()">Aplicar a todos</button>
+              </div>
+            </div>
+          </div>
+
+<div class="mb-3">
+  <button type="button" class="btn btn-outline-secondary" onclick="activarTodosLosDias()">Activar todos los días</button>
+</div>
+
+          <!-- Horario por día -->
+          <div class="row">
+{% for dia in dias %}
+  <div class="col-md-6 mb-3">
+    <div class="border rounded p-3">
+      <label class="form-check-label fw-bold">{{ dia }}</label>
+      <div class="form-check form-switch mb-2">
+        {% with key=dia|stringformat:"s_activo" %}
+          <input class="form-check-input" type="checkbox" name="dias_activos" value="{{ dia }}"
+            {% if horario_guardado.key %}checked{% endif %}>
+        {% endwith %}
+        <label class="form-check-label">Habilitar</label>
+      </div>
+      <div class="d-flex gap-2">
+        {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
+          <input type="time" class="form-control" name="inicio_{{ dia }}" id="inicio_{{ dia }}"
+            value="{{ horario_guardado.inicio }}">
+          <input type="time" class="form-control" name="fin_{{ dia }}" id="fin_{{ dia }}"
+            value="{{ horario_guardado.fin }}">
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
+
+          </div>
+
+
+          <hr>
+          <p class="text-muted small">* Los festivos en Colombia se gestionan automáticamente o puedes personalizarlos.</p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-gradient">Guardar horario</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para editar logo -->
+<div class="modal fade" id="editarLogoModal" tabindex="-1" aria-labelledby="editarLogoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{% url 'panel_negocio' negocio.id %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editarLogoLabel">Editar logo del negocio</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 text-center">
+            {% if negocio.logo %}
+              <img src="{{ negocio.logo.url }}" class="img-thumbnail mb-2" style="max-height: 120px;">
+            {% endif %}
+            <input type="file" name="logo" class="form-control" accept="image/*">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-gradient">Guardar cambios</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<style>
+  /*Estilo modal */
+.bi-pencil-fill {
+    background-color: rgba(0,0,0,0.6);
+    transition: background-color 0.2s;
+}
+.bi-pencil-fill:hover {
+    background-color: rgba(0,0,0,0.8);
+    cursor: pointer;
+}
+</style>
+
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+        transform: scale(1.02);
+    }
+</style>
+
+<script>
+function activarTodosLosDias() {
+  const dias = {{ dias|safe }};
+  dias.forEach(dia => {
+    const check = document.querySelector(`input[name="dias_activos"][value="${dia}"]`);
+    if (check) {
+      check.checked = true;
+    }
+  });
+}
+</script>
+
+<script>
+function aplicarHorarioGeneral() {
+  const inicio = document.getElementById('horaInicioGlobal').value;
+  const fin = document.getElementById('horaFinGlobal').value;
+  const dias = {{ dias|safe }};
+
+  dias.forEach(dia => {
+    const inputInicio = document.getElementById(`inicio_${dia}`);
+    const inputFin = document.getElementById(`fin_${dia}`);
+    if (inputInicio && inputFin) {
+      inputInicio.value = inicio;
+      inputFin.value = fin;
+    }
+  });
+}
+</script>
+
+<style>
+.horario-card {
+  min-width: 140px;
+  padding: 15px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3573a9, #02c0ca);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  font-size: 0.95rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: #ffffff;
+}
+
+.horario-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.horario-card * {
+  color: inherit !important;
+}
+</style>
+
+
+
+{% endblock %}

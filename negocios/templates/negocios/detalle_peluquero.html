@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% block content %}
+
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+
+<style>
+/* Estilos generales mejorados */
+.cover-container {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+.cover-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+.edit-cover-icon, .edit-avatar-icon {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  border: 2px solid white;
+  z-index: 2;
+}
+.profile-picture-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: -60px auto 20px auto;
+  z-index: 3;
+}
+.profile-picture-wrapper img,
+.default-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #fff;
+  background-color: #adb5bd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.profile-container {
+  max-width: 900px;
+  margin: 30px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+</style>
+
+<div class="cover-container">
+  <div class="cover-wrapper">
+    <img src="{% if peluquero.portada %}{{ peluquero.portada.url }}{% else %}https://via.placeholder.com/900x220?text=Portada{% endif %}" class="cover-image">
+
+    <label for="{{ form.portada.id_for_label }}" class="edit-cover-icon">
+      <i class="bi bi-pencil-fill"></i>
+    </label>
+  </div>
+</div>
+
+<div class="profile-picture-wrapper">
+  {% if peluquero.avatar %}
+    <img src="{{ peluquero.avatar.url }}?v={{ peluquero.updated_at.timestamp }}" alt="Foto de perfil">
+  {% else %}
+    <div class="default-avatar">
+      <i class="bi bi-person" style="font-size: 48px; color: white;"></i>
+    </div>
+  {% endif %}
+  <label for="{{ form.avatar.id_for_label }}" class="edit-avatar-icon">
+    <i class="bi bi-pencil-fill"></i>
+  </label>
+</div>
+
+<div class="text-center my-4">
+  <h2 class="fw-bold">Bienvenido, {{ peluquero.nombre }}</h2>
+  <p class="text-muted">Barbero del flow. 🎯</p>
+</div>
+
+<div class="profile-container">
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.avatar|add_class:'d-none' }}
+    {{ form.portada|add_class:'d-none' }}
+
+    <div class="mb-3">
+      <label class="form-label">Nombre</label>
+      {{ form.nombre|add_class:'form-control' }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Horario</label>
+      {{ form.horario|add_class:'form-control' }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Descripción</label>
+      {{ form.descripcion|add_class:'form-control' }}
+    </div>
+
+
+
+
+
+    <hr class="my-4">
+    <h4 class="text-center mb-3">¡Agrega tus cortes aquí!</h4>
+    <br>
+    <div class="mb-3">
+
+
+<style>
+  .input-uniform {
+    height: 38px;
+    resize: none;
+  }
+
+  @media (max-width: 767.98px) {
+    .inline-form .form-group {
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+
+<form method="POST" enctype="multipart/form-data" class="p-4 border rounded bg-light shadow-sm mt-4">
+  {% csrf_token %}
+  <input type="hidden" name="nueva_imagen" value="1">
+
+  <div class="row g-3 align-items-center inline-form">
+    <div class="col-md-3">
+      <label class="form-label">Nombre del corte</label>
+      {{ form_imagen.nombre|add_class:'form-control form-control-sm input-uniform' }}
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Descripción</label>
+      {{ form_imagen.descripcion|add_class:'form-control form-control-sm input-uniform' }}
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label">Duración (min)</label>
+      {{ form_imagen.duracion|add_class:'form-control form-control-sm input-uniform' }}
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label">Selecciona una imagen</label>
+      {{ form_imagen.imagen|add_class:'form-control form-control-sm input-uniform' }}
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+    <button type="submit" class="btn btn-success px-4">Agregar imagen</button>
+  </div>
+</form>
+
+
+    <hr class="my-4"><br><br>
+    </div>
+
+
+<style>
+  #galeria-scroll {
+    position: relative;
+    overflow: hidden; /* oculta scroll */
+    white-space: nowrap;
+    cursor: grab;
+  }
+
+  #galeria-scroll.dragging {
+    cursor: grabbing;
+  }
+
+  .galeria-track {
+    display: inline-block;
+    white-space: nowrap;
+    transition: transform 0.3s ease-out;
+  }
+
+  .galeria-card {
+    display: inline-block;
+    width: 220px;
+    margin-right: 12px;
+    vertical-align: top;
+  }
+
+  .galeria-card img {
+    height: 160px;
+    object-fit: cover;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* Ocultar barra de scroll */
+  #galeria-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  #galeria-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<div id="galeria-scroll" class="mb-4">
+  <div class="galeria-track" id="galeria-track">
+    {% for img in peluquero.galeria.all %}
+      <div class="galeria-card">
+        <div class="card shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCorte{{ img.id }}">
+          <img src="{{ img.imagen.url }}" class="card-img-top">
+          <div class="card-body text-center">
+            <h6 class="card-title mb-0">{{ img.nombre|default:"Sin título" }}</h6>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <div class="modal fade" id="modalCorte{{ img.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">{{ img.nombre|default:"Sin título" }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <img src="{{ img.imagen.url }}" class="img-fluid rounded mb-3">
+              <p><strong>Descripción:</strong> {{ img.descripcion|default:"Sin descripción" }}</p>
+              <p><strong>Duración estimada:</strong> {{ img.duracion }} minutos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+  const scrollContainer = document.getElementById('galeria-scroll');
+  const track = document.getElementById('galeria-track');
+
+  // Duplicar contenido para efecto infinito
+  track.innerHTML += track.innerHTML;
+
+  let scrollPos = 0;
+  let isHover = false;
+  let isDragging = false;
+  let startX;
+  let scrollStart;
+
+  function autoScroll() {
+    if (!isHover && !isDragging) {
+      scrollPos += 0.5;
+      scrollContainer.scrollLeft = scrollPos;
+
+      // Cuando llega a la mitad (original + copia), reinicia
+      if (scrollPos >= track.scrollWidth / 2) {
+        scrollPos = 0;
+        scrollContainer.scrollLeft = 0;
+      }
+    }
+    requestAnimationFrame(autoScroll);
+  }
+
+  // Iniciar animación
+  autoScroll();
+
+  // Hover pausa
+  scrollContainer.addEventListener('mouseenter', () => isHover = true);
+  scrollContainer.addEventListener('mouseleave', () => isHover = false);
+
+  // Drag manual
+  scrollContainer.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    scrollContainer.classList.add('dragging');
+    startX = e.pageX;
+    scrollStart = scrollContainer.scrollLeft;
+  });
+
+  scrollContainer.addEventListener('mouseup', () => {
+    isDragging = false;
+    scrollContainer.classList.remove('dragging');
+  });
+
+  scrollContainer.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const dx = e.pageX - startX;
+    scrollContainer.scrollLeft = scrollStart - dx;
+    scrollPos = scrollContainer.scrollLeft;
+  });
+
+  scrollContainer.addEventListener('mouseleave', () => {
+    isDragging = false;
+    scrollContainer.classList.remove('dragging');
+  });
+</script>
+
+
+
+
+    <hr class="my-5">
+    <h4>Agenda</h4>
+    <div id="calendar"></div>
+
+    <div class="text-center mt-4">
+      <button type="submit" class="btn btn-primary px-5">Guardar cambios</button>
+    </div>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+    initialView: 'timeGridWeek',
+    locale: 'es',
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
+    editable: true,
+    selectable: true,
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'timeGridWeek,timeGridDay'
+    },
+    events: '/api/turnos_peluquero/{{ peluquero.id }}/',
+  });
+  calendar.render();
+});
+
+// Drag and Drop upload para galeria
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+['dragenter', 'dragover'].forEach(event => {
+  dropZone.addEventListener(event, e => {
+    e.preventDefault();
+    dropZone.classList.add('bg-light');
+  });
+});
+
+['dragleave', 'drop'].forEach(event => {
+  dropZone.addEventListener(event, e => {
+    e.preventDefault();
+    dropZone.classList.remove('bg-light');
+  });
+});
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('drop', e => {
+  fileInput.files = e.dataTransfer.files;
+});
+</script>
+{% endblock %}
