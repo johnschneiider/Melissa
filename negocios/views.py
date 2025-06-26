@@ -8,6 +8,11 @@ from .forms import PeluqueroForm
 from .forms import ImagenGaleriaForm
 from datetime import datetime, timedelta
 from django.http import JsonResponse
+import holidays
+import json
+from .forms import NegocioForm, PeluqueroForm, ImagenGaleriaForm
+from .models import Negocio, Peluquero, ImagenGaleria
+from datetime import datetime, timedelta, time
 
 
 
@@ -134,37 +139,140 @@ def crear_peluquero(request, negocio_id):
 
 
 from .models import Peluquero
-
 @login_required
 def detalle_peluquero(request, negocio_id, peluquero_id):
-    peluquero = get_object_or_404(Peluquero, id=peluquero_id, negocio_id=negocio_id, negocio__propietario=request.user)
-
+    peluquero = get_object_or_404(
+        Peluquero, 
+        id=peluquero_id, 
+        negocio_id=negocio_id, 
+        negocio__propietario=request.user
+    )
+    
+    # Configuración de días de la semana
+    DIAS_SEMANA = [
+        {'nombre': 'Lunes', 'festivo': False},
+        {'nombre': 'Martes', 'festivo': False},
+        {'nombre': 'Miércoles', 'festivo': False},
+        {'nombre': 'Jueves', 'festivo': False},
+        {'nombre': 'Viernes', 'festivo': False},
+        {'nombre': 'Sábado', 'festivo': False},
+        {'nombre': 'Domingo', 'festivo': True}
+    ]
+    
+    # Procesar formulario
     if request.method == 'POST':
-        if 'nueva_imagen' in request.POST:
-            form_imagen = ImagenGaleriaForm(request.POST, request.FILES)
-            if form_imagen.is_valid():
-                nueva = form_imagen.save(commit=False)
-                nueva.peluquero = peluquero
-                nueva.save()
-                messages.success(request, "Imagen agregada a la galería.")
-                return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
-        else:
-            form = PeluqueroForm(request.POST, request.FILES, instance=peluquero)
-            if form.is_valid():
+        form = PeluqueroForm(request.POST, request.FILES, instance=peluquero)
+        if form.is_valid():
+            # Procesar horario
+            horario_json = request.POST.get('horario_json', '{}')
+            try:
+                horario_data = json.loads(horario_json)
+                peluquero.horario = horario_data
                 form.save()
-                messages.success(request, "Peluquero actualizado correctamente.")
+                messages.success(request, "Datos del peluquero actualizados correctamente.")
                 return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
+            except json.JSONDecodeError as e:
+                messages.error(request, f"Error en el formato del horario: {str(e)}")
     else:
         form = PeluqueroForm(instance=peluquero)
-        form_imagen = ImagenGaleriaForm()
-
+    
+    # Preparar datos para la plantilla
+    horario_data = peluquero.horario or {}
+    for dia in DIAS_SEMANA:
+        dia['turnos'] = horario_data.get(dia['nombre'], {}).get('turnos', [])
+    
+    # Generar próxima semana con intervalos calculados
+    co_holidays = holidays.CountryHoliday('CO')
+    today = datetime.now().date()
+    proximos_7_dias = []
+    
+    for delta in range(0, 7):
+        fecha = today + timedelta(days=delta)
+        nombre_dia = fecha.strftime('%A')
+        nombre_dia_es = {
+            'Monday': 'Lunes', 
+            'Tuesday': 'Martes', 
+            'Wednesday': 'Miércoles',
+            'Thursday': 'Jueves', 
+            'Friday': 'Viernes', 
+            'Saturday': 'Sábado',
+            'Sunday': 'Domingo'
+        }.get(nombre_dia, nombre_dia)
+        
+        es_festivo = fecha in co_holidays or nombre_dia_es == 'Domingo'
+        turnos_config = horario_data.get(nombre_dia_es, {}).get('turnos', [])
+        turnos_dia = []
+        
+        for turno in turnos_config:
+            try:
+                # Parsear horas y duración
+                hora_inicio = datetime.strptime(turno['inicio'], '%H:%M').time()
+                hora_fin = datetime.strptime(turno['fin'], '%H:%M').time()
+                duracion = int(turno.get('duracion', 30))
+                
+                # Calcular intervalos para este turno
+                intervalos = calcular_intervalos(hora_inicio, hora_fin, duracion)
+                
+                turnos_dia.append({
+                    'inicio': hora_inicio,
+                    'fin': hora_fin,
+                    'duracion': duracion,
+                    'disponible': turno.get('disponible', True),
+                    'intervalos': intervalos
+                })
+            except (ValueError, KeyError) as e:
+                print(f"Error procesando turno: {e}")
+                continue
+        
+        proximos_7_dias.append({
+            'fecha': fecha,
+            'nombre_dia': nombre_dia_es,
+            'festivo': es_festivo,
+            'turnos': turnos_dia
+        })
+    
     return render(request, 'negocios/detalle_peluquero.html', {
         'peluquero': peluquero,
         'form': form,
-        'form_imagen': form_imagen,
+        'form_imagen': ImagenGaleriaForm(),
+        'dias_semana': DIAS_SEMANA,
+        'proximos_7_dias': proximos_7_dias,
+        'horario_json': json.dumps(horario_data),
     })
 
-
+def calcular_intervalos(inicio, fin, duracion_minutos):
+    """Calcula los intervalos de tiempo basados en la duración configurada"""
+    intervalos = []
+    
+    # Convertir a minutos desde medianoche para facilitar cálculos
+    inicio_minutos = inicio.hour * 60 + inicio.minute
+    fin_minutos = fin.hour * 60 + fin.minute
+    
+    # Validar que la duración sea positiva
+    duracion_minutos = max(1, duracion_minutos)
+    
+    tiempo_actual = inicio_minutos
+    
+    while tiempo_actual + duracion_minutos <= fin_minutos:
+        # Calcular hora inicio y fin para este intervalo
+        h_inicio = tiempo_actual // 60
+        m_inicio = tiempo_actual % 60
+        h_fin = (tiempo_actual + duracion_minutos) // 60
+        m_fin = (tiempo_actual + duracion_minutos) % 60
+        
+        # Crear objetos time para el intervalo
+        inicio_intervalo = time(h_inicio, m_inicio)
+        fin_intervalo = time(h_fin, m_fin)
+        
+        intervalos.append({
+            'inicio': inicio_intervalo,
+            'fin': fin_intervalo
+        })
+        
+        # Avanzar al siguiente intervalo
+        tiempo_actual += duracion_minutos
+    
+    return intervalos
 
 
 from django.views.decorators.http import require_POST
@@ -243,18 +351,58 @@ def perfil_peluquero(request, id):
 def api_turnos_peluquero(request, peluquero_id):
     peluquero = get_object_or_404(Peluquero, id=peluquero_id, negocio__propietario=request.user)
     
-    # Simulación: generar horarios libres de lunes a viernes, 9am a 6pm, cada 1 hora
+    try:
+        horario = json.loads(peluquero.horario) if peluquero.horario else {}
+    except json.JSONDecodeError:
+        horario = {}
+    
+    # Obtener días festivos
+    co_holidays = holidays.CountryHoliday('CO')
+    
+    # Generar eventos para el calendario
     eventos = []
-    base_date = datetime.today()
-    for i in range(0, 7):
-        dia = base_date + timedelta(days=i)
-        if dia.weekday() < 5:  # solo lunes a viernes
-            for hora in range(9, 17):
-                eventos.append({
-                    "title": "Disponible",
-                    "start": dia.replace(hour=hora, minute=0, second=0).isoformat(),
-                    "end": dia.replace(hour=hora+1, minute=0, second=0).isoformat(),
-                    "color": "#198754"  # verde
-                })
-
+    base_date = datetime.today().date()
+    
+    # Para cada día de las próximas 4 semanas
+    for delta in range(0, 28):
+        fecha = base_date + timedelta(days=delta)
+        dia_semana = fecha.strftime('%A')
+        
+        # Traducir día de la semana al español
+        dias_traduccion = {
+            'Monday': 'Lunes',
+            'Tuesday': 'Martes',
+            'Wednesday': 'Miércoles',
+            'Thursday': 'Jueves',
+            'Friday': 'Viernes',
+            'Saturday': 'Sábado',
+            'Sunday': 'Domingo'
+        }
+        nombre_dia = dias_traduccion.get(dia_semana, dia_semana)
+        
+        # Verificar si es festivo
+        es_festivo = fecha in co_holidays or nombre_dia == 'Domingo'
+        
+        # Si hay horario para este día y no es festivo
+        if nombre_dia in horario and not es_festivo:
+            for turno in horario[nombre_dia]['turnos']:
+                try:
+                    hora_inicio = datetime.strptime(turno['inicio'], '%H:%M').time()
+                    hora_fin = datetime.strptime(turno['fin'], '%H:%M').time()
+                    
+                    start = datetime.combine(fecha, hora_inicio).isoformat()
+                    end = datetime.combine(fecha, hora_fin).isoformat()
+                    
+                    eventos.append({
+                        "title": "Disponible",
+                        "start": start,
+                        "end": end,
+                        "color": "#28a745",  # verde
+                        "extendedProps": {
+                            "duracion": turno.get('duracion', 30)
+                        }
+                    })
+                except (ValueError, KeyError):
+                    continue
+    
     return JsonResponse(eventos, safe=False)

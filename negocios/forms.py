@@ -1,8 +1,7 @@
 from django import forms
-from .models import Negocio, Peluquero
+from .models import Negocio, Peluquero, ImagenGaleria
 from django.core.exceptions import ValidationError
 import imghdr
-from .models import ImagenGaleria
 
 class ImagenGaleriaForm(forms.ModelForm):
     class Meta:

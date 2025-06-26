@@ -2,7 +2,7 @@
 {% load widget_tweaks %}
 {% block content %}
 
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
 /* Estilos generales mejorados */
@@ -61,12 +61,136 @@
   border-radius: 16px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
+
+/* Estilos para el horario */
+.horario-container {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.dia-horario {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.turno-item {
+  background: #e9f7ef;
+  border-left: 4px solid #28a745;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.turno-item .bi {
+  cursor: pointer;
+  color: #dc3545;
+}
+
+.festivo {
+  background-color: #fff3cd;
+  border-left-color: #ffc107;
+}
+
+/* Estilos para la visualización de turnos */
+.turnos-semana-container {
+  margin-top: 30px;
+}
+
+.semana-header {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.dia-header {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 0 5px;
+  font-weight: bold;
+}
+
+.dia-header.festivo {
+  background: #fff3cd;
+}
+
+.turnos-grid {
+  display: flex;
+}
+
+.dia-columna {
+  flex: 1;
+  margin: 0 5px;
+}
+
+.time-slot {
+  margin-bottom: 5px;
+  padding: 8px;
+  border-radius: 4px;
+  background: #e9f7ef;
+  text-align: center;
+}
+
+.time-slot.disabled {
+  background: #f8d7da;
+  color: #dc3545;
+}
+
+.time-slot.festivo {
+  background: #fff3cd;
+}
+
+/* Selector de días */
+.dias-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.dia-selector {
+  padding: 8px 15px;
+  border-radius: 20px;
+  background: #e9ecef;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dia-selector.selected {
+  background: #007bff;
+  color: white;
+}
+
+/* Panel de configuración de horario */
+.configurador-horario {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .turnos-grid {
+    flex-direction: column;
+  }
+  .dia-columna {
+    margin-bottom: 20px;
+  }
+}
 </style>
 
 <div class="cover-container">
   <div class="cover-wrapper">
     <img src="{% if peluquero.portada %}{{ peluquero.portada.url }}{% else %}https://via.placeholder.com/900x220?text=Portada{% endif %}" class="cover-image">
-
     <label for="{{ form.portada.id_for_label }}" class="edit-cover-icon">
       <i class="bi bi-pencil-fill"></i>
     </label>
@@ -75,7 +199,7 @@
 
 <div class="profile-picture-wrapper">
   {% if peluquero.avatar %}
-    <img src="{{ peluquero.avatar.url }}?v={{ peluquero.updated_at.timestamp }}" alt="Foto de perfil">
+    <img src="{{ peluquero.avatar.url }}" alt="Foto de perfil">
   {% else %}
     <div class="default-avatar">
       <i class="bi bi-person" style="font-size: 48px; color: white;"></i>
@@ -86,278 +210,318 @@
   </label>
 </div>
 
-<div class="text-center my-4">
-  <h2 class="fw-bold">Bienvenido, {{ peluquero.nombre }}</h2>
-  <p class="text-muted">Barbero del flow. 🎯</p>
-</div>
-
 <div class="profile-container">
-  <form method="POST" enctype="multipart/form-data">
+  <form method="POST" enctype="multipart/form-data" id="peluqueroForm">
     {% csrf_token %}
-    {{ form.non_field_errors }}
-    {{ form.avatar|add_class:'d-none' }}
-    {{ form.portada|add_class:'d-none' }}
-
-    <div class="mb-3">
-      <label class="form-label">Nombre</label>
-      {{ form.nombre|add_class:'form-control' }}
+    
+    <!-- Inputs ocultos para avatar y portada -->
+    <div style="display: none;">
+      {{ form.avatar }}
+      {{ form.portada }}
     </div>
-    <div class="mb-3">
-      <label class="form-label">Horario</label>
-      {{ form.horario|add_class:'form-control' }}
+    
+    <!-- Nombre y descripción -->
+    <div class="mb-4">
+      <label class="form-label">Nombre del Peluquero</label>
+      {{ form.nombre|add_class:"form-control" }}
     </div>
-    <div class="mb-3">
+    
+    <div class="mb-4">
       <label class="form-label">Descripción</label>
-      {{ form.descripcion|add_class:'form-control' }}
+      {{ form.descripcion|add_class:"form-control" }}
     </div>
-
-
-
-
-
-    <hr class="my-4">
-    <h4 class="text-center mb-3">¡Agrega tus cortes aquí!</h4>
-    <br>
-    <div class="mb-3">
-
-
-<style>
-  .input-uniform {
-    height: 38px;
-    resize: none;
-  }
-
-  @media (max-width: 767.98px) {
-    .inline-form .form-group {
-      margin-bottom: 1rem;
-    }
-  }
-</style>
-
-<form method="POST" enctype="multipart/form-data" class="p-4 border rounded bg-light shadow-sm mt-4">
-  {% csrf_token %}
-  <input type="hidden" name="nueva_imagen" value="1">
-
-  <div class="row g-3 align-items-center inline-form">
-    <div class="col-md-3">
-      <label class="form-label">Nombre del corte</label>
-      {{ form_imagen.nombre|add_class:'form-control form-control-sm input-uniform' }}
-    </div>
-
-    <div class="col-md-4">
-      <label class="form-label">Descripción</label>
-      {{ form_imagen.descripcion|add_class:'form-control form-control-sm input-uniform' }}
-    </div>
-
-    <div class="col-md-2">
-      <label class="form-label">Duración (min)</label>
-      {{ form_imagen.duracion|add_class:'form-control form-control-sm input-uniform' }}
-    </div>
-
-    <div class="col-md-3">
-      <label class="form-label">Selecciona una imagen</label>
-      {{ form_imagen.imagen|add_class:'form-control form-control-sm input-uniform' }}
-    </div>
-  </div>
-
-  <div class="text-center mt-4">
-    <button type="submit" class="btn btn-success px-4">Agregar imagen</button>
-  </div>
-</form>
-
-
-    <hr class="my-4"><br><br>
-    </div>
-
-
-<style>
-  #galeria-scroll {
-    position: relative;
-    overflow: hidden; /* oculta scroll */
-    white-space: nowrap;
-    cursor: grab;
-  }
-
-  #galeria-scroll.dragging {
-    cursor: grabbing;
-  }
-
-  .galeria-track {
-    display: inline-block;
-    white-space: nowrap;
-    transition: transform 0.3s ease-out;
-  }
-
-  .galeria-card {
-    display: inline-block;
-    width: 220px;
-    margin-right: 12px;
-    vertical-align: top;
-  }
-
-  .galeria-card img {
-    height: 160px;
-    object-fit: cover;
-    user-select: none;
-    pointer-events: none;
-  }
-
-  /* Ocultar barra de scroll */
-  #galeria-scroll::-webkit-scrollbar {
-    display: none;
-  }
-  #galeria-scroll {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-</style>
-
-<div id="galeria-scroll" class="mb-4">
-  <div class="galeria-track" id="galeria-track">
-    {% for img in peluquero.galeria.all %}
-      <div class="galeria-card">
-        <div class="card shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCorte{{ img.id }}">
-          <img src="{{ img.imagen.url }}" class="card-img-top">
-          <div class="card-body text-center">
-            <h6 class="card-title mb-0">{{ img.nombre|default:"Sin título" }}</h6>
+    
+    <!-- Configuración de horario -->
+    <div class="horario-container">
+      <h4 class="mb-4">Configuración de Horario</h4>
+      
+      <!-- Selector de días -->
+      <div class="dias-selector mb-4">
+        <div class="dia-selector selected" data-dia="todos">Todos los días</div>
+        {% for dia in dias_semana %}
+        <div class="dia-selector" data-dia="{{ dia.nombre|lower }}">
+          {{ dia.nombre }}
+          {% if dia.festivo %}<span class="badge bg-warning ms-1">Festivo</span>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      
+      <!-- Configurador de horario -->
+      <div class="configurador-horario">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Hora de inicio</label>
+            <input type="time" class="form-control" id="horaInicio" value="08:00">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Hora de fin</label>
+            <input type="time" class="form-control" id="horaFin" value="18:00">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Duración (minutos)</label>
+            <input type="number" class="form-control" id="duracionTurno" min="15" value="30">
+          </div>
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="button" class="btn btn-primary w-100" id="agregarHorario">
+              <i class="bi bi-plus-lg"></i>
+            </button>
           </div>
         </div>
       </div>
-
-      <!-- Modal -->
-      <div class="modal fade" id="modalCorte{{ img.id }}" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">{{ img.nombre|default:"Sin título" }}</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      
+      <!-- Visualización de horarios configurados -->
+      <div id="horariosConfigurados" class="mt-4">
+        {% for dia in dias_semana %}
+        <div class="dia-horario {% if dia.festivo %}festivo{% endif %}" data-dia="{{ dia.nombre }}">
+          <h5>
+            {{ dia.nombre }}
+            {% if dia.festivo %}<span class="badge bg-warning ms-2">Festivo</span>{% endif %}
+          </h5>
+          <div class="turnos-container">
+            {% for turno in dia.turnos %}
+            <div class="turno-item">
+              <span>{{ turno.inicio }} - {{ turno.fin }} ({{ turno.duracion }} min)</span>
+              <i class="bi bi-trash" onclick="eliminarTurno(this)"></i>
             </div>
-            <div class="modal-body">
-              <img src="{{ img.imagen.url }}" class="img-fluid rounded mb-3">
-              <p><strong>Descripción:</strong> {{ img.descripcion|default:"Sin descripción" }}</p>
-              <p><strong>Duración estimada:</strong> {{ img.duracion }} minutos</p>
-            </div>
+            {% endfor %}
           </div>
         </div>
+        {% endfor %}
       </div>
-    {% endfor %}
-  </div>
-</div>
-<script>
-  const scrollContainer = document.getElementById('galeria-scroll');
-  const track = document.getElementById('galeria-track');
-
-  // Duplicar contenido para efecto infinito
-  track.innerHTML += track.innerHTML;
-
-  let scrollPos = 0;
-  let isHover = false;
-  let isDragging = false;
-  let startX;
-  let scrollStart;
-
-  function autoScroll() {
-    if (!isHover && !isDragging) {
-      scrollPos += 0.5;
-      scrollContainer.scrollLeft = scrollPos;
-
-      // Cuando llega a la mitad (original + copia), reinicia
-      if (scrollPos >= track.scrollWidth / 2) {
-        scrollPos = 0;
-        scrollContainer.scrollLeft = 0;
-      }
-    }
-    requestAnimationFrame(autoScroll);
-  }
-
-  // Iniciar animación
-  autoScroll();
-
-  // Hover pausa
-  scrollContainer.addEventListener('mouseenter', () => isHover = true);
-  scrollContainer.addEventListener('mouseleave', () => isHover = false);
-
-  // Drag manual
-  scrollContainer.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    scrollContainer.classList.add('dragging');
-    startX = e.pageX;
-    scrollStart = scrollContainer.scrollLeft;
-  });
-
-  scrollContainer.addEventListener('mouseup', () => {
-    isDragging = false;
-    scrollContainer.classList.remove('dragging');
-  });
-
-  scrollContainer.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const dx = e.pageX - startX;
-    scrollContainer.scrollLeft = scrollStart - dx;
-    scrollPos = scrollContainer.scrollLeft;
-  });
-
-  scrollContainer.addEventListener('mouseleave', () => {
-    isDragging = false;
-    scrollContainer.classList.remove('dragging');
-  });
-</script>
-
-
-
-
-    <hr class="my-5">
-    <h4>Agenda</h4>
-    <div id="calendar"></div>
-
+      
+      <input type="hidden" name="horario_json" id="horarioJson" value='{{ horario_json }}'>
+    </div>
+    
     <div class="text-center mt-4">
       <button type="submit" class="btn btn-primary px-5">Guardar cambios</button>
     </div>
   </form>
+  
+  <!-- Visualización de Turnos Disponibles -->
+    <div class="turnos-semana-container mt-5">
+    <h4>Turnos Disponibles</h4>
+    
+    <div class="semana-header">
+      {% for dia in proximos_7_dias %}
+        <div class="dia-header {% if dia.festivo %}festivo{% endif %}">
+          {{ dia.fecha|date:"D d/m" }}<br>
+          {% if dia.festivo %}<span class="badge bg-warning">Festivo</span>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+    
+    <div class="turnos-grid">
+      {% for dia in proximos_7_dias %}
+        <div class="dia-columna">
+          {% if dia.turnos %}
+            {% for turno in dia.turnos %}
+              <!-- Calcular intervalos para este turno -->
+              {% with inicio=turno.inicio|time:"H:i" fin=turno.fin|time:"H:i" duracion=turno.duracion %}
+                {% for intervalo in turno.intervalos %}
+                  <div class="time-slot {% if dia.festivo %}festivo{% endif %}">
+                    {{ intervalo.inicio|time:"H:i" }} - {{ intervalo.fin|time:"H:i" }}
+                  </div>
+                {% endfor %}
+              {% endwith %}
+            {% endfor %}
+          {% else %}
+            <div class="alert alert-warning">No hay horario configurado</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-    initialView: 'timeGridWeek',
-    locale: 'es',
-    slotMinTime: '08:00:00',
-    slotMaxTime: '20:00:00',
-    editable: true,
-    selectable: true,
-    headerToolbar: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'timeGridWeek,timeGridDay'
-    },
-    events: '/api/turnos_peluquero/{{ peluquero.id }}/',
+document.addEventListener('DOMContentLoaded', function() {
+  // Elementos del formulario
+  const form = document.getElementById('peluqueroForm');
+  const horarioJsonInput = document.getElementById('horarioJson');
+  
+  // Selectores de días
+  const diaSelectors = document.querySelectorAll('.dia-selector');
+  let diasSeleccionados = ['todos'];
+  
+  // Configurador de horario
+  const horaInicio = document.getElementById('horaInicio');
+  const horaFin = document.getElementById('horaFin');
+  const duracionTurno = document.getElementById('duracionTurno');
+  const agregarHorarioBtn = document.getElementById('agregarHorario');
+  
+  // Manejar selección de días
+  diaSelectors.forEach(selector => {
+    selector.addEventListener('click', function() {
+      const dia = this.dataset.dia;
+      
+      if (dia === 'todos') {
+        // Seleccionar/deseleccionar todos
+        const todosSeleccionado = this.classList.contains('selected');
+        diaSelectors.forEach(s => {
+          s.classList.toggle('selected', !todosSeleccionado);
+          if (s.dataset.dia === 'todos') return;
+          s.classList.toggle('selected', !todosSeleccionado);
+        });
+        diasSeleccionados = todosSeleccionado ? [] : ['todos'];
+      } else {
+        // Seleccionar día individual
+        this.classList.toggle('selected');
+        
+        // Actualizar lista de días seleccionados
+        if (this.classList.contains('selected')) {
+          diasSeleccionados.push(dia);
+          // Si se selecciona algún día individual, deseleccionar "todos"
+          const todos = document.querySelector('.dia-selector[data-dia="todos"]');
+          todos.classList.remove('selected');
+          diasSeleccionados = diasSeleccionados.filter(d => d !== 'todos');
+        } else {
+          diasSeleccionados = diasSeleccionados.filter(d => d !== dia);
+        }
+      }
+    });
   });
-  calendar.render();
-});
-
-// Drag and Drop upload para galeria
-const dropZone = document.getElementById('drop-zone');
-const fileInput = document.getElementById('file-input');
-
-['dragenter', 'dragover'].forEach(event => {
-  dropZone.addEventListener(event, e => {
-    e.preventDefault();
-    dropZone.classList.add('bg-light');
+  
+  // Agregar horario
+  agregarHorarioBtn.addEventListener('click', function() {
+    const inicio = horaInicio.value;
+    const fin = horaFin.value;
+    const duracion = duracionTurno.value;
+    
+    if (!inicio || !fin) {
+      alert('Por favor ingresa hora de inicio y fin');
+      return;
+    }
+    
+    if (inicio >= fin) {
+      alert('La hora de inicio debe ser anterior a la hora de fin');
+      return;
+    }
+    
+    if (diasSeleccionados.length === 0) {
+      alert('Selecciona al menos un día');
+      return;
+    }
+    
+    // Agregar turno a los días seleccionados
+    const horario = JSON.parse(horarioJsonInput.value || '{}');
+    const diasAActualizar = diasSeleccionados.includes('todos') ? 
+      ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'] : 
+      diasSeleccionados;
+    
+    diasAActualizar.forEach(dia => {
+      const nombreDia = capitalizarDia(dia);
+      if (!horario[nombreDia]) horario[nombreDia] = { turnos: [] };
+      
+      horario[nombreDia].turnos.push({
+        inicio: inicio,
+        fin: fin,
+        duracion: duracion,
+        disponible: true
+      });
+      
+      // Actualizar visualización
+      actualizarVisualizacionDia(nombreDia, horario[nombreDia].turnos);
+    });
+    
+    horarioJsonInput.value = JSON.stringify(horario);
+  });
+  
+  // Función para capitalizar nombres de días
+  function capitalizarDia(dia) {
+    const dias = {
+      'lunes': 'Lunes',
+      'martes': 'Martes',
+      'miercoles': 'Miércoles',
+      'jueves': 'Jueves',
+      'viernes': 'Viernes',
+      'sabado': 'Sábado',
+      'domingo': 'Domingo'
+    };
+    return dias[dia] || dia.charAt(0).toUpperCase() + dia.slice(1);
+  }
+  
+  // Función para actualizar visualización de un día
+  function actualizarVisualizacionDia(nombreDia, turnos) {
+    let container = document.querySelector(`.dia-horario[data-dia="${nombreDia}"] .turnos-container`);
+    if (!container) {
+      // Crear contenedor si no existe
+      const diaContainer = document.createElement('div');
+      diaContainer.className = `dia-horario ${nombreDia === 'Domingo' ? 'festivo' : ''}`;
+      diaContainer.dataset.dia = nombreDia;
+      diaContainer.innerHTML = `
+        <h5>
+          ${nombreDia}
+          ${nombreDia === 'Domingo' ? '<span class="badge bg-warning ms-2">Festivo</span>' : ''}
+        </h5>
+        <div class="turnos-container"></div>
+      `;
+      document.getElementById('horariosConfigurados').appendChild(diaContainer);
+      container = diaContainer.querySelector('.turnos-container');
+    }
+    
+    // Limpiar y volver a renderizar
+    container.innerHTML = '';
+    turnos.forEach(turno => {
+      const turnoHTML = `
+        <div class="turno-item">
+          <span>${turno.inicio} - ${turno.fin} (${turno.duracion} min)</span>
+          <i class="bi bi-trash" onclick="eliminarTurno(this)"></i>
+        </div>
+      `;
+      container.insertAdjacentHTML('beforeend', turnoHTML);
+    });
+  }
+  
+  // Configurar envío del formulario
+  form.addEventListener('submit', function(e) {
+    const horario = JSON.parse(horarioJsonInput.value || '{}');
+    const tieneTurnos = Object.values(horario).some(dia => dia.turnos && dia.turnos.length > 0);
+    
+    if (!tieneTurnos) {
+      e.preventDefault();
+      alert('Debes configurar al menos un horario para algún día');
+      return false;
+    }
   });
 });
 
-['dragleave', 'drop'].forEach(event => {
-  dropZone.addEventListener(event, e => {
-    e.preventDefault();
-    dropZone.classList.remove('bg-light');
-  });
-});
-
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('drop', e => {
-  fileInput.files = e.dataTransfer.files;
-});
+// Función global para eliminar turno
+function eliminarTurno(icon) {
+  if (!confirm('¿Eliminar este turno?')) return;
+  
+  const item = icon.closest('.turno-item');
+  const texto = item.querySelector('span').textContent;
+  const [horas, duracion] = texto.split(' (');
+  const [inicio, fin] = horas.split(' - ');
+  const dur = duracion.replace(' min)', '');
+  
+  const diaContainer = item.closest('.dia-horario');
+  const nombreDia = diaContainer.dataset.dia;
+  
+  // Actualizar JSON
+  const horarioJsonInput = document.getElementById('horarioJson');
+  const horario = JSON.parse(horarioJsonInput.value || '{}');
+  
+  if (horario[nombreDia]) {
+    horario[nombreDia].turnos = horario[nombreDia].turnos.filter(t => 
+      !(t.inicio === inicio && t.fin === fin && t.duracion == dur)
+    );
+    
+    // Si no quedan turnos, eliminar el día
+    if (horario[nombreDia].turnos.length === 0) {
+      delete horario[nombreDia];
+    }
+    
+    horarioJsonInput.value = JSON.stringify(horario);
+  }
+  
+  // Eliminar visualmente
+  item.remove();
+  
+  // Si no quedan turnos en el día, mostrar mensaje
+  if (diaContainer.querySelectorAll('.turno-item').length === 0) {
+    diaContainer.querySelector('.turnos-container').innerHTML = '<p>No hay horarios configurados</p>';
+  }
+}
 </script>
 {% endblock %}
