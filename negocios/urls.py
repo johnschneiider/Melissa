@@ -13,7 +13,7 @@ urlpatterns = [
     path('negocios/<int:negocio_id>/eliminar/', views.eliminar_negocio, name='eliminar_negocio'),
     path('negocios/<int:negocio_id>/restaurar/', views.restaurar_negocio, name='restaurar_negocio'),
     path('api/turnos_peluquero/<int:peluquero_id>/', views.api_turnos_peluquero, name='api_turnos_peluquero'),
-
-
+    path('negocio/<int:negocio_id>/peluquero/<int:peluquero_id>/agregar-imagen/', views.agregar_imagen_galeria, name='agregar_imagen_galeria'),
+    path('eliminar-imagen-galeria/<int:imagen_id>/', views.eliminar_imagen_galeria, name='eliminar_imagen_galeria'),
 
 ]

@@ -1,10 +1,278 @@
 {% extends 'base.html' %}
 {% load widget_tweaks %}
 {% block content %}
+{% load static %}
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
+.tarjeta-imagen img {
+    width: 100%;
+    height: 180px; /* Altura fija */
+    object-fit: cover; /* Mantiene la proporción recortando si es necesario */
+}
+
+.nombre-corte {
+    padding: 10px;
+    text-align: center;
+    background: white;
+    font-weight: bold;
+    height: 50px; /* Altura fija para el nombre */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+  
+/* Estilo para imágenes por defecto */
+.img-default {
+    filter: grayscale(20%);
+    opacity: 0.9;
+}
+
+.default-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+
+/* Estilo para indicar que son imágenes de muestra las de la galeria*/
+.tarjeta-imagen .img-default {
+    filter: grayscale(20%);
+    opacity: 0.9;
+}
+
+.tarjeta-imagen {
+    flex: 0 0 200px;
+    height: 250px; /* Altura total fija (180px imagen + 50px nombre + padding) */
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+
+/* Estilos para la galería de trabajos */
+.galeria-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 20px 0;
+    margin: 30px 0;
+}
+
+.galeria-slider {
+    display: flex;
+    gap: 15px;
+    padding: 10px 0;
+    will-change: transform;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden; /* Oculta la barra de desplazamiento */
+    scrollbar-width: none; /* Para Firefox */
+    -ms-overflow-style: none; /* Para IE/Edge */
+}
+
+.galeria-slider-inner {
+    display: flex;
+    gap: 15px;
+    animation: slide 30s linear infinite;
+}
+
+.tarjeta-imagen {
+    flex: 0 0 200px;
+    height: 250px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    scroll-snap-align: start;
+}
+
+.tarjeta-imagen img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.nombre-corte {
+    padding: 10px;
+    text-align: center;
+    background: white;
+    font-weight: bold;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Estilos para el botón de eliminar */
+.btn-eliminar-imagen {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tarjeta-imagen:hover .btn-eliminar-imagen {
+    opacity: 1;
+}
+
+.btn-eliminar-imagen:hover {
+    background: rgba(255, 0, 0, 0.9);
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+.tarjeta-imagen .default-tag {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+
+/* Estilos para el botón de eliminar */
+.btn-eliminar-imagen {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(255, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tarjeta-imagen:hover .btn-eliminar-imagen {
+    opacity: 1;
+}
+
+.btn-eliminar-imagen:hover {
+    background: rgba(255, 0, 0, 0.9);
+}
+</style>
+
+
+<style>
+
+  /* Estilos para la galería de trabajos */
+.galeria-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    padding: 20px 0;
+    margin: 30px 0;
+}
+
+.galeria-slider {
+    display: flex;
+    gap: 15px;
+    padding: 10px 0;
+    will-change: transform;
+}
+
+.galeria-slider-inner {
+    display: flex;
+    gap: 15px;
+    animation: slide 30s linear infinite;
+}
+
+.galeria-slider:hover .galeria-slider-inner {
+    animation-play-state: paused;
+}
+
+.tarjeta-imagen {
+    flex: 0 0 200px;
+    height: 250px;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: white;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+/* Estilos para el formulario de subir imágenes */
+.formulario-galeria .form-group {
+    margin-bottom: 15px;
+}
+
+.formulario-galeria label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.formulario-galeria .btn-submit {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.formulario-galeria .btn-submit:hover {
+    background-color: #0069d9;
+}
 /* Estilos generales mejorados */
 .cover-container {
   position: relative;
@@ -331,6 +599,67 @@
       {% endfor %}
     </div>
   </div>
+
+<!-- Galería de trabajos -->
+<!-- Galería de trabajos - Versión corregida -->
+<div class="galeria-container">
+    <h4 class="mb-3">Galería de Trabajos</h4>
+    
+    <div class="galeria-slider" id="galeriaSlider">
+        <div class="galeria-slider-inner">
+            {% for imagen in galeria_imagenes %}
+            <div class="tarjeta-imagen">
+                {% if not mostrar_defaults %}
+                <button class="btn-eliminar-imagen" 
+                        onclick="eliminarImagenGaleria({{ imagen.id }}, this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+                {% else %}
+                <span class="default-tag">Ejemplo</span>
+                {% endif %}
+                
+<img src="{{ imagen.imagen }}" 
+     alt="{{ imagen.nombre }}"
+     {% if mostrar_defaults %}class="img-default"{% endif %}>
+
+
+                <div class="nombre-corte">{{ imagen.nombre }}</div>
+            </div>
+            {% endfor %}
+            
+            <!-- Duplicado para efecto infinito -->
+            {% for imagen in galeria_imagenes %}
+            <div class="tarjeta-imagen">
+<img src="{{ imagen.imagen }}" 
+     alt="{{ imagen.nombre }}"
+     {% if mostrar_defaults %}class="img-default"{% endif %}>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Formulario para agregar imágenes -->
+    <div class="formulario-galeria">
+        <h5>Agregar nuevo trabajo</h5>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'agregar_imagen_galeria' negocio_id=peluquero.negocio.id peluquero_id=peluquero.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_nombre">Nombre del corte</label>
+                <input type="text" name="nombre" class="form-control" id="id_nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="id_imagen">Imagen</label>
+                <input type="file" name="imagen" class="form-control" id="id_imagen" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="id_duracion">Duración (minutos)</label>
+                <input type="number" name="duracion" class="form-control" id="id_duracion" min="5" value="30" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Subir imagen</button>
+        </form>
+    </div>
+</div>
+
 </div>
 
 <script>
@@ -483,6 +812,76 @@ document.addEventListener('DOMContentLoaded', function() {
       return false;
     }
   });
+
+  // GALERÍA DE IMÁGENES - Funcionalidad mejorada
+  const galeriaSlider = document.getElementById('galeriaSlider');
+  if (galeriaSlider) {
+    // Configurar el arrastre
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    galeriaSlider.addEventListener('mousedown', (e) => {
+      isDown = true;
+      galeriaSlider.classList.add('active');
+      startX = e.pageX - galeriaSlider.offsetLeft;
+      scrollLeft = galeriaSlider.scrollLeft;
+    });
+
+    galeriaSlider.addEventListener('mouseleave', () => {
+      isDown = false;
+      galeriaSlider.classList.remove('active');
+    });
+
+    galeriaSlider.addEventListener('mouseup', () => {
+      isDown = false;
+      galeriaSlider.classList.remove('active');
+    });
+
+    galeriaSlider.addEventListener('mousemove', (e) => {
+      if(!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - galeriaSlider.offsetLeft;
+      const walk = (x - startX) * 2;
+      galeriaSlider.scrollLeft = scrollLeft - walk;
+    });
+
+    // Touch events para móviles
+    galeriaSlider.addEventListener('touchstart', (e) => {
+      isDown = true;
+      galeriaSlider.classList.add('active');
+      startX = e.touches[0].pageX - galeriaSlider.offsetLeft;
+      scrollLeft = galeriaSlider.scrollLeft;
+    });
+
+    galeriaSlider.addEventListener('touchend', () => {
+      isDown = false;
+      galeriaSlider.classList.remove('active');
+    });
+
+    galeriaSlider.addEventListener('touchmove', (e) => {
+      if(!isDown) return;
+      e.preventDefault();
+      const x = e.touches[0].pageX - galeriaSlider.offsetLeft;
+      const walk = (x - startX) * 2;
+      galeriaSlider.scrollLeft = scrollLeft - walk;
+    });
+
+    // Ajustar velocidad basada en cantidad de imágenes
+    function ajustarVelocidadSlider() {
+      const sliderInner = document.querySelector('.galeria-slider-inner');
+      if (!sliderInner) return;
+      
+      const cantidadImagenes = document.querySelectorAll('.tarjeta-imagen').length / 2;
+      const velocidadBase = 60;
+      const nuevaVelocidad = velocidadBase * (5 / Math.max(cantidadImagenes, 1));
+      
+      sliderInner.style.animationDuration = `${nuevaVelocidad}s`;
+    }
+    
+    ajustarVelocidadSlider();
+    window.addEventListener('resize', ajustarVelocidadSlider);
+  }
 });
 
 // Función global para eliminar turno
@@ -522,6 +921,42 @@ function eliminarTurno(icon) {
   if (diaContainer.querySelectorAll('.turno-item').length === 0) {
     diaContainer.querySelector('.turnos-container').innerHTML = '<p>No hay horarios configurados</p>';
   }
+}
+
+// Botón de basura para cada imagen de la galeria
+function eliminarImagenGaleria(imagenId, elemento) {
+  if (!confirm('¿Estás seguro de que quieres eliminar esta imagen?')) return;
+  
+  fetch(`/negocios/eliminar-imagen-galeria/${imagenId}/`, {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+      'Content-Type': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) throw new Error('Error en la respuesta del servidor');
+    return response.json();
+  })
+  .then(data => {
+    if (data.success) {
+      // Eliminar todas las instancias de la imagen (original y duplicado)
+      document.querySelectorAll(`.tarjeta-imagen button[onclick="eliminarImagenGaleria(${imagenId}, this)"]`).forEach(btn => {
+        btn.closest('.tarjeta-imagen').remove();
+      });
+      
+      // Recargar si no quedan imágenes
+      if (document.querySelectorAll('.tarjeta-imagen').length === 0) {
+        location.reload();
+      }
+    } else {
+      throw new Error(data.error || 'Error desconocido');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error al eliminar: ' + error.message);
+  });
 }
 </script>
 {% endblock %}

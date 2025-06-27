@@ -88,8 +88,8 @@ class ImagenGaleria(models.Model):
     )
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
-    duracion = models.PositiveIntegerField(default=30)
-    imagen = models.ImageField(upload_to='galeria/')
+    duracion = models.PositiveIntegerField(default=30, null=True, blank=True)  # minutos
+    imagen = models.ImageField(upload_to='galeria/') 
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):

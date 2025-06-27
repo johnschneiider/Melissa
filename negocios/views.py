@@ -13,6 +13,8 @@ import json
 from .forms import NegocioForm, PeluqueroForm, ImagenGaleriaForm
 from .models import Negocio, Peluquero, ImagenGaleria
 from datetime import datetime, timedelta, time
+import logging
+from django.conf import settings
 
 
 
@@ -231,6 +233,25 @@ def detalle_peluquero(request, negocio_id, peluquero_id):
             'turnos': turnos_dia
         })
     
+    # Manejo de la galería de imágenes
+    galeria_imagenes = peluquero.galeria.all()
+    mostrar_defaults = not galeria_imagenes.exists()
+    
+
+
+    if mostrar_defaults:
+        default_images = [
+            {'nombre': 'Corte Clásico', 'imagen': f'{settings.MEDIA_URL}galeria_default/default1.jpg'},
+            {'nombre': 'Degradado Moderno', 'imagen': f'{settings.MEDIA_URL}galeria_default/default2.jpeg'},
+            {'nombre': 'Barba Estilizada', 'imagen': f'{settings.MEDIA_URL}galeria_default/default3.jpeg'},
+            {'nombre': 'Corte Fade', 'imagen': f'{settings.MEDIA_URL}galeria_default/default4.jpeg'},
+            {'nombre': 'Tinte Profesional', 'imagen': f'{settings.MEDIA_URL}galeria_default/default5.jpg'},
+            {'nombre': 'Corte Pompadour', 'imagen': f'{settings.MEDIA_URL}galeria_default/default6.jpg'},
+            {'nombre': 'Arreglo de Barba', 'imagen': f'{settings.MEDIA_URL}galeria_default/default7.jpg'},
+            {'nombre': 'Corte Undercut', 'imagen': f'{settings.MEDIA_URL}galeria_default/default8.jpg'},
+        ]
+        galeria_imagenes = default_images
+    
     return render(request, 'negocios/detalle_peluquero.html', {
         'peluquero': peluquero,
         'form': form,
@@ -238,6 +259,8 @@ def detalle_peluquero(request, negocio_id, peluquero_id):
         'dias_semana': DIAS_SEMANA,
         'proximos_7_dias': proximos_7_dias,
         'horario_json': json.dumps(horario_data),
+        'galeria_imagenes': galeria_imagenes,
+        'mostrar_defaults': mostrar_defaults
     })
 
 def calcular_intervalos(inicio, fin, duracion_minutos):
@@ -406,3 +429,49 @@ def api_turnos_peluquero(request, peluquero_id):
                     continue
     
     return JsonResponse(eventos, safe=False)
+
+
+@login_required
+def agregar_imagen_galeria(request, negocio_id, peluquero_id):
+    peluquero = get_object_or_404(
+        Peluquero, 
+        id=peluquero_id, 
+        negocio_id=negocio_id, 
+        negocio__propietario=request.user
+    )
+    
+    if request.method == 'POST':
+        print("Datos del formulario recibidos:", request.POST)  # Debug
+        print("Archivos recibidos:", request.FILES)  # Debug
+        
+        form = ImagenGaleriaForm(request.POST, request.FILES)
+        if form.is_valid():
+            print("Formulario válido")  # Debug
+            imagen = form.save(commit=False)
+            imagen.peluquero = peluquero
+            imagen.save()
+            print("Imagen guardada con ID:", imagen.id)  # Debug
+            messages.success(request, "Imagen agregada a la galería.")
+            return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
+        else:
+            print("Errores del formulario:", form.errors)  # Debug
+            messages.error(request, "Error al subir la imagen.")
+    
+    return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
+
+logger = logging.getLogger(__name__)
+@require_POST
+@login_required
+
+def eliminar_imagen_galeria(request, imagen_id):
+    logger.info(f"Intento de eliminar imagen ID: {imagen_id} por usuario: {request.user}")
+    try:
+        imagen = ImagenGaleria.objects.get(
+            id=imagen_id,
+            peluquero__negocio__propietario=request.user
+        )
+        imagen.imagen.delete()  # Elimina el archivo físico
+        imagen.delete()         # Elimina el registro de la BD
+        return JsonResponse({'success': True})
+    except ImagenGaleria.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Imagen no encontrada'}, status=404)
