@@ -18,6 +18,19 @@ class ListaNegociosView(ListView):
     
     def get_queryset(self):
         return Negocio.objects.filter(activo=True).prefetch_related('peluqueros')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Obtener todos los peluqueros activos para cada negocio
+        negocios_con_peluqueros = []
+        for negocio in context['negocios']:
+            peluqueros = negocio.peluqueros.filter(activo=True)
+            negocios_con_peluqueros.append({
+                'negocio': negocio,
+                'peluqueros': peluqueros
+            })
+        context['negocios_con_peluqueros'] = negocios_con_peluqueros
+        return context
 
 class DetallePeluqueroView(DetailView):
     model = Peluquero
