@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'clientes',
     'negocios',  
     'widget_tweaks',
+
     
     #Autenticacioni con google o facebook
     'django.contrib.sites',
@@ -65,6 +66,9 @@ AUTHENTICATION_BACKENDS = [
 
 LOGIN_REDIRECT_URL = '/'  # redirige al home tras login
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'  # opcional
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = 'lista_negocios'
+LOGOUT_REDIRECT_URL = 'lista_negocios'
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True

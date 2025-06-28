@@ -1,0 +1,49 @@
+{% extends 'clientes/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">Peluquerías disponibles</h2>
+        <p class="lead">Selecciona un negocio para ver sus peluqueros y disponibilidad</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for negocio in negocios %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card negocio-card h-100">
+            {% if negocio.logo %}
+            <img src="{{ negocio.logo.url }}" class="card-img-top" alt="{{ negocio.nombre }}" style="height: 180px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+                <i class="bi bi-shop" style="font-size: 3rem;"></i>
+            </div>
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ negocio.nombre }}</h5>
+                <p class="card-text text-muted">
+                    <i class="bi bi-geo-alt"></i> {{ negocio.direccion|truncatechars:50 }}
+                </p>
+                <p class="card-text">
+                    <span class="badge bg-primary">
+                        {{ negocio.peluqueros.count }} peluquero{{ negocio.peluqueros.count|pluralize }}
+                    </span>
+                </p>
+            </div>
+            <div class="card-footer bg-white">
+                <a href="{% url 'clientes:detalle_peluquero' negocio.peluqueros.first.id %}" class="btn btn-primary w-100">
+                    Ver peluqueros
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No hay peluquerías disponibles en este momento.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

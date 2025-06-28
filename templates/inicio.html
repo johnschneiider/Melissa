@@ -69,6 +69,38 @@
         footer a:hover {
             color: white;
         }
+        .btn-option {
+            min-width: 200px;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            margin: 0.5rem;
+        }
+        .btn-client {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+        .btn-owner {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .modal-option {
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+        }
+        .modal-option:hover {
+            transform: translateY(-5px);
+        }
+        .modal-option .card {
+            transition: all 0.3s ease;
+        }
+        .modal-option:hover .card {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
@@ -81,8 +113,7 @@
             {% if user.is_authenticated %}
                 <span class="me-3"><i class="bi bi-person-circle"></i> {{ user.username }}</span>
                 <a href="{% url 'crear_negocio' %}" class="btn btn-outline-secondary me-2">Crear negocio</a>
-
-                {% if user.is_authenticated and user.negocios.exists %}
+                {% if user.negocios.exists %}
                     <a href="{% url 'mis_negocios' %}" class="btn btn-outline-primary me-2">Ver mis negocios</a>
                 {% endif %}
                 <form method="post" action="{% url 'account_logout' %}" style="display: inline;">
@@ -94,17 +125,90 @@
                 <a href="{% url 'account_signup' %}" class="btn gradient-btn">Registrarse</a>
             {% endif %}
         </div>
-
     </header>
 
     <section class="hero">
         <h1>Tu estilo, tu tiempo</h1>
         <p>Reserva turnos sin filas, sin llamadas, sin estrés. Melissa es la forma moderna de gestionar tu cita en peluquerías masculinas y femeninas de alta calidad.</p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'account_signup' %}" class="btn gradient-btn mt-3">Comienza ahora</a>
-        {% endif %}
+        
+        <div class="d-flex flex-wrap justify-content-center mt-4">
+            <!-- Botón directo para Clientes (sin modal) -->
+            <a href="{% url 'clientes:lista_negocios' %}" class="btn btn-client btn-option me-3">
+                <i class="bi bi-person-check"></i> Soy Cliente
+            </a>
+            
+            <!-- Botón para Dueños de Negocio - Muestra modal -->
+            <button class="btn btn-owner btn-option" data-bs-toggle="modal" data-bs-target="#ownerModal">
+                <i class="bi bi-briefcase"></i> Soy Dueño
+            </button>
+        </div>
     </section>
 
+    <!-- Modal para Dueños de Negocio (se mantiene igual) -->
+    <div class="modal fade" id="ownerModal" tabindex="-1" aria-labelledby="ownerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ownerModalLabel">Opciones para Dueños</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="row">
+                        {% if not user.is_authenticated %}
+                        <div class="col-md-6 mb-3">
+                            <a href="{% url 'account_login' %}?next={% url 'mis_negocios' %}" class="text-decoration-none">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <i class="bi bi-box-arrow-in-right" style="font-size: 2rem;"></i>
+                                        <h5>Iniciar Sesión</h5>
+                                        <p class="text-muted">Accede a tu cuenta existente</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{% url 'account_signup' %}?next={% url 'mis_negocios' %}" class="text-decoration-none">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
+                                        <h5>Registrarse</h5>
+                                        <p class="text-muted">Crea una nueva cuenta</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="col-12">
+                            <a href="{% url 'crear_negocio' %}" class="text-decoration-none">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <i class="bi bi-plus-circle" style="font-size: 2rem;"></i>
+                                        <h5>Registrar Negocio</h5>
+                                        <p class="text-muted">Agrega tu peluquería a nuestra plataforma</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% if user.is_authenticated and user.negocios.exists %}
+                        <div class="col-12 mt-3">
+                            <a href="{% url 'mis_negocios' %}" class="text-decoration-none">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <i class="bi bi-shop" style="font-size: 2rem;"></i>
+                                        <h5>Mis Negocios</h5>
+                                        <p class="text-muted">Administra tus peluquerías</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resto del contenido (secciones de información) -->
     <section class="section bg-white text-center">
         <div class="container">
             <h2>¿Quiénes somos?</h2>
@@ -129,19 +233,19 @@
             <div class="row mt-4">
                 <div class="col-md-4">
                     <blockquote class="blockquote">
-                        <p>“Desde que uso Melissa nunca más esperé turno. ¡Una maravilla!”</p>
+                        <p>"Desde que uso Melissa nunca más esperé turno. ¡Una maravilla!"</p>
                         <footer class="blockquote-footer">Laura P.</footer>
                     </blockquote>
                 </div>
                 <div class="col-md-4">
                     <blockquote class="blockquote">
-                        <p>“Es como tener un asistente personal. ¡Super útil para peluquerías modernas!”</p>
+                        <p>"Es como tener un asistente personal. ¡Super útil para peluquerías modernas!"</p>
                         <footer class="blockquote-footer">Andrés G.</footer>
                     </blockquote>
                 </div>
                 <div class="col-md-4">
                     <blockquote class="blockquote">
-                        <p>“Mis clientes están felices y yo también. Gestión total.”</p>
+                        <p>"Mis clientes están felices y yo también. Gestión total."</p>
                         <footer class="blockquote-footer">Marcela R. (dueña de peluquería)</footer>
                     </blockquote>
                 </div>
@@ -159,8 +263,8 @@
                 <div class="col-md-3">
                     <h6>Enlaces</h6>
                     <ul class="list-unstyled">
-                        <li><a href="#">Inicio</a></li>
-                        <li><a href="#">Preguntas frecuentes</a></li>
+                        <li><a href="/">Inicio</a></li>
+                        <li><a href="{% url 'clientes:lista_negocios' %}">Peluquerías</a></li>
                         <li><a href="#">Contacto</a></li>
                     </ul>
                 </div>
@@ -174,5 +278,7 @@
             </div>
         </div>
     </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
