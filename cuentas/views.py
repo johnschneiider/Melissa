@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .forms import ClienteRegistroForm, NegocioRegistroForm
 from django.contrib.auth.views import LoginView
+from django.urls import reverse_lazy
 
 
 def registro_cliente(request):
@@ -30,6 +31,11 @@ def registro_negocio(request):
 
 class LoginUsuario(LoginView):
     template_name = 'cuentas/login.html'
+    redirect_authenticated_user = True
+    
+    def get_success_url(self):
+        # Redirige a la lista de negocios después del login
+        return reverse_lazy('clientes:lista_negocios')
 
 
 

@@ -64,11 +64,11 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
-LOGIN_REDIRECT_URL = '/'  # redirige al home tras login
+LOGIN_REDIRECT_URL = '/' 
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'  # opcional
 LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = 'lista_negocios'
-LOGOUT_REDIRECT_URL = 'lista_negocios'
+LOGIN_REDIRECT_URL = 'clientes:lista_negocios'
+LOGOUT_REDIRECT_URL = 'clientes:lista_negocios'
 
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
