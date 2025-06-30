@@ -1,68 +1,262 @@
 {% extends "base.html" %}
-{% load i18n account socialaccount widget_tweaks %}
+{% load i18n account socialaccount static %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
+        <div class="col-xl-5 col-lg-6 col-md-8 col-sm-10">
 
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white text-center">
-                    <h4 class="mb-0">Registrarse</h4>
+            <!-- Tarjeta de registro -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Cabecera con efecto premium -->
+                <div class="card-header bg-gradient-primary text-white text-center py-4 position-relative">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: url('{% static "images/melissa-pattern.png" %}')"></div>
+                    <h3 class="position-relative mb-0">
+                        <i class="bi bi-person-plus me-2"></i> Crear cuenta premium
+                    </h3>
                 </div>
-                <div class="card-body">
-
+                
+                <!-- Cuerpo de la tarjeta -->
+                <div class="card-body p-4 p-lg-5">
+                    <!-- Mensajes de error -->
                     {% if form.errors %}
-                        <div class="alert alert-danger">
-                            <strong>Corrige los errores:</strong>
-                            <ul class="mb-0">
-                                {% for field in form %}
-                                    {% for error in field.errors %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
-                                {% endfor %}
-                                {% for error in form.non_field_errors %}
-                                    <li>{{ error }}</li>
-                                {% endfor %}
-                            </ul>
+                        <div class="alert alert-danger rounded-3 mb-4">
+                            <div class="d-flex align-items-start">
+                                <i class="bi bi-exclamation-octagon-fill me-3 mt-1"></i>
+                                <div>
+                                    <strong class="d-block mb-2">Corrige los siguientes errores:</strong>
+                                    <ul class="mb-0 ps-3">
+                                        {% for field in form %}
+                                            {% for error in field.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     {% endif %}
 
-                    <form method="post" action="{% url 'account_signup' %}" novalidate>
+                    <!-- Formulario de registro -->
+                    <form method="post" action="{% url 'account_signup' %}" class="needs-validation" novalidate>
                         {% csrf_token %}
+                        
                         {% for field in form %}
-                            <div class="mb-3">
-                                <label class="form-label">{{ field.label }}</label>
-                                {{ field|add_class:"form-control" }}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                
+                                <div class="input-group">
+                                    {% if field.name == 'email' %}
+                                        <span class="input-group-text bg-white"><i class="bi bi-envelope-fill text-primary"></i></span>
+                                    {% elif field.name == 'password1' or field.name == 'password2' %}
+                                        <span class="input-group-text bg-white"><i class="bi bi-lock-fill text-primary"></i></span>
+                                    {% else %}
+                                        <span class="input-group-text bg-white"><i class="bi bi-person-fill text-primary"></i></span>
+                                    {% endif %}
+                                    
+                                    {{ field|add_class:"form-control py-3" }}
+                                </div>
+                                
                                 {% if field.help_text %}
-                                    <div class="form-text small text-muted">{{ field.help_text|safe }}</div>
+                                    <div class="form-text text-muted small mt-2">{{ field.help_text|safe }}</div>
                                 {% endif %}
                             </div>
                         {% endfor %}
-                        <div class="d-grid">
-                            <button type="submit" class="btn gradient-btn">Registrarse</button>
+
+                        <!-- Botón de registro -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg py-3 fw-medium">
+                                <i class="bi bi-check-circle-fill me-2"></i> Crear cuenta premium
+                            </button>
                         </div>
                     </form>
 
-                    <hr class="my-4">
+                    <!-- Separador premium -->
+                    <div class="position-relative my-4">
+                        <hr class="border-1">
+                        <div class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                            o regístrate con
+                        </div>
+                    </div>
 
-                    <div class="text-center">
-                        <p class="mb-2">O usa una cuenta de terceros:</p>
-                        <a href="{% provider_login_url 'google' %}" class="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-2">
-                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" style="width:20px;">
-                            <span>Continuar con Google</span>
+                    <!-- Autenticación social -->
+                    <div class="mb-4">
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark rounded-3 py-3 w-100 d-flex align-items-center justify-content-center gap-3">
+                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" width="20">
+                            <span class="fw-medium">Continuar con Google</span>
                         </a>
                     </div>
 
-                    <p class="mt-4 text-center text-muted">
-                        ¿Ya tienes una cuenta? <a href="{% url 'account_login' %}">Inicia sesión</a>
-                    </p>
+                    <!-- Enlace a login -->
+                    <div class="text-center pt-3 border-top">
+                        <p class="mb-0">
+                            ¿Ya tienes una cuenta? 
+                            <a href="{% url 'account_login' %}" class="text-decoration-none fw-medium">
+                                Inicia sesión aquí
+                            </a>
+                        </p>
+                    </div>
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
+<!-- Estilos premium -->
+<style>
+    :root {
+        --primary: #6e48aa;
+        --primary-dark: #4b2d7f;
+        --secondary: #9d50bb;
+        --accent: #d4af37;
+    }
+    
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    }
+    
+    .card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(110, 72, 170, 0.2) !important;
+    }
+    
+    .rounded-3 {
+        border-radius: 0.75rem !important;
+    }
+    
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+    
+    .form-control {
+        border-radius: 0.5rem !important;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+        padding: 1rem 1.25rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(110, 72, 170, 0.15);
+    }
+    
+    .input-group-text {
+        background-color: white;
+        border-radius: 0.5rem 0 0 0.5rem !important;
+        border-right: none;
+    }
+    
+    .btn-primary {
+        background: var(--gradient-primary);
+        border: none;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(110, 72, 170, 0.3);
+    }
+    
+    .btn-outline-dark {
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-dark:hover {
+        background-color: #f8f9fa;
+        transform: translateY(-2px);
+    }
+    
+    .alert {
+        border-radius: 0.75rem !important;
+        border: none;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .card-body {
+            padding: 2.5rem !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .card-body {
+            padding: 2rem !important;
+        }
+        
+        .btn-lg {
+            padding: 0.875rem 1.5rem !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .container {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem 1rem !important;
+        }
+        
+        .card-body {
+            padding: 1.5rem !important;
+        }
+        
+        .form-control {
+            padding: 0.875rem 1rem !important;
+        }
+    }
+</style>
+
+<!-- Validación del formulario -->
+<script>
+    (function() {
+        'use strict';
+        
+        const form = document.querySelector('.needs-validation');
+        
+        form.addEventListener('submit', function(event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                // Enfocar el primer campo con error
+                const invalidField = form.querySelector('.is-invalid');
+                if (invalidField) {
+                    setTimeout(() => {
+                        invalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }
+            
+            form.classList.add('was-validated');
+        }, false);
+        
+        // Resetear validación al escribir
+        form.querySelectorAll('.form-control').forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.classList.contains('is-invalid')) {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        });
+    })();
+</script>
 
 {% providers_media_js %}
 {% endblock %}

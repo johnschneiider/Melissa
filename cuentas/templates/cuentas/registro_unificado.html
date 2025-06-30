@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load socialaccount %}
+
+{% block title %}Registro - Melissa{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="logo mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">M</div>
+                        <h2 class="fw-bold text-dark mb-2">Únete a Melissa</h2>
+                        <p class="text-muted">Crea tu cuenta y comienza a disfrutar</p>
+                    </div>
+
+                    <!-- Formulario -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Selección de tipo de cuenta -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark">¿Qué tipo de cuenta quieres crear?</label>
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <div class="form-check h-100">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_cliente" value="cliente" required>
+                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_cliente">
+                                            <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
+                                            <span class="fw-bold">Cliente</span>
+                                            <small class="text-muted">Reservar servicios</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check h-100">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_negocio" value="negocio" required>
+                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_negocio">
+                                            <i class="bi bi-shop fs-1 text-warning mb-2"></i>
+                                            <span class="fw-bold">Negocio</span>
+                                            <small class="text-muted">Ofrecer servicios</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-check h-100">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_profesional" value="profesional" required>
+                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_profesional">
+                                            <i class="bi bi-scissors fs-1 text-success mb-2"></i>
+                                            <span class="fw-bold">Profesional</span>
+                                            <small class="text-muted">Soy peluquero</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.tipo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.tipo.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Campos del formulario -->
+                        <div class="mb-3">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de usuario</label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Correo electrónico</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.telefono.id_for_label }}" class="form-label">Teléfono</label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telefono.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Contraseña</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password1.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmar contraseña</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.password2.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Botón de registro -->
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill mb-3">
+                            <i class="bi bi-person-plus me-2"></i>Crear cuenta
+                        </button>
+                    </form>
+
+                    <!-- Separador -->
+                    <div class="position-relative my-4">
+                        <hr class="border-1">
+                        <div class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                            o regístrate con
+                        </div>
+                    </div>
+
+                    <!-- Botón de Google -->
+                    <div class="mb-4">
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark rounded-pill py-3 w-100 d-flex align-items-center justify-content-center gap-3">
+                            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" width="20">
+                            <span class="fw-medium">Continuar con Google</span>
+                        </a>
+                    </div>
+
+                    <!-- Enlace a login -->
+                    <div class="text-center">
+                        <p class="mb-0 text-muted">
+                            ¿Ya tienes una cuenta? 
+                            <a href="{% url 'account_login' %}" class="text-decoration-none fw-bold">Inicia sesión</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-check-input:checked + .form-check-label {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.form-check-label {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-check-label:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.btn-outline-dark {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-dark:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+// Validación del formulario
+document.querySelectorAll('input[name="tipo"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.form-check-label').forEach(label => {
+            label.style.borderColor = '';
+            label.style.backgroundColor = '';
+        });
+        
+        if (this.checked) {
+            this.nextElementSibling.style.borderColor = '#0d6efd';
+            this.nextElementSibling.style.backgroundColor = '#f8f9ff';
+        }
+    });
+});
+</script>
+{% endblock %} 

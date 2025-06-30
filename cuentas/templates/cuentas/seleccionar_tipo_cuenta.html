@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Seleccionar Tipo de Cuenta - Melissa{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="logo mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">M</div>
+                        <h2 class="fw-bold text-dark mb-2">¡Bienvenido a Melissa!</h2>
+                        <p class="text-muted">Selecciona el tipo de cuenta que mejor se adapte a ti</p>
+                    </div>
+
+                    <!-- Formulario de selección -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Selección de tipo de cuenta -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark">¿Qué tipo de cuenta quieres crear?</label>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="form-check h-100">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_cliente" value="cliente" required>
+                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_cliente">
+                                            <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
+                                            <span class="fw-bold">Cliente</span>
+                                            <small class="text-muted">Reservar servicios</small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="form-check h-100">
+                                        <input class="form-check-input" type="radio" name="tipo" id="tipo_negocio" value="negocio" required>
+                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_negocio">
+                                            <i class="bi bi-shop fs-1 text-warning mb-2"></i>
+                                            <span class="fw-bold">Negocio</span>
+                                            <small class="text-muted">Ofrecer servicios</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información del usuario -->
+                        <div class="alert alert-info mb-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <div>
+                                    <strong>Cuenta conectada:</strong> {{ user.email }}
+                                    <br>
+                                    <small class="text-muted">Puedes cambiar esta información más tarde en tu perfil</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón de confirmación -->
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill">
+                            <i class="bi bi-check-circle me-2"></i>Confirmar tipo de cuenta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.logo {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.form-check-input:checked + .form-check-label {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.form-check-label {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-check-label:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+}
+</style>
+
+<script>
+// Validación del formulario
+document.querySelectorAll('input[name="tipo"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('.form-check-label').forEach(label => {
+            label.style.borderColor = '';
+            label.style.backgroundColor = '';
+        });
+        
+        if (this.checked) {
+            this.nextElementSibling.style.borderColor = '#0d6efd';
+            this.nextElementSibling.style.backgroundColor = '#f8f9ff';
+        }
+    });
+});
+
+// Validación antes de enviar
+document.querySelector('form').addEventListener('submit', function(e) {
+    const tipoSeleccionado = document.querySelector('input[name="tipo"]:checked');
+    if (!tipoSeleccionado) {
+        e.preventDefault();
+        alert('Por favor, selecciona un tipo de cuenta.');
+    }
+});
+</script>
+{% endblock %} 

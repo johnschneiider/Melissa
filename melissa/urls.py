@@ -9,10 +9,10 @@ def inicio(request):
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('cuentas/', include('cuentas.urls')),
     path('accounts/', include('allauth.urls')),
-    path('', inicio, name='inicio'), 
-    path('negocios/', include('negocios.urls')),
-    path('', include('clientes.urls')),
+    path('cuentas/', include('cuentas.urls')),
+    path('', inicio, name='inicio'),
+    path('negocios/', include(('negocios.urls', 'negocios'), namespace='negocios')),
     path('clientes/', include('clientes.urls')),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('profesionales/', include(('profesionales.urls', 'profesionales'), namespace='profesionales')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

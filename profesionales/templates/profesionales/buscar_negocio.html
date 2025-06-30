@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Buscar Negocio - Melissa{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h2 class="fw-bold mb-4 text-center">Buscar Negocios</h2>
+                    <p class="text-muted text-center mb-4">Encuentra un negocio y envía tu solicitud de matrícula</p>
+                    {% if matricula_activa %}
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Ya tienes una solicitud de matrícula <strong>({{ matricula_activa.get_estado_display }})</strong> en <strong>{{ matricula_activa.negocio.nombre }}</strong>.
+                            {% if matricula_activa.estado == 'pendiente' %}
+                                <form method="post" action="{% url 'profesionales:cancelar_matricula' matricula_activa.id %}" class="d-inline ms-2">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">Cancelar Solicitud</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="row g-4">
+                        {% for negocio in negocios %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold">{{ negocio.nombre }}</h5>
+                                    <p class="card-text mb-2"><i class="bi bi-geo-alt me-1"></i> {{ negocio.direccion }}</p>
+                                    <form method="post" class="mt-3">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="negocio_id" value="{{ negocio.id }}">
+                                        <div class="mb-2">
+                                            <textarea name="mensaje" class="form-control" rows="2" placeholder="Mensaje opcional para el negocio" {% if matricula_activa %}disabled{% endif %}></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100" {% if matricula_activa %}disabled{% endif %}>
+                                            <i class="bi bi-send me-1"></i>Enviar Solicitud
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p class="text-muted">No hay negocios disponibles en este momento.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{% url 'profesionales:panel' %}" class="btn btn-outline-secondary">Volver al Panel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

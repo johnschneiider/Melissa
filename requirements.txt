@@ -1,0 +1,46 @@
+# Django y dependencias principales
+Django==5.2.3
+django-allauth==65.9.0
+django-widget-tweaks==1.5.0
+django-cors-headers==4.7.0
+
+# Base de datos
+psycopg2-binary==2.9.9
+
+# Manejo de imágenes
+Pillow==11.2.1
+pillow-avif-plugin==1.5.2
+
+# Variables de entorno
+python-dotenv==1.1.1
+
+# Utilidades de fecha y tiempo
+python-dateutil==2.9.0.post0
+holidays==0.75
+
+# Validación y serialización
+pydantic==2.11.7
+pydantic-settings==2.10.1
+
+# HTTP y requests
+requests==2.32.4
+httpx==0.28.1
+
+# Servidor de desarrollo
+gunicorn==23.0.0
+
+# Logging y debugging
+rich==14.0.0
+
+# Seguridad
+cryptography==45.0.4
+
+# Utilidades
+click==8.2.1
+typer==0.16.0
+
+# Desarrollo y testing (opcional)
+pytest==8.2.2
+pytest-django==4.10.0
+black==24.10.0
+flake8==7.1.1

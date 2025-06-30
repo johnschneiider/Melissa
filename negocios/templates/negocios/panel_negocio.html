@@ -2,280 +2,419 @@
 {% load dict_utils %}
 {% block content %}
 
+<div class="container-fluid px-4 py-5">
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <!-- Header del negocio -->
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="display-5 fw-bold text-dark mb-2">{{ negocio.nombre }}</h1>
+                    <p class="lead text-muted mb-0">
+                        <i class="bi bi-geo-alt-fill text-primary"></i> {{ negocio.direccion }}
+                    </p>
+                </div>
+                
+                {% if negocio.logo %}
+                <div class="position-relative d-inline-block mt-3 mt-md-0">
+                    <img src="{{ negocio.logo.url }}" class="img-fluid rounded-circle shadow-lg border border-3 border-white" style="width: 100px; height: 100px; object-fit: cover; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
+                    <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-1 border border-2 border-white">
+                        <i class="bi bi-pencil-fill text-white" style="font-size: 0.8rem;" data-bs-toggle="modal" data-bs-target="#editarLogoModal"></i>
+                    </div>
+                </div>
+                {% else %}
+                <button class="btn btn-primary rounded-pill px-4 py-2 mt-3 mt-md-0" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
+                    <i class="bi bi-upload me-2"></i>Subir logo
+                </button>
+                {% endif %}
+            </div>
 
-<div class="container mt-5">
-    <h2>{{ negocio.nombre }}</h2>
-    <p><strong>Dirección:</strong> {{ negocio.direccion }}</p>
+            <!-- Horario de atención -->
+            {% if horario_guardado %}
+            <div class="card border-0 shadow-sm mb-5">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-4 text-dark">
+                        <i class="bi bi-clock-history text-primary me-2"></i>Horario de atención
+                    </h3>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for dia in dias %}
+                            {% with dia_activo=dia|add:"_activo" dia_inicio=dia|add:"_inicio" dia_fin=dia|add:"_fin" %}
+                                {% if horario_guardado|get:dia_activo %}
+                                <div class="horario-card bg-gradient-primary">
+                                    <strong>{{ dia }}</strong><br>
+                                    <small>{{ horario_guardado|get:dia_inicio }} - {{ horario_guardado|get:dia_fin }}</small>
+                                </div>
+                                {% else %}
+                                <div class="horario-card bg-light text-muted">
+                                    <strong>{{ dia }}</strong><br>
+                                    <small>Cerrado</small>
+                                </div>
+                                {% endif %}
+                            {% endwith %}
+                        {% endfor %}
+                    </div>
+                    <button class="btn btn-link text-primary mt-3 ps-0" data-bs-toggle="modal" data-bs-target="#horarioModal">
+                        <i class="bi bi-pencil-square me-1"></i> Editar horario
+                    </button>
+                </div>
+            </div>
+            {% endif %}
 
-  {% if negocio.logo %}
-      <div class="position-relative d-inline-block mb-3">
-          <img src="{{ negocio.logo.url }}" class="img-fluid rounded shadow" style="max-height: 150px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
-          <div class="position-absolute bottom-0 end-0 p-1">
-              <i class="bi bi-pencil-fill bg-dark text-white rounded-circle p-1" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editarLogoModal"></i>
-          </div>
-      </div>
-  {% else %}
-      <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editarLogoModal">
-          Subir logo de negocio
-      </button>
-  {% endif %}
+            <!-- Sección de profesionales aceptados -->
+            <div class="card border-0 shadow-sm mb-5">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="h5 mb-0 text-dark">
+                            <i class="bi bi-person-check text-success me-2"></i>Profesionales aceptados
+                        </h3>
+                        <span class="badge bg-success bg-opacity-10 text-success">{{ profesionales_aceptados|length }} aceptados</span>
+                    </div>
+                    {% if profesionales_aceptados %}
+                    <div class="row g-3">
+                        {% for prof in profesionales_aceptados %}
+                        <div class="col-12 col-md-6 mb-4">
+                            <div class="card h-100 shadow-sm border-info flex-row flex-wrap align-items-center">
+                                {% if prof.foto_perfil %}
+                                <img src="{{ prof.foto_perfil.url }}" class="rounded-circle m-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center m-3" style="width: 80px; height: 80px;">
+                                    <i class="bi bi-person-fill fs-2"></i>
+                                </div>
+                                {% endif %}
+                                <div class="card-body flex-grow-1">
+                                    <h5 class="card-title mb-1 text-dark">{{ prof.nombre_completo }}</h5>
+                                    <div class="mb-1">
+                                        <span class="badge bg-secondary">{{ prof.especialidad|default:'Sin especialidad' }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <i class="bi bi-clock-history text-primary me-1"></i>
+                                        <span class="text-muted small">{{ prof.horario }}</span>
+                                    </div>
+                                    <div class="mb-2 d-flex align-items-center">
+                                        <span class="me-2">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= prof.promedio %}
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                {% elif prof.promedio|floatformat:1 == forloop.counter0|stringformat:'d' %}
+                                                    <i class="bi bi-star-half text-warning"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star text-warning"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="text-muted small">{{ prof.promedio|floatformat:1 }} ({{ prof.num_calificaciones }} calificaciones)</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <i class="bi bi-briefcase text-success me-1"></i>
+                                        <span class="text-muted small">Servicios: {{ prof.servicios }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <i class="bi bi-calendar-check text-info me-1"></i>
+                                        <span class="text-muted small">Reservas: {{ prof.reservas_count }}</span>
+                                    </div>
+                                    <a href="{% url 'negocios:ver_perfil_profesional' prof.id %}?negocio_id={{ negocio.id }}" class="btn btn-outline-primary btn-sm mt-2">Ver perfil</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-people fs-1 text-muted opacity-25 mb-3"></i>
+                        <p class="text-muted">No hay profesionales aceptados aún</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
 
-
-{% if horario_guardado %}
-  <p><strong>Horario de atención:</strong></p>
-  <div class="d-flex flex-wrap gap-3 mb-3">
-    {% for dia in dias %}
-      {% with dia_activo=dia|add:"_activo" dia_inicio=dia|add:"_inicio" dia_fin=dia|add:"_fin" %}
-        {% if horario_guardado|get:dia_activo %}
-          <div class="horario-card text-white">
-            <strong>{{ dia }}</strong><br>
-            <small>{{ horario_guardado|get:dia_inicio }} - {{ horario_guardado|get:dia_fin }}</small>
-          </div>
-        {% else %}
-          <div class="horario-card text-white bg-secondary">
-            <strong>{{ dia }}</strong><br>
-            <small>Cerrado</small>
-          </div>
-        {% endif %}
-      {% endwith %}
-    {% endfor %}
-  </div>
-{% endif %}
-
-
-
-
-
-
-
-    <h4>Peluqueros del negocio</h4>
-    <p>Estos son los peluqueros que trabajan en tu negocio. Puedes crear nuevos
-
-
-    <hr>
-    <h5>Peluqueros registrados: {{ peluqueros|length }}</h5>
-
-<div class="row mt-4">
-  {% for p in peluqueros %}
-    <div class="col-md-4 mb-3">
-      <a href="{% url 'detalle_peluquero' negocio.id p.id %}" class="text-decoration-none">
-        <div class="horario-card h-100 d-flex align-items-center justify-content-between gap-3 text-white">
-          {% if p.avatar %}
-            <img src="{{ p.avatar.url }}" class="rounded-circle" style="width: 50px; height: 50px;">
-          {% else %}
-            <i class="bi bi-person-circle fs-2"></i>
-          {% endif %}
-          <div class="flex-grow-1">
-            <strong>{{ p.nombre }}</strong><br>
-            <small>{{ p.horario }}</small>
-          </div>
-          <a href="{% url 'eliminar_peluquero' negocio.id p.id %}" onclick="event.stopPropagation();" class="text-white" title="Eliminar">
-            <i class="bi bi-trash fs-5"></i>
-          </a>
+            <!-- Acciones rápidas -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="h5 mb-4 text-dark">
+                        <i class="bi bi-lightning-charge text-primary me-2"></i>Acciones rápidas
+                    </h3>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'negocios:dashboard_negocio' negocio.id %}" class="list-group-item list-group-item-action border-0 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                    <i class="bi bi-graph-up"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 text-dark">Dashboard y Métricas</h5>
+                                    <small class="text-muted">Visualiza KPIs, gráficos y estadísticas de tu negocio</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{% url 'negocios:editar_negocio' negocio.id %}" class="list-group-item list-group-item-action border-0 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                    <i class="bi bi-building"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 text-dark">Editar información del negocio</h5>
+                                    <small class="text-muted">Actualiza los datos básicos de tu negocio</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                            </div>
+                        </a>
+                        <a href="{% url 'negocios:configurar_negocio' negocio.id %}" class="list-group-item list-group-item-action border-0 py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                    <i class="bi bi-gear"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1 text-dark">Configurar negocio</h5>
+                                    <small class="text-muted">Configura horarios y detalles de tu negocio</small>
+                                </div>
+                                <i class="bi bi-chevron-right ms-auto text-muted"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
-      </a>
     </div>
-  {% endfor %}
 </div>
-
-
-
-
-    <hr>
-
-    <h4>Acciones</h4>
-    <ul class="list-group">
-        <li class="list-group-item">
-            <a href="#">🖼 Editar información del negocio</a>
-        </li>
-        <li class="list-group-item">
-            <a href="{% url 'crear_peluquero' negocio.id %}">👥 Crear peluquero</a>
-        </li>
-        <li class="list-group-item">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#horarioModal">🕒 Asignar horario de atención</a>
-
-        </li>
-    </ul>
-</div>
-
-
-
-
-
-
 
 <!-- Modal para asignar horario -->
 <div class="modal fade" id="horarioModal" tabindex="-1" aria-labelledby="horarioModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <form method="POST" action="{% url 'asignar_horario_negocio' negocio.id %}">
-      {% csrf_token %}
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Asignar horario de atención</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" action="{% url 'negocios:panel_negocio' negocio.id %}">
+            {% csrf_token %}
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-dark">Asignar horario de atención</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Asignar todos los días -->
+                    <div class="mb-4 border rounded-3 p-3 bg-light">
+                        <h6 class="text-dark mb-3">Horario general para todos los días</h6>
+                        <div class="row g-2">
+                            <div class="col-md-5">
+                                <label class="form-label small text-muted">Hora de inicio</label>
+                                <input type="time" id="horaInicioGlobal" class="form-control">
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small text-muted">Hora de cierre</label>
+                                <input type="time" id="horaFinGlobal" class="form-control">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-primary w-100" onclick="aplicarHorarioGeneral()">
+                                    Aplicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-          <!-- Asignar todos los días -->
-          <div class="mb-4 border rounded p-3 bg-light">
-            <h6>Horario general para todos los días</h6>
-            <div class="row">
-              <div class="col-md-5">
-                <input type="time" id="horaInicioGlobal" class="form-control" placeholder="Inicio">
-              </div>
-              <div class="col-md-5">
-                <input type="time" id="horaFinGlobal" class="form-control" placeholder="Fin">
-              </div>
-              <div class="col-md-2">
-                <button type="button" class="btn btn-outline-primary w-100" onclick="aplicarHorarioGeneral()">Aplicar a todos</button>
-              </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary rounded-pill" onclick="activarTodosLosDias()">
+                            <i class="bi bi-check2-all me-1"></i> Activar todos los días
+                        </button>
+                    </div>
+
+                    <!-- Horario por día -->
+                    <div class="row g-3">
+                        {% for dia in dias %}
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label class="form-check-label fw-bold text-dark">{{ dia }}</label>
+                                    <div class="form-check form-switch">
+                                        {% with key=dia|stringformat:"s_activo" %}
+                                        <input class="form-check-input" type="checkbox" name="dias_activos" value="{{ dia }}"
+                                            {% if horario_guardado.key %}checked{% endif %}>
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted">Apertura</label>
+                                        {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
+                                        <input type="time" class="form-control" name="inicio_{{ dia }}" id="inicio_{{ dia }}"
+                                            value="{{ horario_guardado.inicio }}">
+                                        {% endwith %}
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted">Cierre</label>
+                                        {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
+                                        <input type="time" class="form-control" name="fin_{{ dia }}" id="fin_{{ dia }}"
+                                            value="{{ horario_guardado.fin }}">
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <p class="text-muted small mt-3"><i class="bi bi-info-circle me-1"></i> Los festivos en Colombia se gestionan automáticamente o puedes personalizarlos.</p>
+                </div>
+
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar cambios</button>
+                </div>
             </div>
-          </div>
-
-<div class="mb-3">
-  <button type="button" class="btn btn-outline-secondary" onclick="activarTodosLosDias()">Activar todos los días</button>
-</div>
-
-          <!-- Horario por día -->
-          <div class="row">
-{% for dia in dias %}
-  <div class="col-md-6 mb-3">
-    <div class="border rounded p-3">
-      <label class="form-check-label fw-bold">{{ dia }}</label>
-      <div class="form-check form-switch mb-2">
-        {% with key=dia|stringformat:"s_activo" %}
-          <input class="form-check-input" type="checkbox" name="dias_activos" value="{{ dia }}"
-            {% if horario_guardado.key %}checked{% endif %}>
-        {% endwith %}
-        <label class="form-check-label">Habilitar</label>
-      </div>
-      <div class="d-flex gap-2">
-        {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
-          <input type="time" class="form-control" name="inicio_{{ dia }}" id="inicio_{{ dia }}"
-            value="{{ horario_guardado.inicio }}">
-          <input type="time" class="form-control" name="fin_{{ dia }}" id="fin_{{ dia }}"
-            value="{{ horario_guardado.fin }}">
-        {% endwith %}
-      </div>
+        </form>
     </div>
-  </div>
-{% endfor %}
-
-
-          </div>
-
-
-          <hr>
-          <p class="text-muted small">* Los festivos en Colombia se gestionan automáticamente o puedes personalizarlos.</p>
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-gradient">Guardar horario</button>
-        </div>
-      </div>
-    </form>
-  </div>
 </div>
 
 <!-- Modal para editar logo -->
 <div class="modal fade" id="editarLogoModal" tabindex="-1" aria-labelledby="editarLogoLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{% url 'panel_negocio' negocio.id %}" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editarLogoLabel">Editar logo del negocio</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <div class="mb-3 text-center">
-            {% if negocio.logo %}
-              <img src="{{ negocio.logo.url }}" class="img-thumbnail mb-2" style="max-height: 120px;">
-            {% endif %}
-            <input type="file" name="logo" class="form-control" accept="image/*">
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-gradient">Guardar cambios</button>
-        </div>
-      </div>
-    </form>
-  </div>
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{% url 'negocios:panel_negocio' negocio.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title text-dark">Editar logo del negocio</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        {% if negocio.logo %}
+                        <img src="{{ negocio.logo.url }}" class="img-thumbnail rounded-circle mb-3 border-0 shadow-sm" style="width: 150px; height: 150px; object-fit: cover;">
+                        {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                            <i class="bi bi-camera fs-1 text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <input type="file" name="logo" class="form-control" accept="image/*" id="logoInput">
+                        <label for="logoInput" class="btn btn-outline-primary rounded-pill mt-3 w-100">
+                            <i class="bi bi-upload me-2"></i> Seleccionar imagen
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar logo</button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
 
-
 <style>
-  /*Estilo modal */
-.bi-pencil-fill {
-    background-color: rgba(0,0,0,0.6);
-    transition: background-color 0.2s;
-}
-.bi-pencil-fill:hover {
-    background-color: rgba(0,0,0,0.8);
-    cursor: pointer;
-}
-</style>
-
-
-<style>
+    /* Estilos generales */
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
     .hover-shadow:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
-        transform: scale(1.02);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-2px);
+    }
+    
+    /* Tarjetas de horario */
+    .horario-card {
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        text-align: center;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        min-width: 100px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .horario-card.bg-gradient-primary {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: white;
+    }
+    
+    .horario-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Modal personalizado */
+    .modal-content {
+        border-radius: 1rem;
+    }
+    
+    /* Botones */
+    .btn-primary {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2563eb;
+        border-color: #2563eb;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 2rem;
+        }
+        
+        .horario-card {
+            min-width: 80px;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
     }
 </style>
 
 <script>
 function activarTodosLosDias() {
-  const dias = {{ dias|safe }};
-  dias.forEach(dia => {
-    const check = document.querySelector(`input[name="dias_activos"][value="${dia}"]`);
-    if (check) {
-      check.checked = true;
-    }
-  });
+    const diasSemana = {{ dias|safe }};
+    diasSemana.forEach(dia => {
+        const check = document.querySelector(`input[name="dias_activos"][value="${dia}"]`);
+        if (check) {
+            check.checked = true;
+        }
+    });
+    
+    // Mostrar notificación
+    const toast = new bootstrap.Toast(document.createElement('div'));
+    toast._element.classList.add('toast', 'align-items-center', 'text-white', 'bg-primary', 'border-0');
+    toast._element.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                Todos los días han sido activados
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    document.body.appendChild(toast._element);
+    toast.show();
+    setTimeout(() => {
+        toast._element.remove();
+    }, 3000);
 }
-</script>
 
-<script>
 function aplicarHorarioGeneral() {
-  const inicio = document.getElementById('horaInicioGlobal').value;
-  const fin = document.getElementById('horaFinGlobal').value;
-  const dias = {{ dias|safe }};
+    const inicio = document.getElementById('horaInicioGlobal').value;
+    const fin = document.getElementById('horaFinGlobal').value;
+    const diasSemana = {{ dias|safe }};
 
-  dias.forEach(dia => {
-    const inputInicio = document.getElementById(`inicio_${dia}`);
-    const inputFin = document.getElementById(`fin_${dia}`);
-    if (inputInicio && inputFin) {
-      inputInicio.value = inicio;
-      inputFin.value = fin;
-    }
-  });
+    diasSemana.forEach(dia => {
+        const inputInicio = document.getElementById(`inicio_${dia}`);
+        const inputFin = document.getElementById(`fin_${dia}`);
+        if (inputInicio && inputFin) {
+            inputInicio.value = inicio;
+            inputFin.value = fin;
+        }
+    });
+    
+    // Mostrar notificación
+    const toast = new bootstrap.Toast(document.createElement('div'));
+    toast._element.classList.add('toast', 'align-items-center', 'text-white', 'bg-primary', 'border-0');
+    toast._element.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                Horario aplicado a todos los días
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    document.body.appendChild(toast._element);
+    toast.show();
+    setTimeout(() => {
+        toast._element.remove();
+    }, 3000);
 }
 </script>
-
-<style>
-.horario-card {
-  min-width: 140px;
-  padding: 15px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3573a9, #02c0ca);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  font-size: 0.95rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  color: #ffffff;
-}
-
-.horario-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-}
-
-.horario-card * {
-  color: inherit !important;
-}
-</style>
-
-
 
 {% endblock %}

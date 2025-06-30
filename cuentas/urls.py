@@ -1,10 +1,16 @@
 from django.urls import path
-from .views import registro_cliente, registro_negocio, LoginUsuario
-from django.contrib.auth.views import LogoutView
+from . import views
+from .views import api_notificaciones
+
+app_name = 'cuentas'
 
 urlpatterns = [
-    path('registro/cliente/', registro_cliente, name='registro_cliente'),
-    path('registro/negocio/', registro_negocio, name='registro_negocio'),
-    path('login/', LoginUsuario.as_view(), name='login'),
-    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
+    path('registro/', views.registro_unificado, name='registro_unificado'),
+    path('login/', views.LoginPersonalizadoView.as_view(), name='login_personalizado'),
+    path('logout/', views.logout_personalizado, name='logout_personalizado'),
+    path('perfil/', views.perfil_usuario, name='perfil_usuario'),
+    path('cambiar-tipo/', views.cambiar_tipo_usuario, name='cambiar_tipo_usuario'),
+    path('seleccionar-tipo-google/', views.seleccionar_tipo_cuenta_google, name='seleccionar_tipo_google'),
+    path('completar-perfil-google/', views.completar_perfil_google, name='completar_perfil_google'),
+    path('api/notificaciones/', api_notificaciones, name='api_notificaciones'),
 ]

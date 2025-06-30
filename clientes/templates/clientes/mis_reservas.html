@@ -1,0 +1,459 @@
+{% extends 'clientes/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+
+
+<style>
+    .reserva-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    .reserva-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .badge-estado {
+        font-size: 0.8rem;
+    }
+    .pendiente {
+        background-color: #ffc107;
+        color: #000;
+    }
+    .confirmado {
+        background-color: #28a745;
+    }
+    .cancelado {
+        background-color: #dc3545;
+    }
+    .completado {
+        background-color: #17a2b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">Mis Reservas</h2>
+    
+    <div class="row">
+        {% for reserva in reservas %}
+        <div class="col-md-6 mb-4">
+            <div class="card reserva-card" data-bs-toggle="modal" data-bs-target="#reservaModal" 
+                 data-reserva-id="{{ reserva.id }}"
+                 data-reserva-peluquero="{{ reserva.peluquero.nombre }}"
+                 data-reserva-fecha="{{ reserva.fecha|date:'d/m/Y' }}"
+                 data-reserva-hora="{{ reserva.hora_inicio|time:'H:i' }}"
+                 data-reserva-servicio="{{ reserva.servicio.nombre|default:'No especificado' }}"
+                 data-reserva-notas="{{ reserva.notas|default:'Sin notas' }}"
+                 data-reserva-estado="{{ reserva.estado }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="card-title">{{ reserva.peluquero.nombre }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ reserva.peluquero.negocio.nombre }}</h6>
+                        </div>
+                        <span class="badge badge-estado {{ reserva.estado }}">
+                            {{ reserva.get_estado_display }}
+                        </span>
+                    </div>
+                    <div class="mt-3">
+                        <p class="card-text mb-1">
+                            <i class="bi bi-calendar-event"></i> {{ reserva.fecha|date:"l, d F Y" }}
+                        </p>
+                        <p class="card-text mb-1">
+                            <i class="bi bi-clock"></i> {{ reserva.hora_inicio|time:"H:i" }} - {{ reserva.hora_fin|time:"H:i" }}
+                        </p>
+                        {% if reserva.servicio %}
+                        <p class="card-text">
+                            <i class="bi bi-scissors"></i> {{ reserva.servicio.nombre }}
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                No tienes reservas activas actualmente.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de Detalle de Reserva -->
+<div class="modal fade" id="reservaModal" tabindex="-1" aria-labelledby="reservaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reservaModalLabel">Detalles de la Reserva</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6>Peluquero:</h6>
+                    <p id="modal-peluquero"></p>
+                </div>
+                <div class="mb-3">
+                    <h6>Fecha:</h6>
+                    <p id="modal-fecha"></p>
+                </div>
+                <div class="mb-3">
+                    <h6>Hora:</h6>
+                    <p id="modal-hora"></p>
+                </div>
+                <div class="mb-3">
+                    <h6>Servicio:</h6>
+                    <p id="modal-servicio"></p>
+                </div>
+                <div class="mb-3">
+                    <h6>Notas:</h6>
+                    <p id="modal-notas"></p>
+                </div>
+                <div class="mb-3">
+                    <h6>Estado:</h6>
+                    <p><span class="badge" id="modal-estado"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-danger" id="btn-cancelar">Cancelar Reserva</button>
+                <button type="button" class="btn btn-primary" id="btn-reagendar">Reagendar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Reagendamiento -->
+<div class="modal fade" id="reagendarModal" tabindex="-1" aria-labelledby="reagendarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reagendarModalLabel">Reagendar Reserva</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="reagendarForm" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="reserva_id" id="reagendar-reserva-id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nueva_fecha" class="form-label">Nueva Fecha</label>
+                        <input type="date" class="form-control" id="nueva_fecha" name="nueva_fecha" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nueva_hora" class="form-label">Nueva Hora</label>
+                        <input type="time" class="form-control" id="nueva_hora" name="nueva_hora" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Reagendamiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="csrf_token_js" value="{{ csrf_token }}">
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Constantes y variables
+    const reservaModal = document.getElementById('reservaModal');
+    const reagendarModal = new bootstrap.Modal(document.getElementById('reagendarModal'));
+    const hoy = new Date().toISOString().split('T')[0];
+    let reservaIdActual = null;
+    
+    // Elementos del DOM que se usan frecuentemente
+    const DOM_ELEMENTS = {
+        modalPeluquero: document.getElementById('modal-peluquero'),
+        modalFecha: document.getElementById('modal-fecha'),
+        modalHora: document.getElementById('modal-hora'),
+        modalServicio: document.getElementById('modal-servicio'),
+        modalNotas: document.getElementById('modal-notas'),
+        modalEstado: document.getElementById('modal-estado'),
+        btnCancelar: document.getElementById('btn-cancelar'),
+        btnReagendar: document.getElementById('btn-reagendar'),
+        nuevaFecha: document.getElementById('nueva_fecha'),
+        nuevaHora: document.getElementById('nueva_hora'),
+        reagendarForm: document.getElementById('reagendarForm'),
+        reagendarReservaId: document.getElementById('reagendar-reserva-id')
+    };
+
+    // Funciones de utilidad
+    const utils = {
+        getCSRFToken: () => {
+            const input = document.getElementById('csrf_token_js');
+            if (input) return input.value;
+            const token = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!token) {
+                throw new Error('CSRF token no encontrado');
+            }
+            return token.value;
+        },
+        
+        showAlert: (message, type = 'success') => {
+            // Implementar un sistema de notificaciones más elegante
+            alert(message); // Puedes reemplazar esto con un toast/sweet alert
+        },
+        
+        handleApiError: (error, defaultMessage = 'Ocurrió un error') => {
+            console.error('API Error:', error);
+            let errorMessage = defaultMessage;
+            
+            if (error instanceof Error) {
+                errorMessage = error.message;
+            } else if (typeof error === 'string') {
+                errorMessage = error;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            }
+            
+            utils.showAlert(errorMessage, 'error');
+            return errorMessage;
+        },
+        
+        validateResponse: async (response) => {
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error HTTP: ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Respuesta no válida del servidor');
+            }
+            
+            return response.json();
+        },
+        
+        resetFormErrors: () => {
+            document.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(el => {
+                el.remove();
+            });
+        }
+    };
+
+    // Manejar la apertura del modal de detalles
+    reservaModal.addEventListener('show.bs.modal', function(event) {
+        try {
+            const button = event.relatedTarget;
+            reservaIdActual = button.getAttribute('data-reserva-id');
+            
+            // Validar que el ID de reserva existe
+            if (!reservaIdActual) {
+                throw new Error('No se pudo identificar la reserva');
+            }
+            
+            // Actualizar contenido del modal
+            DOM_ELEMENTS.modalPeluquero.textContent = button.getAttribute('data-reserva-peluquero') || 'No especificado';
+            DOM_ELEMENTS.modalFecha.textContent = button.getAttribute('data-reserva-fecha') || 'No especificada';
+            DOM_ELEMENTS.modalHora.textContent = button.getAttribute('data-reserva-hora') || 'No especificada';
+            DOM_ELEMENTS.modalServicio.textContent = button.getAttribute('data-reserva-servicio') || 'No especificado';
+            DOM_ELEMENTS.modalNotas.textContent = button.getAttribute('data-reserva-notas') || 'No hay notas';
+            
+            // Actualizar estado
+            const estado = button.getAttribute('data-reserva-estado') || 'pendiente';
+            DOM_ELEMENTS.modalEstado.textContent = estado.charAt(0).toUpperCase() + estado.slice(1);
+            DOM_ELEMENTS.modalEstado.className = 'badge ' + estado;
+            
+            // Mostrar/ocultar botones según estado
+            const isDisabled = estado === 'cancelado' || estado === 'completado';
+            DOM_ELEMENTS.btnCancelar.disabled = isDisabled;
+            DOM_ELEMENTS.btnReagendar.disabled = isDisabled;
+            
+        } catch (error) {
+            utils.handleApiError(error, 'Error al cargar los detalles de la reserva');
+            // Cierra el modal si hay un error
+            bootstrap.Modal.getInstance(reservaModal).hide();
+        }
+    });
+    
+    // Manejar cancelación de reserva
+DOM_ELEMENTS.btnCancelar.addEventListener('click', async function() {
+    try {
+        if (!reservaIdActual) {
+            throw new Error('No se ha seleccionado ninguna reserva');
+        }
+        
+        if (!confirm('¿Estás seguro de que deseas cancelar esta reserva?')) {
+            return;
+        }
+        
+        const csrfToken = utils.getCSRFToken();
+        
+        const response = await fetch(
+            `{% url 'clientes:cancelar_reserva' 0 %}`.replace('0', reservaIdActual), 
+            {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'  // Asegura que las cookies se incluyan
+            }
+        );
+        
+        const data = await utils.validateResponse(response);
+        
+        if (data.success) {
+            utils.showAlert(data.message || 'Reserva cancelada exitosamente');
+            location.reload();
+        } else {
+            throw new Error(data.message || 'No se pudo cancelar la reserva');
+        }
+        
+    } catch (error) {
+        utils.handleApiError(error);
+    }
+});
+    
+    // Manejar apertura del modal de reagendamiento
+    DOM_ELEMENTS.btnReagendar.addEventListener('click', function() {
+        try {
+            if (!reservaIdActual) {
+                throw new Error('No se ha seleccionado ninguna reserva');
+            }
+            
+            DOM_ELEMENTS.reagendarReservaId.value = reservaIdActual;
+            DOM_ELEMENTS.nuevaFecha.value = '';
+            DOM_ELEMENTS.nuevaHora.value = '';
+            DOM_ELEMENTS.nuevaFecha.min = hoy;
+            
+            utils.resetFormErrors();
+            reagendarModal.show();
+            
+        } catch (error) {
+            utils.handleApiError(error);
+        }
+    });
+    
+    // Manejar envío del formulario de reagendamiento
+    DOM_ELEMENTS.reagendarForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        try {
+            const csrfToken = utils.getCSRFToken();
+            const formData = {
+                fecha: DOM_ELEMENTS.nuevaFecha.value,
+                hora_inicio: DOM_ELEMENTS.nuevaHora.value
+            };
+            
+            // Validación básica del lado del cliente
+            if (!formData.fecha || !formData.hora_inicio) {
+                throw new Error('Por favor completa todos los campos');
+            }
+            
+            if (new Date(formData.fecha) < new Date(hoy)) {
+                throw new Error('No puedes seleccionar una fecha pasada');
+            }
+            
+            const response = await fetch(
+                `{% url 'clientes:reagendar_reserva' 0 %}`.replace('0', reservaIdActual), 
+                {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(formData)
+                }
+            );
+            
+            const data = await utils.validateResponse(response);
+            
+            if (data.success) {
+                utils.showAlert(data.message || 'Reserva reagendada exitosamente');
+                reagendarModal.hide();
+                location.reload();
+            } else {
+                // Mostrar errores de validación del servidor en el formulario
+                if (data.errors) {
+                    utils.resetFormErrors();
+                    
+                    for (const [field, messages] of Object.entries(data.errors)) {
+                        const input = document.getElementById(`nueva_${field}`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = messages.join(', ');
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                    
+                    throw new Error('Por favor corrige los errores en el formulario');
+                }
+                
+                throw new Error(data.message || 'No se pudo reagendar la reserva');
+            }
+            
+        } catch (error) {
+            utils.handleApiError(error);
+        }
+    });
+    
+    // Limpiar al cerrar modales
+    reservaModal.addEventListener('hidden.bs.modal', function() {
+        reservaIdActual = null;
+    });
+    
+    document.getElementById('reagendarModal').addEventListener('hidden.bs.modal', function() {
+        utils.resetFormErrors();
+    });
+    
+    // Validación en tiempo real para fecha de reagendamiento
+    DOM_ELEMENTS.nuevaFecha.addEventListener('change', function() {
+        if (this.value < hoy) {
+            this.setCustomValidity('No puedes seleccionar una fecha pasada');
+            this.classList.add('is-invalid');
+        } else {
+            this.setCustomValidity('');
+            this.classList.remove('is-invalid');
+        }
+    });
+    
+    // Mejorar UX: Deshabilitar horas pasadas para la fecha seleccionada
+    DOM_ELEMENTS.nuevaFecha.addEventListener('change', function() {
+        if (this.value === hoy) {
+            const now = new Date();
+            const currentHour = now.getHours().toString().padStart(2, '0');
+            const currentMinute = now.getMinutes().toString().padStart(2, '0');
+            DOM_ELEMENTS.nuevaHora.min = `${currentHour}:${currentMinute}`;
+        } else {
+            DOM_ELEMENTS.nuevaHora.removeAttribute('min');
+        }
+    });
+});
+</script>
+
+<style>
+    /* ... estilos existentes ... */
+    
+    .toast {
+        transition: opacity 0.3s ease;
+        margin-bottom: 10px;
+    }
+    .bg-success {
+        background-color: #28a745 !important;
+    }
+    .bg-error {
+        background-color: #dc3545 !important;
+    }
+    .spinner-border {
+        margin-left: 8px;
+    }
+</style>
+{% endblock %}

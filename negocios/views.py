@@ -1,477 +1,499 @@
-from .forms import NegocioForm
+from .forms import NegocioForm, ImagenNegocioForm
 from django.contrib.auth.decorators import login_required
-from .models import Negocio, Peluquero
+from .models import Negocio, MetricaNegocio, ReporteMensual, ImagenNegocio, Servicio, ServicioNegocio
+from clientes.models import Calificacion
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_POST
-from .forms import PeluqueroForm
-from .forms import ImagenGaleriaForm
+from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.csrf import csrf_protect
 from datetime import datetime, timedelta
 from django.http import JsonResponse
 import holidays
 import json
-from .forms import NegocioForm, PeluqueroForm, ImagenGaleriaForm
-from .models import Negocio, Peluquero, ImagenGaleria
 from datetime import datetime, timedelta, time
 import logging
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.utils.html import escape
+import re
+from django.contrib.auth import get_user_model
+from django.urls import reverse
+from django.utils import timezone
+from django.db.models import Avg, Sum, Count, Max, Q
+import numpy as np
+from profesionales.models import Matriculacion, Profesional
+from profesionales.models import Notificacion
+from negocios.models import ImagenNegocio as ImagenGaleria
+from django.db import models
 
+logger = logging.getLogger(__name__)
 
+def sanitize_input(text):
+    """Sanitizar entrada de texto para prevenir XSS"""
+    if text:
+        # Remover caracteres peligrosos
+        text = re.sub(r'<script.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL)
+        text = re.sub(r'<.*?>', '', text)
+        return escape(text.strip())
+    return text
 
 @login_required
 def crear_negocio(request):
-    print("¿Usuario autenticado?", request.user.is_authenticated)
-    print("Tipo de usuario:", repr(request.user.tipo))
-
-    if request.user.tipo.strip().lower() != 'cliente':
-        messages.error(request, "Solo los clientes pueden crear negocios.")
+    """Vista simplificada para crear negocio"""
+    # Verificar que el usuario sea de tipo negocio
+    if not hasattr(request.user, 'tipo') or request.user.tipo != 'negocio':
+        messages.error(request, 'Solo usuarios de tipo negocio pueden crear negocios.')
         return redirect('inicio')
-
+    
     if request.method == 'POST':
         form = NegocioForm(request.POST, request.FILES)
         if form.is_valid():
-            negocio = form.save(commit=False)
-            negocio.propietario = request.user
-            negocio.save()
-            messages.success(request, "Negocio creado exitosamente.")
-            return redirect('panel_negocio', negocio_id=negocio.id)
+            try:
+                negocio = form.save(commit=False)
+                negocio.propietario = request.user
+                negocio.activo = True
+                negocio.save()
+                
+                logger.info(f"Negocio '{negocio.nombre}' creado por {request.user.username}")
+                messages.success(request, f'¡Felicidades! Tu negocio "{negocio.nombre}" ha sido creado exitosamente.')
+                
+                # Redirigir al panel del negocio
+                return redirect('negocios:panel_negocio', negocio_id=negocio.id)
+                
+            except Exception as e:
+                logger.error(f"Error al crear negocio: {e}")
+                messages.error(request, 'Hubo un error al crear tu negocio. Por favor, intenta nuevamente.')
     else:
         form = NegocioForm()
-
+    
     return render(request, 'negocios/crear_negocio.html', {'form': form})
 
+@login_required
+@require_GET
+def mis_negocios(request):
+    try:
+        negocios_activos = request.user.negocios.filter(activo=True)
+        negocios_eliminados = request.user.negocios.filter(activo=False)
+        tiene_eliminados = negocios_eliminados.exists()
 
+        return render(request, 'negocios/mis_negocios.html', {
+            'negocios': negocios_activos,
+            'negocios_eliminados': negocios_eliminados,
+            'tiene_eliminados': tiene_eliminados,
+        })
+    except Exception as e:
+        logger.error(f"Error en mis_negocios: {str(e)}")
+        messages.error(request, "Error al cargar tus negocios.")
+        return redirect('inicio')
 
+@require_POST
+@login_required
+@csrf_protect
+def eliminar_negocio(request, negocio_id):
+    """Vista para eliminar un negocio"""
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+    
+    if request.method == 'POST':
+        try:
+            negocio.delete()
+            messages.success(request, f'El negocio "{negocio.nombre}" ha sido eliminado.')
+            return redirect('negocios:mis_negocios')
+        except Exception as e:
+            logger.error(f"Error al eliminar negocio: {e}")
+            messages.error(request, 'Error al eliminar el negocio.')
+    
+    return render(request, 'negocios/confirmar_eliminacion_negocio.html', {'negocio': negocio})
+
+@require_POST
+@login_required
+@csrf_protect
+def restaurar_negocio(request, negocio_id):
+    try:
+        negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user, activo=False)
+        negocio.activo = True
+        negocio.save()
+        logger.info(f"Negocio '{negocio.nombre}' restaurado por {request.user.username}")
+        messages.success(request, f"El negocio '{negocio.nombre}' ha sido restaurado.")
+    except Exception as e:
+        logger.error(f"Error restaurando negocio: {str(e)}")
+        messages.error(request, "Error al restaurar el negocio.")
+    
+    return redirect('negocios:mis_negocios')
 
 @login_required
-def mis_negocios(request):
-    negocios_activos = request.user.negocios.filter(activo=True)
-    negocios_eliminados = request.user.negocios.filter(activo=False)
-    tiene_eliminados = negocios_eliminados.exists()
+@csrf_protect
+def configurar_negocio(request, negocio_id):
+    try:
+        negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
 
-    return render(request, 'negocios/mis_negocios.html', {
-        'negocios': negocios_activos,
-        'negocios_eliminados': negocios_eliminados,
-        'tiene_eliminados': tiene_eliminados,
+        if request.method == 'POST':
+            form = NegocioForm(request.POST, request.FILES, instance=negocio)
+            if form.is_valid():
+                form.save()
+                logger.info(f"Negocio '{negocio.nombre}' actualizado por {request.user.username}")
+                messages.success(request, "Negocio actualizado.")
+                return redirect('negocios:configurar_negocio', negocio_id=negocio.id)
+            else:
+                logger.warning(f"Formulario inválido al configurar negocio: {form.errors}")
+        else:
+            form = NegocioForm(instance=negocio)
+
+        return render(request, 'negocios/configurar_negocio.html', {'form': form, 'negocio': negocio})
+    except Exception as e:
+        logger.error(f"Error en configurar_negocio: {str(e)}")
+        messages.error(request, "Error al cargar la configuración del negocio.")
+        return redirect('negocios:mis_negocios')
+
+@login_required
+@csrf_protect
+def panel_negocio(request, negocio_id):
+    try:
+        negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+
+        if request.method == 'POST' and 'logo' in request.FILES:
+            try:
+                negocio.logo = request.FILES['logo']
+                negocio.save()
+                logger.info(f"Logo actualizado para negocio '{negocio.nombre}' por {request.user.username}")
+                messages.success(request, "Logo actualizado correctamente.")
+                return redirect('negocios:panel_negocio', negocio_id=negocio.id)
+            except Exception as e:
+                logger.error(f"Error actualizando logo: {str(e)}")
+                messages.error(request, "Error al actualizar el logo.")
+
+        # Profesionales aceptados (matriculación aprobada)
+        profesionales_aceptados = []
+        for m in negocio.matriculaciones.filter(estado='aprobada').select_related('profesional'):
+            prof = m.profesional
+            # Horario (puedes ajustar el formato según tu modelo real)
+            horarios = prof.horarios.all()
+            horario_str = ', '.join([f"{h.get_dia_semana_display()}: {h.hora_inicio.strftime('%H:%M')} - {h.hora_fin.strftime('%H:%M')}" for h in horarios]) if horarios else 'No asignado'
+            # Calificaciones
+            calificaciones = prof.calificaciones.filter(negocio=negocio)
+            promedio = round(calificaciones.aggregate(models.Avg('puntaje'))['puntaje__avg'] or 0, 1)
+            num_calificaciones = calificaciones.count()
+            # Servicios
+            servicios = prof.servicios.all()
+            servicios_nombres = ', '.join([s.nombre for s in servicios]) if servicios else 'No asignados'
+            # Reservas
+            from clientes.models import Reserva
+            reservas_count = Reserva.objects.filter(profesional=prof, peluquero=negocio).count()
+            profesionales_aceptados.append({
+                'id': prof.id,
+                'nombre_completo': prof.nombre_completo,
+                'especialidad': prof.especialidad,
+                'foto_perfil': prof.foto_perfil,
+                'horario': horario_str,
+                'promedio': promedio,
+                'num_calificaciones': num_calificaciones,
+                'servicios': servicios_nombres,
+                'reservas_count': reservas_count,
+            })
+
+        dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+        horario_guardado = {}
+        for dia in dias:
+            base = negocio.horario_atencion.get(dia, {})
+            horario_guardado[f"{dia}_inicio"] = base.get("inicio", "")
+            horario_guardado[f"{dia}_fin"] = base.get("fin", "")
+            horario_guardado[f"{dia}_activo"] = bool(base)
+
+        return render(request, 'negocios/panel_negocio.html', {
+            'negocio': negocio,
+            'profesionales_aceptados': profesionales_aceptados,
+            'dias': dias,
+            'horario_guardado': horario_guardado,
+        })
+    except Exception as e:
+        logger.error(f"Error en panel_negocio: {str(e)}")
+        messages.error(request, "Error al cargar el panel del negocio.")
+        return redirect('negocios:mis_negocios')
+
+@login_required
+def dashboard_negocio(request, negocio_id):
+    # Obtener el negocio específico del usuario
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+
+    # Métricas diarias (últimos 30 días) - datos de ejemplo para mostrar
+    fechas = ['01/06', '02/06', '03/06', '04/06', '05/06', '06/06', '07/06', '08/06', '09/06', '10/06']
+    reservas = [5, 8, 12, 6, 9, 15, 11, 7, 13, 10]
+    ingresos = [150, 240, 360, 180, 270, 450, 330, 210, 390, 300]
+    clientes_nuevos = [2, 3, 5, 1, 4, 6, 3, 2, 5, 4]
+
+    # Reporte mensual actual - datos de ejemplo
+    reporte = type('Reporte', (), {
+        'total_reservas': 45,
+        'ingresos_totales': 1350,
+        'clientes_nuevos': 15,
+        'dia_mas_ocupado': 'Sábado',
+        'hora_pico': '14:00'
+    })()
+
+    # Top peluquero del mes - datos de ejemplo
+    peluquero_top = type('Peluquero', (), {
+        'nombre': 'María García',
+        'avatar': None
+    })()
+    peluquero_top_score = 4.8
+
+    # Ventas por mes (últimos 12 meses) - datos de ejemplo
+    meses = ['01/24', '02/24', '03/24', '04/24', '05/24', '06/24']
+    ventas_mes = [1200, 1350, 1100, 1400, 1600, 1350]
+
+    # Días más ocupados
+    dias_ocupados = 'Sábado'
+    hora_pico = '14:00'
+
+    context = {
+        'negocio': negocio,
+        'fechas': fechas,
+        'reservas': reservas,
+        'ingresos': ingresos,
+        'clientes_nuevos': clientes_nuevos,
+        'meses': meses,
+        'ventas_mes': ventas_mes,
+        'reporte': reporte,
+        'peluquero_top': peluquero_top,
+        'peluquero_top_score': peluquero_top_score,
+        'dias_ocupados': dias_ocupados,
+        'hora_pico': hora_pico,
+    }
+    return render(request, 'negocios/dashboard_negocio.html', context)
+
+@require_GET
+def detalle_negocio(request, negocio_id):
+    """Vista pública para ver detalles del negocio"""
+    negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
+    # Calificaciones percentil 75
+    calificaciones = Calificacion.objects.filter(negocio=negocio).values_list('puntaje', flat=True)
+    calificacion_percentil = 5
+    if calificaciones:
+        calificacion_percentil = round(float(np.percentile(list(calificaciones), 75)), 1)
+    # Estado abierto/cerrado
+    ahora = datetime.now()
+    dia_semana = ahora.strftime('%A')
+    dia_semana_es = {
+        'Monday': 'Lunes', 'Tuesday': 'Martes', 'Wednesday': 'Miércoles', 'Thursday': 'Jueves', 'Friday': 'Viernes', 'Saturday': 'Sábado', 'Sunday': 'Domingo'
+    }[dia_semana]
+    horario = negocio.horario_atencion.get(dia_semana_es, {})
+    abierto = False
+    proximo_cambio = None
+    if horario and 'inicio' in horario and 'fin' in horario:
+        try:
+            inicio = datetime.strptime(horario['inicio'], '%H:%M').time()
+            fin = datetime.strptime(horario['fin'], '%H:%M').time()
+            if inicio <= ahora.time() <= fin:
+                abierto = True
+                proximo_cambio = fin.strftime('%H:%M')
+            else:
+                abierto = False
+                proximo_cambio = inicio.strftime('%H:%M')
+        except Exception:
+            abierto = False
+    # Ciudad (asumimos que está en la dirección)
+    ciudad = negocio.direccion.split(',')[-1].strip() if ',' in negocio.direccion else negocio.direccion
+    # Imágenes
+    logo = negocio.logo
+    portada = negocio.portada
+    galeria = ImagenGaleria.objects.filter(negocio=negocio)
+    imagenes = negocio.imagenes.all().order_by('-created_at')
+    # Servicios del negocio
+    servicios = negocio.servicios_negocio.select_related('servicio').all()
+    # Profesionales matriculados aprobados
+    matriculaciones = Matriculacion.objects.filter(negocio=negocio, estado='aprobada').select_related('profesional')
+    profesionales = [m.profesional for m in matriculaciones]
+    peluqueros_info = []
+    for profesional in profesionales:
+        avatar = profesional.foto_perfil if hasattr(profesional, 'foto_perfil') else None
+        especialidad = profesional.especialidad if hasattr(profesional, 'especialidad') else ''
+        descripcion = profesional.descripcion if hasattr(profesional, 'descripcion') else ''
+        servicios_prof = profesional.servicios.all() if hasattr(profesional, 'servicios') else []
+        peluquero_info = {
+            'id': profesional.id,
+            'nombre': profesional.nombre_completo,
+            'avatar': avatar,
+            'especialidad': especialidad,
+            'descripcion': descripcion,
+            'servicios': servicios_prof,
+            'promedio': 5,  # Puedes calcular el promedio real si tienes calificaciones
+            'num_calificaciones': 0,  # Puedes calcular el número real si tienes calificaciones
+        }
+        peluqueros_info.append(peluquero_info)
+    # Comentarios
+    comentarios = Calificacion.objects.filter(negocio=negocio).exclude(comentario='').order_by('-fecha_calificacion')
+    return render(request, 'negocios/detalle_negocio.html', {
+        'negocio': negocio,
+        'peluqueros_info': peluqueros_info,
+        'calificacion_percentil': calificacion_percentil,
+        'abierto': abierto,
+        'proximo_cambio': proximo_cambio,
+        'ciudad': ciudad,
+        'logo': logo,
+        'portada': portada,
+        'galeria': galeria,
+        'imagenes': imagenes,
+        'servicios': servicios,
+        'profesionales': profesionales,
+        'comentarios': comentarios,
     })
 
-
-@require_POST
 @login_required
-def eliminar_negocio(request, negocio_id):
+def editar_negocio(request, negocio_id):
+    """Vista para editar un negocio y su galería de imágenes"""
     negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-    negocio.activo = False
-    negocio.save()
-    messages.success(request, "Negocio eliminado correctamente.")
-    return redirect('mis_negocios')
-
-@require_POST
-@login_required
-def restaurar_negocio(request, negocio_id):
-    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user, activo=False)
-    negocio.activo = True
-    negocio.save()
-    messages.success(request, f"El negocio '{negocio.nombre}' ha sido restaurado.")
-    return redirect('mis_negocios')
-
-
-
-@login_required
-def configurar_negocio(request, negocio_id):
-    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-
+    imagenes = negocio.imagenes.all()
+    imagen_form = ImagenNegocioForm()
     if request.method == 'POST':
         form = NegocioForm(request.POST, request.FILES, instance=negocio)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Negocio actualizado.")
-            return redirect('configurar_negocio', negocio_id=negocio.id)
+        if 'agregar_imagen' in request.POST:
+            imagen_form = ImagenNegocioForm(request.POST, request.FILES)
+            if imagen_form.is_valid():
+                nueva_imagen = imagen_form.save(commit=False)
+                nueva_imagen.negocio = negocio
+                nueva_imagen.save()
+                messages.success(request, 'Imagen agregada a la galería.')
+                return redirect('negocios:editar_negocio', negocio_id=negocio.id)
+        elif form.is_valid():
+            negocio = form.save(commit=False)
+            negocio.save()
+            form.save_m2m()
+            # Si se agregó un nuevo servicio, créalo y asígnalo
+            nuevo_servicio = form.cleaned_data.get('nuevo_servicio')
+            if nuevo_servicio:
+                servicio, creado = Servicio.objects.get_or_create(nombre=nuevo_servicio)
+                negocio.servicios.add(servicio)
+            messages.success(request, 'Negocio actualizado exitosamente.')
+            # Redirige según el tipo de usuario
+            if hasattr(request.user, 'tipo') and request.user.tipo == 'negocio':
+                return redirect('negocios:panel_negocio', negocio_id=negocio.id)
+            else:
+                return redirect('negocios:detalle_negocio', negocio_id=negocio.id)
     else:
         form = NegocioForm(instance=negocio)
-
-    return render(request, 'negocios/configurar_negocio.html', {'form': form, 'negocio': negocio})
-
-
-
-@login_required
-def panel_negocio(request, negocio_id):
-    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-
-    if request.method == 'POST' and 'logo' in request.FILES:
-        negocio.logo = request.FILES['logo']
-        negocio.save()
-        messages.success(request, "Logo actualizado correctamente.")
-        return redirect('panel_negocio', negocio_id=negocio.id)
-
-    peluqueros = negocio.peluqueros.filter(activo=True)
-    dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-
-    horario_guardado = {}
-    for dia in dias:
-        base = negocio.horario_atencion.get(dia, {})
-        horario_guardado[f"{dia}_inicio"] = base.get("inicio", "")
-        horario_guardado[f"{dia}_fin"] = base.get("fin", "")
-        horario_guardado[f"{dia}_activo"] = bool(base)
-
-    return render(request, 'negocios/panel_negocio.html', {
-        'negocio': negocio,
-        'peluqueros': peluqueros,
-        'dias': dias,
-        'horario_guardado': horario_guardado,
-    })
-
-
-
-@login_required
-def crear_peluquero(request, negocio_id):
-    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-
-    #if negocio.peluqueros.exists():
-    #    messages.info(request, "Este negocio ya tiene un peluquero asignado.")
-    #    return redirect('panel_negocio', negocio_id=negocio.id)
-
-    Peluquero.objects.create(
-        negocio=negocio,
-        nombre="Peluquero Default",
-        horario="Lunes a Viernes de 9am a 6pm"
-    )
-
-    messages.success(request, "Peluquero creado correctamente.")
-    return redirect('panel_negocio', negocio_id=negocio.id)
-
-
-from .models import Peluquero
-@login_required
-def detalle_peluquero(request, negocio_id, peluquero_id):
-    peluquero = get_object_or_404(
-        Peluquero, 
-        id=peluquero_id, 
-        negocio_id=negocio_id, 
-        negocio__propietario=request.user
-    )
-    
-    # Configuración de días de la semana
-    DIAS_SEMANA = [
-        {'nombre': 'Lunes', 'festivo': False},
-        {'nombre': 'Martes', 'festivo': False},
-        {'nombre': 'Miércoles', 'festivo': False},
-        {'nombre': 'Jueves', 'festivo': False},
-        {'nombre': 'Viernes', 'festivo': False},
-        {'nombre': 'Sábado', 'festivo': False},
-        {'nombre': 'Domingo', 'festivo': True}
-    ]
-    
-    # Procesar formulario
-    if request.method == 'POST':
-        form = PeluqueroForm(request.POST, request.FILES, instance=peluquero)
-        if form.is_valid():
-            # Procesar horario
-            horario_json = request.POST.get('horario_json', '{}')
-            try:
-                horario_data = json.loads(horario_json)
-                peluquero.horario = horario_data
-                form.save()
-                messages.success(request, "Datos del peluquero actualizados correctamente.")
-                return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
-            except json.JSONDecodeError as e:
-                messages.error(request, f"Error en el formato del horario: {str(e)}")
-    else:
-        form = PeluqueroForm(instance=peluquero)
-    
-    # Preparar datos para la plantilla
-    horario_data = peluquero.horario or {}
-    for dia in DIAS_SEMANA:
-        dia['turnos'] = horario_data.get(dia['nombre'], {}).get('turnos', [])
-    
-    # Generar próxima semana con intervalos calculados
-    co_holidays = holidays.CountryHoliday('CO')
-    today = datetime.now().date()
-    proximos_7_dias = []
-    
-    for delta in range(0, 7):
-        fecha = today + timedelta(days=delta)
-        nombre_dia = fecha.strftime('%A')
-        nombre_dia_es = {
-            'Monday': 'Lunes', 
-            'Tuesday': 'Martes', 
-            'Wednesday': 'Miércoles',
-            'Thursday': 'Jueves', 
-            'Friday': 'Viernes', 
-            'Saturday': 'Sábado',
-            'Sunday': 'Domingo'
-        }.get(nombre_dia, nombre_dia)
-        
-        es_festivo = fecha in co_holidays or nombre_dia_es == 'Domingo'
-        turnos_config = horario_data.get(nombre_dia_es, {}).get('turnos', [])
-        turnos_dia = []
-        
-        for turno in turnos_config:
-            try:
-                # Parsear horas y duración
-                hora_inicio = datetime.strptime(turno['inicio'], '%H:%M').time()
-                hora_fin = datetime.strptime(turno['fin'], '%H:%M').time()
-                duracion = int(turno.get('duracion', 30))
-                
-                # Calcular intervalos para este turno
-                intervalos = calcular_intervalos(hora_inicio, hora_fin, duracion)
-                
-                turnos_dia.append({
-                    'inicio': hora_inicio,
-                    'fin': hora_fin,
-                    'duracion': duracion,
-                    'disponible': turno.get('disponible', True),
-                    'intervalos': intervalos
-                })
-            except (ValueError, KeyError) as e:
-                print(f"Error procesando turno: {e}")
-                continue
-        
-        proximos_7_dias.append({
-            'fecha': fecha,
-            'nombre_dia': nombre_dia_es,
-            'festivo': es_festivo,
-            'turnos': turnos_dia
-        })
-    
-    # Manejo de la galería de imágenes
-    galeria_imagenes = peluquero.galeria.all()
-    mostrar_defaults = not galeria_imagenes.exists()
-    
-
-
-    if mostrar_defaults:
-        default_images = [
-            {'nombre': 'Corte Clásico', 'imagen': f'{settings.MEDIA_URL}galeria_default/default1.jpg'},
-            {'nombre': 'Degradado Moderno', 'imagen': f'{settings.MEDIA_URL}galeria_default/default2.jpeg'},
-            {'nombre': 'Barba Estilizada', 'imagen': f'{settings.MEDIA_URL}galeria_default/default3.jpeg'},
-            {'nombre': 'Corte Fade', 'imagen': f'{settings.MEDIA_URL}galeria_default/default4.jpeg'},
-            {'nombre': 'Tinte Profesional', 'imagen': f'{settings.MEDIA_URL}galeria_default/default5.jpg'},
-            {'nombre': 'Corte Pompadour', 'imagen': f'{settings.MEDIA_URL}galeria_default/default6.jpg'},
-            {'nombre': 'Arreglo de Barba', 'imagen': f'{settings.MEDIA_URL}galeria_default/default7.jpg'},
-            {'nombre': 'Corte Undercut', 'imagen': f'{settings.MEDIA_URL}galeria_default/default8.jpg'},
-        ]
-        galeria_imagenes = default_images
-    
-    return render(request, 'negocios/detalle_peluquero.html', {
-        'peluquero': peluquero,
+    return render(request, 'negocios/editar_negocio.html', {
         'form': form,
-        'form_imagen': ImagenGaleriaForm(),
-        'dias_semana': DIAS_SEMANA,
-        'proximos_7_dias': proximos_7_dias,
-        'horario_json': json.dumps(horario_data),
-        'galeria_imagenes': galeria_imagenes,
-        'mostrar_defaults': mostrar_defaults
+        'negocio': negocio,
+        'imagenes': imagenes,
+        'imagen_form': imagen_form,
     })
 
-def calcular_intervalos(inicio, fin, duracion_minutos):
-    """Calcula los intervalos de tiempo basados en la duración configurada"""
-    intervalos = []
-    
-    # Convertir a minutos desde medianoche para facilitar cálculos
-    inicio_minutos = inicio.hour * 60 + inicio.minute
-    fin_minutos = fin.hour * 60 + fin.minute
-    
-    # Validar que la duración sea positiva
-    duracion_minutos = max(1, duracion_minutos)
-    
-    tiempo_actual = inicio_minutos
-    
-    while tiempo_actual + duracion_minutos <= fin_minutos:
-        # Calcular hora inicio y fin para este intervalo
-        h_inicio = tiempo_actual // 60
-        m_inicio = tiempo_actual % 60
-        h_fin = (tiempo_actual + duracion_minutos) // 60
-        m_fin = (tiempo_actual + duracion_minutos) % 60
-        
-        # Crear objetos time para el intervalo
-        inicio_intervalo = time(h_inicio, m_inicio)
-        fin_intervalo = time(h_fin, m_fin)
-        
-        intervalos.append({
-            'inicio': inicio_intervalo,
-            'fin': fin_intervalo
-        })
-        
-        # Avanzar al siguiente intervalo
-        tiempo_actual += duracion_minutos
-    
-    return intervalos
-
-
-from django.views.decorators.http import require_POST
+@login_required
+def solicitudes_matricula(request):
+    user = request.user
+    if user.tipo != 'negocio':
+        messages.error(request, 'Acceso solo para negocios.')
+        return redirect('inicio')
+    negocios = user.negocio_set.all()
+    solicitudes = Matriculacion.objects.filter(negocio__in=negocios, estado='pendiente').select_related('profesional', 'negocio')
+    return render(request, 'negocios/solicitudes_matricula.html', {'solicitudes': solicitudes})
 
 @login_required
-def eliminar_peluquero(request, negocio_id, peluquero_id):
-    peluquero = get_object_or_404(Peluquero, id=peluquero_id, negocio_id=negocio_id, negocio__propietario=request.user)
-
-    if request.method == 'POST':
-        confirmar = request.POST.get('confirmar')
-        if confirmar == 'SI':
-            peluquero.activo = False
-            peluquero.save()
-            messages.success(request, "Peluquero desactivado correctamente.")
-            return redirect('panel_negocio', negocio_id=negocio_id)
-        else:
-            messages.info(request, "Operación cancelada.")
-            return redirect('panel_negocio', negocio_id=negocio_id)
-
-    return render(request, 'negocios/confirmar_eliminacion_peluquero.html', {
-        'peluquero': peluquero,
-        'negocio_id': negocio_id
-    })  
-    
-import holidays
-
-def festivos_colombia():
-    co_holidays = holidays.CountryHoliday('CO')
-    return [date for date in co_holidays]
-
+def ver_perfil_profesional(request, profesional_id):
+    profesional = get_object_or_404(Profesional, id=profesional_id)
+    negocio_id = request.GET.get('negocio_id')
+    negocio = None
+    if negocio_id:
+        from .models import Negocio
+        try:
+            negocio = Negocio.objects.get(id=negocio_id, propietario=request.user)
+        except Negocio.DoesNotExist:
+            negocio = None
+    return render(request, 'negocios/perfil_profesional.html', {
+        'profesional': profesional,
+        'negocio': negocio,
+    })
 
 @require_POST
 @login_required
-def asignar_horario_negocio(request, negocio_id):
+def api_responder_matricula(request, solicitud_id, accion):
+    user = request.user
+    if user.tipo != 'negocio':
+        return JsonResponse({'ok': False, 'error': 'Solo negocios pueden realizar esta acción.'}, status=403)
+    try:
+        solicitud = Matriculacion.objects.get(id=solicitud_id, negocio__propietario=user)
+        if solicitud.estado != 'pendiente':
+            return JsonResponse({'ok': False, 'error': 'La solicitud ya fue respondida.'}, status=400)
+        if accion == 'aceptar':
+            solicitud.aprobar()
+            Notificacion.objects.create(
+                profesional=solicitud.profesional,
+                tipo='matriculacion',
+                titulo='¡Solicitud aceptada!',
+                mensaje=f'Tu solicitud para unirte a {solicitud.negocio.nombre} ha sido aceptada.',
+                url_relacionada=''
+            )
+        elif accion == 'rechazar':
+            solicitud.rechazar()
+            Notificacion.objects.create(
+                profesional=solicitud.profesional,
+                tipo='matriculacion',
+                titulo='Solicitud rechazada',
+                mensaje=f'Tu solicitud para unirte a {solicitud.negocio.nombre} ha sido rechazada.',
+                url_relacionada=''
+            )
+        else:
+            return JsonResponse({'ok': False, 'error': 'Acción no válida.'}, status=400)
+        return JsonResponse({'ok': True})
+    except Matriculacion.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Solicitud no encontrada.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'ok': False, 'error': str(e)}, status=500)
+
+@login_required
+def desvincular_profesional(request, matricula_id):
+    user = request.user
+    if user.tipo != 'negocio':
+        messages.error(request, 'Acceso solo para negocios.')
+        return redirect('inicio')
+    matricula = get_object_or_404(Matriculacion, id=matricula_id, negocio__propietario=user, estado='aprobada')
+    if request.method == 'POST':
+        matricula.estado = 'cancelada'
+        matricula.save()
+        messages.success(request, 'Profesional desvinculado correctamente.')
+        return redirect('negocios:solicitudes_matricula')
+    return render(request, 'negocios/desvincular_profesional.html', {'matricula': matricula})
+
+@login_required
+def galeria_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-
-    dias_activos = request.POST.getlist('dias_activos')
-    horarios = {}
-
-    for dia in dias_activos:
-        inicio = request.POST.get(f'inicio_{dia}')
-        fin = request.POST.get(f'fin_{dia}')
-        if inicio and fin:
-            horarios[dia] = {'inicio': inicio, 'fin': fin}
-
-    # Suponiendo que tienes un campo JSON o TextField en el modelo para almacenar esto:
-    negocio.horario_atencion = horarios
-    negocio.save()
-
-    messages.success(request, "Horario asignado correctamente.")
-    return redirect('panel_negocio', negocio_id=negocio.id)
-
-
-
-def perfil_peluquero(request, id):
-    peluquero = get_object_or_404(Peluquero, id=id)
-    
-    if request.method == 'POST' and 'nueva_imagen' in request.POST:
-        form_imagen = ImagenGaleriaForm(request.POST, request.FILES)
-        if form_imagen.is_valid():
-            nueva = form_imagen.save(commit=False)
-            nueva.peluquero = peluquero
-            nueva.save()
-            return redirect(request.path_info)
-    else:
-        form_imagen = ImagenGaleriaForm()
-
-    return render(request, 'tu_template.html', {
-        'peluquero': peluquero,
-        'form_imagen': form_imagen,
-        # otros contextos
+    imagenes = negocio.imagenes.all().order_by('-created_at')
+    return render(request, 'negocios/galeria_negocio.html', {
+        'negocio': negocio,
+        'imagenes': imagenes,
     })
 
-
 @login_required
-def api_turnos_peluquero(request, peluquero_id):
-    peluquero = get_object_or_404(Peluquero, id=peluquero_id, negocio__propietario=request.user)
-    
-    try:
-        horario = json.loads(peluquero.horario) if peluquero.horario else {}
-    except json.JSONDecodeError:
-        horario = {}
-    
-    # Obtener días festivos
-    co_holidays = holidays.CountryHoliday('CO')
-    
-    # Generar eventos para el calendario
-    eventos = []
-    base_date = datetime.today().date()
-    
-    # Para cada día de las próximas 4 semanas
-    for delta in range(0, 28):
-        fecha = base_date + timedelta(days=delta)
-        dia_semana = fecha.strftime('%A')
-        
-        # Traducir día de la semana al español
-        dias_traduccion = {
-            'Monday': 'Lunes',
-            'Tuesday': 'Martes',
-            'Wednesday': 'Miércoles',
-            'Thursday': 'Jueves',
-            'Friday': 'Viernes',
-            'Saturday': 'Sábado',
-            'Sunday': 'Domingo'
-        }
-        nombre_dia = dias_traduccion.get(dia_semana, dia_semana)
-        
-        # Verificar si es festivo
-        es_festivo = fecha in co_holidays or nombre_dia == 'Domingo'
-        
-        # Si hay horario para este día y no es festivo
-        if nombre_dia in horario and not es_festivo:
-            for turno in horario[nombre_dia]['turnos']:
-                try:
-                    hora_inicio = datetime.strptime(turno['inicio'], '%H:%M').time()
-                    hora_fin = datetime.strptime(turno['fin'], '%H:%M').time()
-                    
-                    start = datetime.combine(fecha, hora_inicio).isoformat()
-                    end = datetime.combine(fecha, hora_fin).isoformat()
-                    
-                    eventos.append({
-                        "title": "Disponible",
-                        "start": start,
-                        "end": end,
-                        "color": "#28a745",  # verde
-                        "extendedProps": {
-                            "duracion": turno.get('duracion', 30)
-                        }
-                    })
-                except (ValueError, KeyError):
-                    continue
-    
-    return JsonResponse(eventos, safe=False)
-
-
-@login_required
-def agregar_imagen_galeria(request, negocio_id, peluquero_id):
-    peluquero = get_object_or_404(
-        Peluquero, 
-        id=peluquero_id, 
-        negocio_id=negocio_id, 
-        negocio__propietario=request.user
-    )
-    
+def editar_profesional_negocio(request, negocio_id, profesional_id):
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+    profesional = get_object_or_404(Profesional, id=profesional_id)
+    matriculacion = get_object_or_404(Matriculacion, negocio=negocio, profesional=profesional, estado='aprobada')
+    servicios_negocio = ServicioNegocio.objects.filter(negocio=negocio)
     if request.method == 'POST':
-        print("Datos del formulario recibidos:", request.POST)  # Debug
-        print("Archivos recibidos:", request.FILES)  # Debug
-        
-        form = ImagenGaleriaForm(request.POST, request.FILES)
-        if form.is_valid():
-            print("Formulario válido")  # Debug
-            imagen = form.save(commit=False)
-            imagen.peluquero = peluquero
-            imagen.save()
-            print("Imagen guardada con ID:", imagen.id)  # Debug
-            messages.success(request, "Imagen agregada a la galería.")
-            return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
-        else:
-            print("Errores del formulario:", form.errors)  # Debug
-            messages.error(request, "Error al subir la imagen.")
-    
-    return redirect('detalle_peluquero', negocio_id=negocio_id, peluquero_id=peluquero_id)
-
-logger = logging.getLogger(__name__)
-@require_POST
-@login_required
-
-def eliminar_imagen_galeria(request, imagen_id):
-    logger.info(f"Intento de eliminar imagen ID: {imagen_id} por usuario: {request.user}")
-    try:
-        imagen = ImagenGaleria.objects.get(
-            id=imagen_id,
-            peluquero__negocio__propietario=request.user
-        )
-        imagen.imagen.delete()  # Elimina el archivo físico
-        imagen.delete()         # Elimina el registro de la BD
-        return JsonResponse({'success': True})
-    except ImagenGaleria.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Imagen no encontrada'}, status=404)
+        # Actualizar servicios asignados
+        servicios_ids = request.POST.getlist('servicios')
+        profesional.servicios.set([s.servicio for s in servicios_negocio if str(s.id) in servicios_ids])
+        # Actualizar días y horarios (ejemplo simple, puedes expandirlo)
+        dias = request.POST.getlist('dias')
+        horario = {}
+        for dia in dias:
+            inicio = request.POST.get(f'inicio_{dia}')
+            fin = request.POST.get(f'fin_{dia}')
+            if inicio and fin:
+                horario[dia] = {'inicio': inicio, 'fin': fin}
+        profesional.horario = horario
+        profesional.save()
+        messages.success(request, 'Perfil del profesional actualizado correctamente.')
+        return redirect('negocios:panel_negocio', negocio_id=negocio.id)
+    # Días de la semana
+    dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+    horario_actual = getattr(profesional, 'horario', {})
+    servicios_asignados = profesional.servicios.values_list('id', flat=True)
+    return render(request, 'negocios/editar_profesional_negocio.html', {
+        'negocio': negocio,
+        'profesional': profesional,
+        'servicios_negocio': servicios_negocio,
+        'dias_semana': dias_semana,
+        'horario_actual': horario_actual,
+        'servicios_asignados': servicios_asignados,
+    })

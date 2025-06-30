@@ -1,0 +1,24 @@
+Profesional
+Aston
+As5d1cd.45c*
+
+
+Negocio
+Primitivo
+As5d1cd.45c*
+
+
+Cliente
+Tati
+As5d1cd.45c*
+
+
+
+identificador de cliente
+1021577441313-n5qjqhrdiptb5hqk4lvb504tevpih70d.apps.googleusercontent.com
+
+clave secreta
+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
+
+
+from allauth.socialaccount.models import SocialApp, SocialAppSite; from django.contrib.sites.models import Site; site = Site.objects.get_or_create(domain='127.0.0.1:8000', name='localhost')[0]; app, created = SocialApp.objects.get_or_create(provider='google', name='Dummy Google', client_id='dummy', secret='dummy', key=''); app.sites.add(site); print('SocialApp creado y asignado al sitio.')

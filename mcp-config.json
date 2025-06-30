@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "django-project": {
+      "command": "python",
+      "args": [
+        "mcp_server.py"
+      ]
+    }
+  }
+}

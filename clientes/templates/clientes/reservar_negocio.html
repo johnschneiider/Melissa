@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}Reservar en {{ negocio.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        {% if negocio.logo %}
+                            <img src="{{ negocio.logo.url }}" class="rounded-circle shadow mb-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2.5rem; color: #764ba2;">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                        {% endif %}
+                        <h2 class="fw-bold text-dark mb-2">Reservar en {{ negocio.nombre }}</h2>
+                        <p class="text-muted mb-0">Selecciona el servicio, profesional, fecha y hora para tu reserva</p>
+                    </div>
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ form.servicio.label_tag }}
+                            {{ form.servicio }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.profesional.label_tag }}
+                            {{ form.profesional }}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.fecha.label_tag }}
+                            {{ form.fecha }}
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Horarios disponibles</label>
+                            <div id="slots-disponibles" class="row g-2"></div>
+                            <div id="hora-input-wrapper" style="display:none;">
+                                {{ form.hora_inicio.label_tag }}
+                                {{ form.hora_inicio }}
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            {{ form.notas.label_tag }}
+                            {{ form.notas }}
+                        </div>
+                        <button type="submit" class="btn btn-primary">Reservar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const servicioField = document.getElementById('id_servicio');
+    const profesionalField = document.getElementById('id_profesional');
+    const fechaField = document.getElementById('id_fecha');
+    const slotsDiv = document.getElementById('slots-disponibles');
+    const horaInicioField = document.getElementById('id_hora_inicio');
+    const horaInputWrapper = document.getElementById('hora-input-wrapper');
+
+    function fetchSlots() {
+        slotsDiv.innerHTML = '';
+        horaInicioField.value = '';
+        horaInputWrapper.style.display = 'none';
+        const servicioId = servicioField.value;
+        const profesionalId = profesionalField.value;
+        const fecha = fechaField.value;
+        if (!servicioId || !profesionalId || !fecha) {
+            slotsDiv.innerHTML = '<div class="col-12 text-muted">Selecciona servicio, profesional y fecha para ver horarios.</div>';
+            return;
+        }
+        fetch(`/clientes/api/horarios-disponibles/${profesionalId}/?fecha=${fecha}&servicio_negocio_id=${servicioId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.festivo) {
+                    slotsDiv.innerHTML = '<div class="col-12 text-danger">No hay turnos disponibles este día.</div>';
+                    return;
+                }
+                if (data.disponibles.length === 0) {
+                    slotsDiv.innerHTML = '<div class="col-12 text-muted">No hay horarios disponibles.</div>';
+                    return;
+                }
+                data.disponibles.forEach(slot => {
+                    const card = document.createElement('div');
+                    card.className = 'col-6 col-md-3 mb-2';
+                    card.innerHTML = `<button type="button" class="btn btn-outline-primary w-100 slot-btn py-3" data-hora="${slot.inicio}">${slot.inicio} - ${slot.fin}</button>`;
+                    slotsDiv.appendChild(card);
+                });
+                document.querySelectorAll('.slot-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        horaInicioField.value = this.dataset.hora;
+                        horaInputWrapper.style.display = 'block';
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                    });
+                });
+            });
+    }
+
+    servicioField.addEventListener('change', fetchSlots);
+    profesionalField.addEventListener('change', fetchSlots);
+    fechaField.addEventListener('change', fetchSlots);
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load dict_utils %}
+{% block title %}Editar Profesional - {{ profesional.nombre_completo }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Editar Horario y Servicios de {{ profesional.nombre_completo }}</h2>
+
+    <!-- Asignar horario a todos los días -->
+    <div class="card mb-4 shadow-sm border-primary">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Asignar mismo horario a todos los días</h5>
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="all_inicio" class="form-label">Hora de inicio</label>
+                    <input type="time" id="all_inicio" class="form-control">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label for="all_fin" class="form-label">Hora de fin</label>
+                    <input type="time" id="all_fin" class="form-control">
+                </div>
+                <div class="col-12 col-md-4 d-grid">
+                    <button type="button" class="btn btn-primary mt-3 mt-md-0" onclick="asignarHorarioTodos()">
+                        Asignar a todos los días
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            {% for dia in dias_semana %}
+                <div class="col-12 col-md-6 mb-3">
+                    <div class="card h-100 shadow-sm border-info">
+                        <div class="card-body">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="dias" id="dia_{{ dia }}" value="{{ dia }}" {% if dia in horario_actual %}checked{% endif %}>
+                                <label class="form-check-label fw-bold" for="dia_{{ dia }}">{{ dia }}</label>
+                            </div>
+                            <div class="row g-2 align-items-center">
+                                <div class="col">
+                                    <label class="form-label mb-0">Inicio</label>
+                                    {% if dia in horario_actual %}
+                                        <input type="time" class="form-control horario-inicio" name="inicio_{{ dia }}" value="{{ horario_actual|lookup:dia|lookup:'inicio' }}">
+                                    {% else %}
+                                        <input type="time" class="form-control horario-inicio" name="inicio_{{ dia }}">
+                                    {% endif %}
+                                </div>
+                                <div class="col">
+                                    <label class="form-label mb-0">Fin</label>
+                                    {% if dia in horario_actual %}
+                                        <input type="time" class="form-control horario-fin" name="fin_{{ dia }}" value="{{ horario_actual|lookup:dia|lookup:'fin' }}">
+                                    {% else %}
+                                        <input type="time" class="form-control horario-fin" name="fin_{{ dia }}">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-4">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function asignarHorarioTodos() {
+    const inicio = document.getElementById('all_inicio').value;
+    const fin = document.getElementById('all_fin').value;
+    // Asignar a todos los inputs de horario
+    document.querySelectorAll('.horario-inicio').forEach(input => {
+        input.value = inicio;
+    });
+    document.querySelectorAll('.horario-fin').forEach(input => {
+        input.value = fin;
+    });
+}
+</script>
+{% endblock %} 

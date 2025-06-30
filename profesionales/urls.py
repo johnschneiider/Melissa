@@ -1,0 +1,13 @@
+from django.urls import path
+from . import views
+
+app_name = 'profesionales'
+
+urlpatterns = [
+    path('completar-perfil/', views.completar_perfil, name='completar_perfil'),
+    path('panel/', views.panel, name='panel'),
+    path('editar-perfil/', views.editar_perfil, name='editar_perfil'),
+    path('buscar-negocio/', views.buscar_negocio, name='buscar_negocio'),
+    path('notificaciones/', views.notificaciones, name='notificaciones'),
+    path('cancelar-matricula/<int:matricula_id>/', views.cancelar_matricula, name='cancelar_matricula'),
+] 

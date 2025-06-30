@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - Melissa{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-circle me-2"></i>
+                        Mi Perfil
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Información Personal</h5>
+                            <hr>
+                            <p><strong>Usuario:</strong> {{ user.username }}</p>
+                            <p><strong>Email:</strong> {{ user.email }}</p>
+                            <p><strong>Nombre:</strong> {{ user.first_name|default:"No especificado" }}</p>
+                            <p><strong>Apellido:</strong> {{ user.last_name|default:"No especificado" }}</p>
+                            <p><strong>Teléfono:</strong> {{ user.telefono|default:"No especificado" }}</p>
+                            <p><strong>Tipo de cuenta:</strong> 
+                                <span class="badge {% if es_cliente %}bg-success{% else %}bg-info{% endif %}">
+                                    {{ user.get_tipo_display }}
+                                </span>
+                            </p>
+                            <p><strong>Fecha de registro:</strong> {{ user.date_joined|date:"d/m/Y" }}</p>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Acciones</h5>
+                            <hr>
+                            
+                            {% if es_cliente %}
+                                <div class="mb-3">
+                                    <a href="{% url 'clientes:lista_negocios' %}" class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-search me-2"></i>Buscar Negocios
+                                    </a>
+                                    <a href="{% url 'clientes:mis_reservas' %}" class="btn btn-outline-primary w-100 mb-2">
+                                        <i class="bi bi-calendar-check me-2"></i>Mis Reservas
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            {% if es_negocio %}
+                                <div class="mb-3">
+                                    <a href="{% url 'negocios:mis_negocios' %}" class="btn btn-primary w-100 mb-2">
+                                        <i class="bi bi-shop me-2"></i>Mis Negocios
+                                    </a>
+                                    <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-outline-primary w-100 mb-2">
+                                        <i class="bi bi-plus-circle me-2"></i>Crear Negocio
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mb-3">
+                                <a href="#" class="btn btn-outline-secondary w-100 mb-2">
+                                    <i class="bi bi-gear me-2"></i>Configuración
+                                </a>
+                                <a href="{% url 'account_logout' %}" class="btn btn-outline-danger w-100">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sección para cambiar tipo de usuario (solo para desarrollo) -->
+                    {% if user.is_staff or user.is_superuser %}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        Herramientas de Desarrollo
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted small">Esta sección solo está disponible para administradores.</p>
+                                    <form method="post" action="{% url 'cuentas:cambiar_tipo_usuario' %}">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label for="tipo" class="form-label">Cambiar tipo de usuario:</label>
+                                                <select name="tipo" id="tipo" class="form-select">
+                                                    <option value="cliente" {% if es_cliente %}selected{% endif %}>Cliente</option>
+                                                    <option value="negocio" {% if es_negocio %}selected{% endif %}>Negocio</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-warning">
+                                                    <i class="bi bi-arrow-repeat me-2"></i>Cambiar Tipo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

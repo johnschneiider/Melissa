@@ -1,19 +1,24 @@
 from django.urls import path
 from . import views
+from .views import api_responder_matricula
+
+app_name = 'negocios'
 
 urlpatterns = [
-    path('crear/', views.crear_negocio, name='crear_negocio'),
     path('mis/', views.mis_negocios, name='mis_negocios'),
-    path('configurar/<int:negocio_id>/', views.configurar_negocio, name='configurar_negocio'),
+    path('crear/', views.crear_negocio, name='crear_negocio'),
+    path('<int:negocio_id>/', views.detalle_negocio, name='detalle_negocio'),
+    path('<int:negocio_id>/editar/', views.editar_negocio, name='editar_negocio'),
+    path('<int:negocio_id>/eliminar/', views.eliminar_negocio, name='eliminar_negocio'),
+    path('<int:negocio_id>/configurar/', views.configurar_negocio, name='configurar_negocio'),
     path('<int:negocio_id>/panel/', views.panel_negocio, name='panel_negocio'),
-    path('<int:negocio_id>/crear-peluquero/', views.crear_peluquero, name='crear_peluquero'),
-    path('<int:negocio_id>/peluquero/<int:peluquero_id>/', views.detalle_peluquero, name='detalle_peluquero'),
-    path('<int:negocio_id>/peluquero/<int:peluquero_id>/eliminar/', views.eliminar_peluquero, name='eliminar_peluquero'),
-    path('<int:negocio_id>/asignar-horario/', views.asignar_horario_negocio, name='asignar_horario_negocio'),
-    path('negocios/<int:negocio_id>/eliminar/', views.eliminar_negocio, name='eliminar_negocio'),
-    path('negocios/<int:negocio_id>/restaurar/', views.restaurar_negocio, name='restaurar_negocio'),
-    path('api/turnos_peluquero/<int:peluquero_id>/', views.api_turnos_peluquero, name='api_turnos_peluquero'),
-    path('negocio/<int:negocio_id>/peluquero/<int:peluquero_id>/agregar-imagen/', views.agregar_imagen_galeria, name='agregar_imagen_galeria'),
-    path('eliminar-imagen-galeria/<int:imagen_id>/', views.eliminar_imagen_galeria, name='eliminar_imagen_galeria'),
-
+    path('<int:negocio_id>/dashboard/', views.dashboard_negocio, name='dashboard_negocio'),
+    path('solicitudes-matricula/', views.solicitudes_matricula, name='solicitudes_matricula'),
+    path('perfil-profesional/<int:profesional_id>/', views.ver_perfil_profesional, name='ver_perfil_profesional'),
+    path('desvincular-profesional/<int:matricula_id>/', views.desvincular_profesional, name='desvincular_profesional'),
+    path('api/matricula/<int:solicitud_id>/<str:accion>/', api_responder_matricula, name='api_responder_matricula'),
+    path('api/matricula/<int:solicitud_id>/aceptar/', api_responder_matricula, {'accion': 'aceptar'}, name='api_aceptar_matricula'),
+    path('api/matricula/<int:solicitud_id>/rechazar/', api_responder_matricula, {'accion': 'rechazar'}, name='api_rechazar_matricula'),
+    path('<int:negocio_id>/galeria/', views.galeria_negocio, name='galeria_negocio'),
+    path('<int:negocio_id>/profesional/<int:profesional_id>/editar/', views.editar_profesional_negocio, name='editar_profesional_negocio'),
 ]

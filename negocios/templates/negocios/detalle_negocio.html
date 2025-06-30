@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}{{ negocio.nombre }} - Detalle del Negocio{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <!-- Cabecera -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-2 text-center">
+            {% if logo %}
+                <img src="{{ logo.url }}" class="rounded-circle shadow" style="width: 100px; height: 100px; object-fit: cover;">
+            {% else %}
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                    <i class="bi bi-shop fs-1 text-muted"></i>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-md-7">
+            <h1 class="display-5 fw-bold mb-1">{{ negocio.nombre }}</h1>
+            <div class="d-flex align-items-center mb-2">
+                <span class="fs-4 text-warning me-2">
+                    {% for i in "12345" %}
+                        {% if calificacion_percentil >= i %}
+                            <i class="bi bi-star-fill"></i>
+                        {% elif calificacion_percentil > i|add:"-1" %}
+                            <i class="bi bi-star-half"></i>
+                        {% else %}
+                            <i class="bi bi-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <span class="text-muted">{{ calificacion_percentil }} / 5 (percentil 75)</span>
+            </div>
+            <div class="mb-2">
+                <span class="badge bg-{% if abierto %}success{% else %}danger{% endif %}">
+                    {% if abierto %}Abierto{% else %}Cerrado{% endif %}
+                </span>
+                <span class="ms-2 text-muted">
+                    {% if abierto %}Cierra a {{ proximo_cambio }}{% else %}Abre a {{ proximo_cambio }}{% endif %}
+                </span>
+            </div>
+            <div class="mb-2">
+                <i class="bi bi-geo-alt text-primary"></i> <span class="fw-bold">{{ ciudad }}</span>
+            </div>
+        </div>
+        <div class="col-md-3 text-center">
+            <a href="{% url 'clientes:reservar_negocio' negocio.id %}" class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">Reservar</a>
+        </div>
+    </div>
+    <!-- Galería del negocio -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">Galería del Negocio</h4>
+            {% if galeria %}
+            <div class="row g-3 mb-2">
+                {% for img in galeria|slice:':4' %}
+                <div class="col-6 col-md-3">
+                    <div class="card h-100 shadow-sm">
+                        <img src="{{ img.imagen.url }}" class="card-img-top" style="object-fit:cover; height:140px;">
+                        <div class="card-body p-2">
+                            <div class="fw-bold small">{{ img.titulo }}</div>
+                            {% if img.descripcion %}<div class="text-muted small">{{ img.descripcion }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if galeria|length > 4 %}
+            <a href="{% url 'negocios:galeria_negocio' negocio.id %}" class="btn btn-outline-primary">Ver todas las imágenes</a>
+            {% endif %}
+            {% else %}
+            <div class="text-muted">No hay imágenes en la galería.</div>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Servicios -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">Servicios</h4>
+            <ul class="list-group list-group-flush mb-4">
+                {% for servicio in servicios %}
+                <li class="list-group-item">
+                    <span class="fw-bold">{{ servicio.servicio.nombre }}</span>
+                    <span class="text-muted small ms-2">Duración: {{ servicio.duracion }} min</span>
+                    {% if servicio.servicio.descripcion %}<br><span class="text-muted small">{{ servicio.servicio.descripcion }}</span>{% endif %}
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No hay servicios registrados.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <!-- Profesionales -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">Profesionales</h4>
+            <div class="row g-4">
+                {% for p in peluqueros_info %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0">
+                        <div class="card-body text-center">
+                            {% if p.avatar %}
+                                <img src="{{ p.avatar.url }}" class="rounded-circle shadow mb-3" style="width: 90px; height: 90px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-3 mx-auto" style="width: 90px; height: 90px;">
+                                    <i class="bi bi-person fs-1 text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <h5 class="fw-bold mb-1">
+                                <a href="{% url 'clientes:detalle_peluquero' p.id %}" class="text-dark text-decoration-none">{{ p.nombre }}</a>
+                            </h5>
+                            <div class="text-primary small mb-1">{{ p.especialidad }}</div>
+                            <div class="text-muted small mb-2">{{ p.descripcion }}</div>
+                            <div class="mb-2">
+                                <span class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if p.promedio >= i %}
+                                            <i class="bi bi-star-fill"></i>
+                                        {% elif p.promedio > i|add:"-1" %}
+                                            <i class="bi bi-star-half"></i>
+                                        {% else %}
+                                            <i class="bi bi-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="text-muted ms-1">({{ p.num_calificaciones }} calificaciones)</span>
+                            </div>
+                            {% if p.servicios %}
+                            <div class="mb-2">
+                                <span class="fw-bold">Servicios:</span>
+                                <span class="text-muted small">
+                                    {% for s in p.servicios %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                </span>
+                            </div>
+                            {% endif %}
+                            <a href="{% url 'clientes:reservar_negocio' negocio.id %}?peluquero={{ p.id }}" class="btn btn-outline-primary btn-sm mt-2 w-100">
+                                <i class="bi bi-calendar-plus me-1"></i>Reservar con este profesional
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-muted">No hay profesionales registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <!-- Comentarios recientes -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="fw-bold mb-3">Comentarios recientes</h4>
+            {% if comentarios %}
+                <ul class="list-group list-group-flush">
+                    {% for comentario in comentarios %}
+                    <li class="list-group-item">
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="fw-bold me-2">{{ comentario.cliente.username }}</span>
+                            <span class="text-warning">
+                                {% for i in "12345" %}
+                                    {% if comentario.puntaje >= i %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% elif comentario.puntaje > i|add:"-1" %}
+                                        <i class="bi bi-star-half"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <span class="ms-2 text-muted small">{{ comentario.fecha_calificacion|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div>{{ comentario.comentario }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="text-muted">No hay comentarios aún.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

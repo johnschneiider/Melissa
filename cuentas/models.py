@@ -5,6 +5,7 @@ class UsuarioPersonalizado(AbstractUser):
     TIPO_USUARIO = (
         ('cliente', 'Cliente'),
         ('negocio', 'Negocio'),
+        ('profesional', 'Profesional'),
     )
-    tipo = models.CharField(max_length=10, choices=TIPO_USUARIO, default='cliente')
+    tipo = models.CharField(max_length=15, choices=TIPO_USUARIO, default='cliente')
     telefono = models.CharField(max_length=15, blank=True) 

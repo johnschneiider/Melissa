@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitudes de Matrícula - Melissa{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <h2 class="fw-bold mb-4 text-center">Solicitudes de Matrícula</h2>
+                    <!-- CSRF token para JS -->
+                    <input type="hidden" id="csrf_token_js" value="{{ csrf_token }}">
+                    <!-- Feedback global -->
+                    <div id="feedbackGlobal"></div>
+                    <div class="row g-4" id="solicitudesLista">
+                        {% for solicitud in solicitudes %}
+                        <div class="col-md-6 col-lg-4 solicitud-card" id="solicitud-{{ solicitud.id }}">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold">{{ solicitud.negocio.nombre }}</h5>
+                                    <p class="mb-2"><i class="bi bi-person me-1"></i> <a href="{% url 'negocios:ver_perfil_profesional' solicitud.profesional.id %}" target="_blank">{{ solicitud.profesional.nombre_completo }}</a></p>
+                                    <p class="mb-2"><i class="bi bi-envelope me-1"></i> {{ solicitud.profesional.usuario.email }}</p>
+                                    <p class="mb-2"><i class="bi bi-chat-left-text me-1"></i> {{ solicitud.mensaje_solicitud|default:'Sin mensaje' }}</p>
+                                    <div class="d-flex gap-2 mt-3">
+                                        <button class="btn btn-success btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="aceptar">Aceptar</button>
+                                        <button class="btn btn-danger btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="rechazar">Rechazar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center">
+                            <p class="text-muted">No hay solicitudes pendientes.</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// Obtener CSRF token del input hidden (más robusto que desde cookies)
+const csrftoken = document.getElementById('csrf_token_js').value;
+
+function mostrarFeedbackGlobal(mensaje, tipo) {
+  const feedback = document.getElementById('feedbackGlobal');
+  feedback.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">${mensaje}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+}
+
+document.querySelectorAll('.btn-accion-matricula').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const id = this.dataset.id;
+    const accion = this.dataset.accion;
+    const card = document.getElementById('solicitud-' + id);
+    // Spinner y deshabilitar
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+    // Deshabilitar el otro botón
+    const sibling = card.querySelector('.btn-accion-matricula[data-accion="' + (accion === 'aceptar' ? 'rechazar' : 'aceptar') + '"]');
+    if (sibling) sibling.disabled = true;
+    try {
+      const resp = await fetch(`/negocios/api/matricula/${id}/${accion}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({})
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        mostrarFeedbackGlobal('Acción realizada con éxito.', 'success');
+        // Quitar la tarjeta de la solicitud
+        card.remove();
+        // Si no quedan solicitudes, mostrar mensaje
+        if (document.querySelectorAll('.solicitud-card').length === 0) {
+          document.getElementById('solicitudesLista').innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay solicitudes pendientes.</p></div>';
+        }
+      } else {
+        mostrarFeedbackGlobal(data.error || 'Ocurrió un error.', 'danger');
+        this.disabled = false;
+        this.innerHTML = accion.charAt(0).toUpperCase() + accion.slice(1);
+        if (sibling) sibling.disabled = false;
+      }
+    } catch (e) {
+      mostrarFeedbackGlobal('Error de red o servidor.', 'danger');
+      this.disabled = false;
+      this.innerHTML = accion.charAt(0).toUpperCase() + accion.slice(1);
+      if (sibling) sibling.disabled = false;
+    }
+  });
+});
+</script>
+{% endblock %} 

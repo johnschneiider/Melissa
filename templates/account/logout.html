@@ -1,42 +1,87 @@
-{% load i18n %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Sesión cerrada - Melissa</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .card {
-            margin-top: 10vh;
-        }
-        .gradient-btn {
-            background: linear-gradient(to right, #a18cd1, #fbc2eb);
-            border: none;
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 30px;
-            font-weight: 500;
-            transition: background 0.3s;
-        }
-        .gradient-btn:hover {
-            opacity: 0.9;
-        }
-    </style>
-</head>
-<body>
-<div class="container d-flex justify-content-center">
-    <div class="card shadow-sm w-100" style="max-width: 500px;">
-        <div class="card-header text-center bg-dark text-white">
-            <h4>Sesión finalizada</h4>
-        </div>
-        <div class="card-body text-center">
-            <p>Has cerrado sesión exitosamente.</p>
-            <a href="{% url 'inicio' %}" class="gradient-btn">Volver al inicio</a>
+{% extends "base.html" %}
+{% load i18n account %}
+
+{% block title %}Cerrar Sesión - Melissa{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-xl-5 col-lg-6 col-md-8 col-sm-10">
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-warning text-dark text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4 p-lg-5 text-center">
+                    <div class="mb-4">
+                        <i class="bi bi-question-circle-fill text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3">¿Estás seguro?</h4>
+                        <p class="text-muted">¿Realmente quieres cerrar tu sesión?</p>
+                    </div>
+                    
+                    <form method="post" action="{% url 'account_logout' %}">
+                        {% csrf_token %}
+                        {% if redirect_field_value %}
+                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}"/>
+                        {% endif %}
+                        
+                        <div class="d-flex gap-3 justify-content-center">
+                            <button type="submit" class="btn btn-warning btn-lg py-3 px-4">
+                                <i class="bi bi-box-arrow-right me-2"></i> Sí, Cerrar Sesión
+                            </button>
+                            <a href="{% url 'inicio' %}" class="btn btn-outline-secondary btn-lg py-3 px-4">
+                                <i class="bi bi-x-circle me-2"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'inicio' %}" class="text-muted">
+                            <i class="bi bi-arrow-left me-1"></i>Volver al inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-</body>
-</html>
+
+<style>
+    :root {
+        --primary: #6e48aa;
+        --primary-dark: #4b2d7f;
+        --secondary: #9d50bb;
+        --accent: #d4af37;
+    }
+    
+    .bg-gradient-warning {
+        background: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+    }
+    
+    .card {
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(255, 193, 7, 0.2) !important;
+    }
+    
+    .rounded-4 {
+        border-radius: 1rem !important;
+    }
+    
+    .btn {
+        border-radius: 0.5rem !important;
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+</style>
+{% endblock %}

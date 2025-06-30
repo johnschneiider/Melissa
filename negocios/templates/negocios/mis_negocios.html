@@ -1,61 +1,209 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5">
-    <h3>Mis negocios</h3>
-    <div class="row">
-        {% for negocio in negocios %}
-    {% if negocio.id %}
-<div class="col-md-4">
-    <div class="card mb-4 shadow position-relative">
-        <!-- Ícono de eliminar -->
-        <button class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
-                data-bs-toggle="modal"
-                data-bs-target="#modalEliminarNegocio{{ negocio.id }}">
-            <i class="bi bi-trash"></i>
-        </button>
-
-        <a href="{% url 'panel_negocio' negocio.id %}" class="text-decoration-none text-dark">
-            {% if negocio.logo %}
-                <img src="{{ negocio.logo.url }}" class="card-img-top" alt="Logo del negocio" style="height: 180px; object-fit: cover;">
-            {% else %}
-                <div class="card-img-top bg-secondary text-white text-center py-5">
-                    Sin logo
-                </div>
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ negocio.nombre }}</h5>
-                <p class="card-text">{{ negocio.direccion }}</p>
-                <p class="text-muted">Creado: {{ negocio.creado_en|date:"d/m/Y" }}</p>
-            </div>
+<div class="container py-5">
+    <!-- Header con acciones -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-shop me-2"></i> Mis Negocios</h2>
+            <p class="text-muted mb-0">Administra tus establecimientos registrados</p>
+        </div>
+        <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Negocio
         </a>
     </div>
-</div>
 
+    <!-- Listado de negocios -->
+    <div class="row g-4">
+        {% for negocio in negocios %}
+        {% if negocio.id %}
+        <div class="col-xl-4 col-lg-6 col-md-6">
+            <!-- Tarjeta de negocio -->
+            <div class="card border-0 shadow-sm h-100 position-relative overflow-hidden transition-all">
+                <!-- Badge de estado -->
+                <div class="position-absolute top-0 end-0 m-3">
+                    <span class="badge bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle-fill me-1"></i> Activo
+                    </span>
+                </div>
+
+                <!-- Botón de eliminar -->
+                <button class="btn btn-sm btn-icon position-absolute top-0 start-0 m-3"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEliminarNegocio{{ negocio.id }}">
+                    <i class="bi bi-trash text-danger"></i>
+                </button>
+
+                <!-- Enlace al panel -->
+                <a href="{% url 'negocios:panel_negocio' negocio.id %}" class="text-decoration-none text-dark h-100 d-flex flex-column">
+                    <!-- Imagen del negocio -->
+                    <div class="card-img-container">
+                        {% if negocio.logo %}
+                        <img src="{{ negocio.logo.url }}" class="card-img-top" alt="{{ negocio.nombre }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <div class="text-center p-4">
+                                <i class="bi bi-building text-muted" style="font-size: 3rem;"></i>
+                                <p class="mt-2 mb-0 text-muted">Sin logo</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contenido de la tarjeta -->
+                    <div class="card-body">
+                        <h5 class="card-title mb-2">{{ negocio.nombre }}</h5>
+                        <p class="card-text text-muted mb-3">
+                            <i class="bi bi-geo-alt-fill text-primary me-1"></i> {{ negocio.direccion }}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-calendar me-1"></i> {{ negocio.creado_en|date:"d/m/Y" }}
+                            </span>
+                            <span class="text-end">
+                                <span class="text-primary">Administrar</span>
+                                <i class="bi bi-arrow-right-short ms-1"></i>
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
 
         <!-- Modal de confirmación -->
-        <div class="modal fade" id="modalEliminarNegocio{{ negocio.id }}" tabindex="-1" aria-labelledby="modalLabel{{ negocio.id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="POST" action="{% url 'eliminar_negocio' negocio.id %}">
+        <div class="modal fade" id="modalEliminarNegocio{{ negocio.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form method="POST" action="{% url 'negocios:eliminar_negocio' negocio.id %}">
                     {% csrf_token %}
-                    <div class="modal-content">
-                        <div class="modal-header bg-danger text-white">
-                            <h5 class="modal-title" id="modalLabel{{ negocio.id }}">¿Eliminar este negocio?</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="modal-content border-0 shadow-lg">
+                        <div class="modal-header bg-gradient-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirmar eliminación
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p>¿Estás seguro de que deseas eliminar el negocio <strong>{{ negocio.nombre }}</strong>?</p>
-                            <p class="text-muted small">
-                                Esta acción ocultará el negocio, pero no eliminará los datos permanentemente.
-                            </p>
+                            <p>¿Estás seguro de que deseas eliminar el negocio <strong>"{{ negocio.nombre }}"</strong>?</p>
+                            <div class="alert alert-light border mt-3">
+                                <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                                <small>Esta acción ocultará el negocio, pero podrás restaurarlo más tarde.</small>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                            <button type="submit" class="btn btn-danger">Sí, eliminar</button>
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash-fill me-2"></i> Confirmar
+                            </button>
                         </div>
                     </div>
                 </form>
             </div>
         </div>
-    {% endif %}
-{% endfor %}
+        {% endif %}
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 text-center py-5">
+                <div class="card-body">
+                    <i class="bi bi-shop text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="mt-3">No tienes negocios registrados</h4>
+                    <p class="text-muted mb-4">Comienza creando tu primer negocio para gestionar tus citas</p>
+                    <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-primary px-4">
+                        <i class="bi bi-plus-circle-fill me-2"></i> Crear Negocio
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Estilos premium -->
+<style>
+    :root {
+        --primary: #6e48aa;
+        --primary-dark: #4b2d7f;
+        --secondary: #9d50bb;
+        --danger: #dc3545;
+    }
+    
+    .bg-gradient-danger {
+        background: linear-gradient(135deg, var(--danger) 0%, #c82333 100%);
+    }
+    
+    .card {
+        border-radius: 1rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(110, 72, 170, 0.15) !important;
+    }
+    
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.9);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .btn-icon:hover {
+        background-color: white;
+    }
+    
+    .card-img-container {
+        overflow: hidden;
+        border-radius: 1rem 1rem 0 0;
+    }
+    
+    .card-img-container img {
+        transition: transform 0.5s ease;
+    }
+    
+    .card:hover .card-img-container img {
+        transform: scale(1.05);
+    }
+    
+    .modal-content {
+        border-radius: 1rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .card-img-container, 
+        .card-img-container img,
+        .card-img-container div {
+            height: 180px !important;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+            align-items: flex-start !important;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .container {
+            padding-left: 1.25rem;
+            padding-right: 1.25rem;
+        }
+        
+        .card-img-container, 
+        .card-img-container img,
+        .card-img-container div {
+            height: 160px !important;
+        }
+    }
+</style>
 {% endblock %}

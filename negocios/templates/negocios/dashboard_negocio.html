@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ negocio.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="display-6 fw-bold text-dark mb-2">
+                        <i class="bi bi-graph-up text-primary me-3"></i>Dashboard
+                    </h1>
+                    <p class="lead text-muted mb-0">{{ negocio.nombre }} - Análisis y Métricas</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'negocios:panel_negocio' negocio.id %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left me-2"></i>Volver al Panel
+                    </a>
+                    <a href="{% url 'negocios:configurar_negocio' negocio.id %}" class="btn btn-primary">
+                        <i class="bi bi-gear me-2"></i>Configurar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPIs Principales -->
+    <div class="row g-4 mb-5">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-calendar-check text-primary fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Reservas Hoy</h6>
+                            <h3 class="mb-0 fw-bold text-dark">{{ reporte.total_reservas|default:"0" }}</h3>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> +12% vs ayer
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-currency-dollar text-success fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Ingresos del Mes</h6>
+                            <h3 class="mb-0 fw-bold text-dark">${{ reporte.ingresos_totales|default:"0"|floatformat:0 }}</h3>
+                            <small class="text-success">
+                                <i class="bi bi-arrow-up"></i> +8% vs mes anterior
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-people text-warning fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Clientes Nuevos</h6>
+                            <h3 class="mb-0 fw-bold text-dark">{{ reporte.clientes_nuevos|default:"0" }}</h3>
+                            <small class="text-warning">
+                                <i class="bi bi-arrow-up"></i> +5 esta semana
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="bi bi-star text-info fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Calificación Promedio</h6>
+                            <h3 class="mb-0 fw-bold text-dark">{{ peluquero_top_score|default:"4.5" }}</h3>
+                            <small class="text-info">
+                                <i class="bi bi-star-fill"></i> {{ peluquero_top.nombre|default:"N/A" }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficos -->
+    <div class="row g-4 mb-5">
+        <!-- Gráfico de Reservas -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-graph-up text-primary me-2"></i>Reservas Últimos 30 Días
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="reservasChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico de Ingresos -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-currency-dollar text-success me-2"></i>Ingresos Mensuales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="ingresosChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información Adicional -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-calendar-event text-info me-2"></i>Días Más Ocupados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary bg-opacity-10 rounded p-2 me-3">
+                            <i class="bi bi-calendar-check text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">{{ dias_ocupados|default:"Sábado" }}</h6>
+                            <small class="text-muted">Día con más reservas</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded p-2 me-3">
+                            <i class="bi bi-clock text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">{{ hora_pico|default:"14:00" }}</h6>
+                            <small class="text-muted">Hora pico de reservas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 py-3">
+                    <h5 class="mb-0 text-dark">
+                        <i class="bi bi-trophy text-warning me-2"></i>Mejor Peluquero del Mes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if peluquero_top %}
+                    <div class="d-flex align-items-center">
+                        {% if peluquero_top.avatar %}
+                        <img src="{{ peluquero_top.avatar.url }}" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                        <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-fill fs-4"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-1">{{ peluquero_top.nombre }}</h6>
+                            <div class="mb-1">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= peluquero_top_score %}
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-star text-muted"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                <span class="ms-2 text-muted">{{ peluquero_top_score }}</span>
+                            </div>
+                            <small class="text-muted">Mejor calificado del mes</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-emoji-smile text-muted fs-1 mb-3"></i>
+                        <p class="text-muted mb-0">Aún no hay suficientes datos para mostrar el mejor peluquero</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Gráfico de Reservas
+const reservasCtx = document.getElementById('reservasChart').getContext('2d');
+new Chart(reservasCtx, {
+    type: 'line',
+    data: {
+        labels: {{ fechas|safe }},
+        datasets: [{
+            label: 'Reservas',
+            data: {{ reservas|safe }},
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.05)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// Gráfico de Ingresos
+const ingresosCtx = document.getElementById('ingresosChart').getContext('2d');
+new Chart(ingresosCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ meses|safe }},
+        datasets: [{
+            data: {{ ventas_mes|safe }},
+            backgroundColor: [
+                '#667eea',
+                '#764ba2',
+                '#f093fb',
+                '#f5576c',
+                '#4facfe',
+                '#00f2fe',
+                '#43e97b',
+                '#38f9d7',
+                '#fa709a',
+                '#fee140',
+                '#a8edea',
+                '#fed6e3'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20
+                }
+            }
+        }
+    }
+});
+</script>
+
+<style>
+.card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+</style>
+{% endblock %} 

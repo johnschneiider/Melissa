@@ -1,249 +1,833 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<head>
   <meta charset="UTF-8">
-  <title>Melissa Citas | Gestión de turnos para peluquerías</title>
+  <title>{% block title %}Melissa Citas | Gestión de turnos para peluquerías{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Melissa es una app para peluquerías que facilita la gestión de citas y turnos con un calendario intuitivo, presencia profesional y estilo minimalista.">
+  <meta name="description" content="{% block description %}Melissa es una app para peluquerías que facilita la gestión de citas y turnos con un calendario intuitivo, presencia profesional y estilo minimalista.{% endblock %}">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="{{ request.build_absolute_uri }}">
-
+  
+  <!-- Seguridad -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   
   <!-- Open Graph para redes sociales -->
-  <meta property="og:title" content="Melissa Citas – Administra turnos de peluquería fácilmente">
-  <meta property="og:description" content="Optimiza tus citas con Melissa: calendario, gestión de peluqueros y experiencia profesional para tus clientes.">
+  <meta property="og:title" content="{% block og_title %}Melissa Citas – Administra turnos de peluquería fácilmente{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Optimiza tus citas con Melissa: calendario, gestión de peluqueros y experiencia profesional para tus clientes.{% endblock %}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="{{ request.build_absolute_uri }}">
-  <meta property="og:image" content="URL_de_imagen_promocional">
+  <meta property="og:image" content="{% block og_image %}URL_de_imagen_promocional{% endblock %}">
   
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Melissa Citas | Gestión de turnos para peluquerías">
-  <meta name="twitter:description" content="La app para que dueños de peluquerías manejen citas, peluqueros y calendario con estilo minimalista.">
-  <meta name="twitter:image" content="URL_de_imagen_promocional">
+  <meta name="twitter:title" content="{% block twitter_title %}Melissa Citas | Gestión de turnos para peluquerías{% endblock %}">
+  <meta name="twitter:description" content="{% block twitter_description %}La app para que dueños de peluquerías manejen citas, peluqueros y calendario con estilo minimalista.{% endblock %}">
+  <meta name="twitter:image" content="{% block twitter_image %}URL_de_imagen_promocional{% endblock %}">
 
   <!-- Hojas de estilo -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <!-- FullCalendar CSS -->
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
 
+  <style>
+    :root {
+      --primary: #6e48aa;
+      --primary-dark: #4b2d7f;
+      --secondary: #9d50bb;
+      --accent: #d4af37;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --light-gray: #e9ecef;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      --gradient-accent: linear-gradient(135deg, var(--accent) 0%, #f5d76e 100%);
+      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 5px 20px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    body {
+      font-family: 'Manrope', 'Segoe UI', sans-serif;
+      background-color: #f9f5f0;
+      color: var(--dark);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      scroll-behavior: smooth;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+    }
+
+    /* Header */
+    .header {
+      padding: 1rem 2rem;
+      background-color: rgba(255, 255, 255, 0.98);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .header.scrolled {
+      padding: 0.8rem 2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .logo {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--gradient-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.5rem;
+      font-family: 'Playfair Display', serif;
+      box-shadow: var(--shadow-sm);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+      transition: var(--transition);
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Botones */
+    .btn-primary {
+      background: var(--gradient-primary);
+      border: none;
+      color: white;
+      font-weight: 500;
+      transition: var(--transition);
+      padding: 0.7rem 1.8rem;
+      border-radius: 50px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      color: white;
+    }
+
+    .btn-outline-primary {
+      border-color: var(--primary);
+      color: var(--primary);
+      transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+      background-color: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn-accent {
+      background: var(--gradient-accent);
+      color: var(--dark);
+      font-weight: 500;
+      border: none;
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-accent:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      color: var(--dark);
+    }
+
+    /* Mensajes de alerta mejorados */
+    .alert {
+      border: none;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .alert::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: currentColor;
+    }
+
+    .alert-success {
+      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+      color: #155724;
+      border-left: 4px solid var(--success);
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      color: #721c24;
+      border-left: 4px solid var(--danger);
+    }
+
+    .alert-warning {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      color: #856404;
+      border-left: 4px solid var(--warning);
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+      color: #0c5460;
+      border-left: 4px solid var(--info);
+    }
+
+    /* Formularios mejorados */
+    .form-control, .form-select {
+      border-radius: 8px;
+      border: 2px solid var(--light-gray);
+      padding: 0.75rem 1rem;
+      transition: var(--transition);
+      background-color: white;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(110, 72, 170, 0.25);
+      background-color: white;
+    }
+
+    .form-label {
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Cards mejoradas */
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      background: var(--gradient-primary);
+      color: white;
+      border: none;
+      padding: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    /* Navegación mejorada */
+    .nav-link {
+      color: var(--dark);
+      font-weight: 500;
+      transition: var(--transition);
+      position: relative;
+      padding: 0.5rem 1rem;
+    }
+
+    .nav-link:hover {
+      color: var(--primary);
+    }
+
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 0;
+      height: 2px;
+      background: var(--gradient-primary);
+      transition: var(--transition);
+      transform: translateX(-50%);
+    }
+
+    .nav-link:hover::after {
+      width: 100%;
+    }
+
+    /* Footer */
+    footer {
+      background-color: var(--dark);
+      color: white;
+      padding: 3rem 0;
+      position: relative;
+      margin-top: 4rem;
+    }
+
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: var(--gradient-accent);
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    footer a:hover {
+      color: var(--accent);
+      transform: translateX(3px);
+    }
+
+    .footer-links {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-links li {
+      margin-bottom: 0.8rem;
+      position: relative;
+      padding-left: 1.5rem;
+    }
+
+    .footer-links li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 2px;
+      background: var(--accent);
+      transition: var(--transition);
+    }
+
+    .footer-links li:hover::before {
+      width: 12px;
+    }
+
+    /* Loading spinner */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 0.8rem 1rem;
+      }
+      
+      .logo {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+      
+      .btn {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Accesibilidad */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Focus visible para accesibilidad */
+    .btn:focus-visible,
+    .form-control:focus-visible,
+    .nav-link:focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Animaciones suaves */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mejoras para formularios */
+    .form-floating {
+      position: relative;
+    }
+
+    .form-floating > .form-control,
+    .form-floating > .form-select {
+      height: calc(3.5rem + 2px);
+      line-height: 1.25;
+    }
+
+    .form-floating > label {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      padding: 1rem 0.75rem;
+      pointer-events: none;
+      border: 1px solid transparent;
+      transform-origin: 0 0;
+      transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+    }
+
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+      opacity: 0.65;
+      transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
 </head>
 
-
-
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .header {
-            padding: 1rem 2rem;
-            background-color: #f8f9fa;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .logo {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background-color: #ccc;
-        }
-
-        .gradient-btn {
-            background: linear-gradient(to right, #a18cd1, #fbc2eb);
-            border: none;
-            color: white;
-            padding: 0.6rem 1.5rem;
-            border-radius: 30px;
-            font-weight: 500;
-            transition: background 0.3s;
-        }
-
-        .gradient-btn:hover {
-            opacity: 0.9;
-        }
-
-        .btn-gradient {
-            background: linear-gradient(45deg, #9d50bb, #6e48aa);
-            border: none;
-            color: white;
-            font-weight: 500;
-            transition: 0.3s ease;
-        }
-
-        .btn-gradient:hover {
-            background: linear-gradient(45deg, #6e48aa, #9d50bb);
-        }
-
-        footer {
-            background-color: #212529;
-            color: white;
-            padding: 2rem 2rem;
-        }
-
-        footer a {
-            color: #bbb;
-            text-decoration: none;
-        }
-
-        footer a:hover {
-            color: white;
-        }
-    </style>
-</head>
-<!-- FullCalendar JS -->
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js'></script>
-
-<body class="bg-light">
-
-    <!-- Header global -->
-    <header class="header">
+<body>
+  <!-- Header -->
+  <header class="header" id="header">
     <div class="d-flex align-items-center">
-        <div class="logo me-3"></div>
-        <h4 class="mb-0">Melissa</h4>
-    </div>
-    <div class="d-flex align-items-center d-none d-md-flex">
-        {% if user.is_authenticated %}
-            <span class="me-3 d-none d-md-inline"><i class="bi bi-person-circle"></i> {{ user.username }}</span>
-            <a href="{% url 'crear_negocio' %}" class="btn btn-outline-secondary me-2">Crear negocio</a>
-            {% if user.negocios.exists %}
-                <a href="{% url 'mis_negocios' %}" class="btn btn-outline-primary me-2">Ver mis negocios</a>
-            {% endif %}
-            {% if tiene_eliminados %}
-                <button class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#modalRestaurarNegocios">
-                    Restaurar negocios
-                </button>
-            {% endif %}
-            <form method="post" action="{% url 'account_logout' %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger">Cerrar sesión</button>
-            </form>
-        {% else %}
-            <a href="{% url 'account_login' %}" class="btn btn-outline-primary me-2">Iniciar sesión</a>
-            <a href="{% url 'account_signup' %}" class="btn gradient-btn">Registrarse</a>
-        {% endif %}
+      <a href="{% url 'inicio' %}" class="logo me-3" aria-label="Melissa - Inicio">
+        M
+      </a>
+      <h1 class="h4 mb-0 d-none d-md-block">Melissa</h1>
     </div>
 
-    <!-- Ícono hamburguesa para móviles -->
-    <div class="d-md-none">
-        <button class="btn" data-bs-toggle="modal" data-bs-target="#menuUsuarioModal">
-            <i class="bi bi-person-circle fs-4"></i>
-        </button>
-    </div>
-</header>
+    <nav class="navbar navbar-expand-lg">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'inicio' %}">
+              <i class="bi bi-house-door"></i> Inicio
+            </a>
+          </li>
+          
+          <!-- Opciones para Clientes -->
+          {% if is_cliente %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clientes:dashboard' %}">
+                <i class="bi bi-search"></i> Buscar Negocios
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clientes:mis_reservas' %}">
+                <i class="bi bi-calendar-check"></i> Mis Reservas
+              </a>
+            </li>
+          {% endif %}
+          
+          <!-- Opciones para Dueños de Negocio -->
+          {% if is_negocio %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'negocios:mis_negocios' %}">
+                <i class="bi bi-shop me-2"></i>Mis Negocios
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'negocios:crear_negocio' %}">
+                <i class="bi bi-plus-circle me-2"></i>Crear Negocio
+              </a>
+            </li>
+          {% endif %}
+          
+          <!-- Opciones para usuarios no autenticados -->
+          {% if not user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clientes:dashboard' %}">
+                <i class="bi bi-search"></i> Buscar Negocios
+              </a>
+            </li>
+          {% endif %}
+        </ul>
 
-<!-- Modal de usuario (responsive) -->
-<div class="modal fade" id="menuUsuarioModal" tabindex="-1" aria-labelledby="menuUsuarioModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-fullscreen-sm-down">
-    <div class="modal-content border-0 rounded-4 shadow">
-      <div class="modal-header bg-gradient text-white" style="background: linear-gradient(45deg, #6e48aa, #9d50bb);">
-        <h5 class="modal-title" id="menuUsuarioModalLabel">Menú de usuario</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <ul class="navbar-nav">
+          {% if user.is_authenticated %}
+            <!-- Campana de notificaciones global -->
+            <li class="nav-item d-flex align-items-center me-2">
+              <a href="#" class="nav-link position-relative" id="notificacionesBell" data-bs-toggle="modal" data-bs-target="#notificacionesModal" title="Notificaciones">
+                <i class="bi bi-bell fs-4"></i>
+                <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                  <!-- Contador dinámico -->
+                </span>
+              </a>
+            </li>
+            <!-- Menú de usuario -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person-circle"></i> {{ user.username }}
+                {% if is_cliente %}
+                  <span class="badge bg-primary ms-1">Cliente</span>
+                {% elif is_negocio %}
+                  <span class="badge bg-success ms-1">Negocio</span>
+                {% elif is_profesional %}
+                  <span class="badge bg-info ms-1">Profesional</span>
+                {% endif %}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                {% if is_cliente %}
+                  <li><a class="dropdown-item" href="{% url 'clientes:mis_reservas' %}">
+                    <i class="bi bi-calendar-check"></i> Mis Reservas
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                {% elif is_negocio %}
+                  <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}">
+                    <i class="bi bi-shop me-2"></i>Mis Negocios
+                  </a></li>
+                  <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}">
+                    <i class="bi bi-plus-circle me-2"></i>Crear Negocio
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                {% elif is_profesional %}
+                  <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}">
+                    <i class="bi bi-person-badge"></i> Panel Profesional
+                  </a></li>
+                  <li><hr class="dropdown-divider"></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="{% url 'account_logout' %}">
+                  <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                </a></li>
+              </ul>
+            </li>
+          {% else %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="authDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-person"></i> Acceder
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="authDropdown">
+                <li><a class="dropdown-item" href="{% url 'account_login' %}">
+                  <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+                </a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-outline-light d-none d-md-inline-flex">
+                  <i class="bi bi-person-plus me-2"></i>Registrarse
+                </a></li>
+              </ul>
+            </li>
+          {% endif %}
+        </ul>
       </div>
-      <div class="modal-body d-flex flex-column gap-3 p-4">
-        {% if user.is_authenticated %}
-            <div><i class="bi bi-person"></i> {{ user.username }}</div>
-            <a href="{% url 'crear_negocio' %}" class="btn btn-outline-secondary w-100">Crear negocio</a>
-            {% if user.negocios.exists %}
-                <a href="{% url 'mis_negocios' %}" class="btn btn-outline-primary w-100">Ver mis negocios</a>
-            {% endif %}
-            {% if tiene_eliminados %}
-                <button class="btn btn-warning w-100" data-bs-toggle="modal" data-bs-target="#modalRestaurarNegocios">
-                    Restaurar negocios
-                </button>
-            {% endif %}
-            <form method="post" action="{% url 'account_logout' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100">Cerrar sesión</button>
-            </form>
-        {% else %}
-            <a href="{% url 'account_login' %}" class="btn btn-outline-primary w-100">Iniciar sesión</a>
-            <a href="{% url 'account_signup' %}" class="btn gradient-btn w-100">Registrarse</a>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
+    </nav>
+  </header>
 
-
-    <!-- Modal para restaurar negocios eliminados -->
-<div class="modal fade" id="modalRestaurarNegocios" tabindex="-1" aria-labelledby="modalRestaurarNegociosLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title" id="modalRestaurarNegociosLabel">Negocios eliminados</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        
-    {% if negocios_eliminados %}
-    <ul class="list-group">
-        {% for negocio in negocios_eliminados %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <span>{{ negocio.nombre }}</span>
-            <form method="POST" action="{% url 'restaurar_negocio' negocio.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm btn-success">Restaurar</button>
-            </form>
-        </li>
-        {% endfor %}
-    </ul>
-    {% else %}
-    <p class="text-muted">No tienes negocios eliminados.</p>
-    {% endif %}
-
-        
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-    <!-- Contenido dinámico -->
-    <main class="container my-5">
-        {% block content %}
-        {% endblock %}
-    </main>
-
-    <!-- Footer global -->
-    <footer class="mt-auto">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Melissa App</h5>
-                    <p>Una solución moderna para el manejo de citas en peluquerías con enfoque americano y un estilo minimalista.</p>
-                </div>
-                <div class="col-md-3">
-                    <h6>Enlaces</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Inicio</a></li>
-                        <li><a href="#">Preguntas frecuentes</a></li>
-                        <li><a href="#">Contacto</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h6>Contacto</h6>
-                    <p>Email: info@melissacitas.com<br>Tel: +1 800 555 1234</p>
-                </div>
-            </div>
-            <div class="text-center mt-4">
-                <small>&copy; 2025 Melissa App. Todos los derechos reservados.</small>
-            </div>
+  <!-- Mensajes de alerta -->
+  {% if messages %}
+    <div class="container mt-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    </footer>
+      {% endfor %}
+    </div>
+  {% endif %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Contenido principal -->
+  <main class="container-fluid px-0">
+    {% block content %}{% endblock %}
+  </main>
 
+  <!-- Footer -->
+  <footer class="mt-auto">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <h5 class="mb-3">Melissa</h5>
+          <p class="text-muted">La plataforma líder para la gestión de citas en peluquerías. Simplifica tu negocio con nuestra tecnología intuitiva.</p>
+        </div>
+        <div class="col-md-4">
+          <h6 class="mb-3">Enlaces Útiles</h6>
+          <ul class="footer-links">
+            <li><a href="{% url 'inicio' %}">Inicio</a></li>
+            <li><a href="{% url 'clientes:dashboard' %}">Buscar Negocios</a></li>
+            {% if user.is_authenticated %}
+              <li><a href="{% url 'account_logout' %}">Cerrar Sesión</a></li>
+            {% else %}
+              <li><a href="{% url 'account_login' %}">Iniciar Sesión</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="mb-3">Contacto</h6>
+          <ul class="footer-links">
+            <li><a href="mailto:soporte@melissa.com">soporte@melissa.com</a></li>
+            <li><a href="tel:+573001234567">+57 300 123 4567</a></li>
+          </ul>
+        </div>
+      </div>
+      <hr class="my-4">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <p class="mb-0 text-muted">&copy; 2024 Melissa. Todos los derechos reservados.</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <a href="#" class="text-muted me-3">Términos de Servicio</a>
+          <a href="#" class="text-muted">Política de Privacidad</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal de Notificaciones Global -->
+  <div class="modal fade" id="notificacionesModal" tabindex="-1" aria-labelledby="notificacionesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="notificacionesModalLabel">
+            <i class="bi bi-bell me-2"></i> Notificaciones
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-0">
+          <div id="notificacionesLoader" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+          <div id="notificacionesLista" class="list-group list-group-flush d-none">
+            <!-- Aquí se cargarán las notificaciones vía JS -->
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="hidden" id="csrf_token_js" value="{{ csrf_token }}">
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  
+  <!-- CSRF Token para AJAX -->
+  <script>
+    // Obtener CSRF token del input hidden (más robusto que desde cookies)
+    const csrftoken = document.getElementById('csrf_token_js')?.value || '';
+
+    // Configurar headers para AJAX
+    $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+        if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+      }
+    });
+
+    // Header scroll effect
+    window.addEventListener('scroll', function() {
+      const header = document.getElementById('header');
+      if (window.scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Auto-hide alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const alerts = document.querySelectorAll('.alert');
+      alerts.forEach(function(alert) {
+        setTimeout(function() {
+          const bsAlert = new bootstrap.Alert(alert);
+          bsAlert.close();
+        }, 5000);
+      });
+    });
+
+    // Loading states for buttons
+    document.addEventListener('DOMContentLoaded', function() {
+      const forms = document.querySelectorAll('form');
+      forms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Procesando...';
+          }
+        });
+      });
+    });
+
+    // Elemento para feedback
+    let feedbackAlert = null;
+    function mostrarFeedback(mensaje, tipo) {
+      if (!feedbackAlert) {
+        feedbackAlert = document.createElement('div');
+        feedbackAlert.className = 'alert mt-2';
+        document.getElementById('notificacionesLista').parentElement.prepend(feedbackAlert);
+      }
+      feedbackAlert.className = 'alert mt-2 alert-' + (tipo === 'success' ? 'success' : 'danger');
+      feedbackAlert.innerText = mensaje;
+      feedbackAlert.style.display = 'block';
+      setTimeout(() => { feedbackAlert.style.display = 'none'; }, 3000);
+    }
+
+    // Al hacer fetch para aceptar/rechazar:
+    async function responderMatricula(solicitudId, accion) {
+      const url = `/negocios/api/matricula/${solicitudId}/${accion}/`;
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+          },
+          body: JSON.stringify({})
+        });
+        const data = await response.json();
+        if (data.ok) {
+          mostrarFeedback('Acción realizada con éxito.', 'success');
+          // Recargar notificaciones para reflejar el cambio
+          cargarNotificaciones();
+        } else {
+          mostrarFeedback(data.error || 'Ocurrió un error.', 'error');
+        }
+      } catch (e) {
+        mostrarFeedback('Error de red o servidor.', 'error');
+      }
+    }
+  </script>
+
+  {% block extra_js %}{% endblock %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const bell = document.getElementById('notificacionesBell');
+      const countSpan = document.getElementById('notificacionesCount');
+      const modal = document.getElementById('notificacionesModal');
+      const loader = document.getElementById('notificacionesLoader');
+      const lista = document.getElementById('notificacionesLista');
+      let notificacionesCargadas = false;
+
+      // Función para cargar notificaciones
+      async function cargarNotificaciones() {
+        loader.classList.remove('d-none');
+        lista.classList.add('d-none');
+        lista.innerHTML = '';
+        try {
+          const resp = await fetch('/cuentas/api/notificaciones/');
+          if (!resp.ok) throw new Error('Error al cargar notificaciones');
+          const data = await resp.json();
+          // Actualizar contador
+          if (data.no_leidas > 0) {
+            countSpan.textContent = data.no_leidas;
+            countSpan.classList.remove('d-none');
+          } else {
+            countSpan.classList.add('d-none');
+          }
+          // Renderizar notificaciones
+          if (data.notificaciones.length === 0) {
+            lista.innerHTML = '<div class="list-group-item text-center text-muted py-4">No tienes notificaciones.</div>';
+          } else {
+            data.notificaciones.forEach(function(noti) {
+              let html = `<div class="list-group-item d-flex justify-content-between align-items-start ${!noti.leida ? 'bg-light' : ''}">`;
+              html += `<div class="ms-2 me-auto">
+                <div class="fw-bold">${noti.titulo}</div>
+                <div class="small text-muted">${noti.fecha}</div>
+                <div>${noti.mensaje || ''}</div>`;
+              if (noti.url) {
+                html += `<a href="${noti.url}" class="btn btn-link btn-sm">Ver más</a>`;
+              }
+              html += '</div>';
+              if (!noti.leida) {
+                html += '<span class="badge bg-primary rounded-pill">Nuevo</span>';
+              }
+              // Si es negocio y es solicitud de matriculación
+              if (noti.tipo === 'matriculacion' && noti.profesional_id) {
+                html += `<div class="ms-3 d-flex flex-column gap-2">
+                  <button class="btn btn-success btn-sm mb-1 aceptar-matricula" data-id="${noti.id}" data-prof="${noti.profesional_id}">Aceptar</button>
+                  <button class="btn btn-danger btn-sm rechazar-matricula" data-id="${noti.id}" data-prof="${noti.profesional_id}">Rechazar</button>
+                </div>`;
+              }
+              html += '</div>';
+              lista.innerHTML += html;
+            });
+          }
+          loader.classList.add('d-none');
+          lista.classList.remove('d-none');
+        } catch (e) {
+          loader.classList.add('d-none');
+          lista.classList.remove('d-none');
+          lista.innerHTML = '<div class="list-group-item text-danger text-center py-4">Error al cargar notificaciones</div>';
+        }
+      }
+
+      // Cargar notificaciones al abrir el modal
+      if (modal) {
+        modal.addEventListener('show.bs.modal', function() {
+          cargarNotificaciones();
+        });
+      }
+      // También cargar al cargar la página (para el contador)
+      cargarNotificaciones();
+
+      // Delegar eventos para aceptar/rechazar
+      if (lista) {
+        lista.addEventListener('click', async function(e) {
+          if (e.target.classList.contains('aceptar-matricula') || e.target.classList.contains('rechazar-matricula')) {
+            const id = e.target.getAttribute('data-id');
+            const prof = e.target.getAttribute('data-prof');
+            const accion = e.target.classList.contains('aceptar-matricula') ? 'aceptar' : 'rechazar';
+            e.target.disabled = true;
+            e.target.textContent = 'Procesando...';
+            await responderMatricula(id, accion);
+          }
+        });
+      }
+    });
+  </script>
 </body>
 </html>

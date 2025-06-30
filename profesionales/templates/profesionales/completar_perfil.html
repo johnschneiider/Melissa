@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Completar Perfil Profesional - Melissa{% endblock %}
+
+{% block content %}
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="row w-100 justify-content-center">
+        <div class="col-md-7 col-lg-6 col-xl-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="logo mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">M</div>
+                        <h2 class="fw-bold text-dark mb-2">Completa tu Perfil Profesional</h2>
+                        <p class="text-muted">Cuéntanos sobre tu experiencia y habilidades</p>
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-4">
+                                <label for="{{ field.id_for_label }}" class="form-label fw-medium">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text text-muted small mt-2">{{ field.help_text|safe }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill mb-2">
+                            <i class="bi bi-check-circle me-2"></i>Guardar Perfil
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

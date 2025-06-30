@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Cliente - Melissa{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header del Dashboard -->
+    <div class="row bg-primary text-white py-4">
+        <div class="col-12">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-6 fw-bold mb-2">¡Hola, {{ user.username }}!</h1>
+                        <p class="mb-0 opacity-75">Encuentra los mejores servicios de peluquería cerca de ti</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="bg-white bg-opacity-20 rounded-3 p-3">
+                                    <h4 class="mb-0 fw-bold">{{ total_reservas }}</h4>
+                                    <small>Total</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-warning bg-opacity-20 rounded-3 p-3">
+                                    <h4 class="mb-0 fw-bold">{{ reservas_pendientes }}</h4>
+                                    <small>Pendientes</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-success bg-opacity-20 rounded-3 p-3">
+                                    <h4 class="mb-0 fw-bold">{{ reservas_completadas }}</h4>
+                                    <small>Completadas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <form method="GET" class="card shadow-sm border-0">
+                    <div class="card-body p-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Buscar servicios</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-transparent border-end-0">
+                                        <i class="bi bi-search text-muted"></i>
+                                    </span>
+                                    <input type="text" name="q" value="{{ query }}" class="form-control border-start-0" 
+                                           placeholder="Buscar por nombre de negocio, peluquero o ubicación...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary w-100 py-3">
+                                    <i class="bi bi-search me-2"></i>Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Lista de negocios -->
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold">Negocios disponibles</h2>
+                    <span class="badge bg-primary fs-6">{{ negocios_info.count }} encontrados</span>
+                </div>
+
+                {% if negocios_info %}
+                    <div class="row g-4">
+                        {% for info in negocios_info %}
+                        <div class="col-md-6">
+                            <div class="card h-100 shadow-sm border-0 hover-shadow">
+                                <div class="card-body p-4">
+                                    <div class="d-flex align-items-start mb-3">
+                                        {% if info.negocio.logo %}
+                                            <img src="{{ info.negocio.logo.url }}" class="rounded-circle me-3" 
+                                                 style="width: 60px; height: 60px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                                 style="width: 60px; height: 60px;">
+                                                <i class="bi bi-shop fs-4 text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div class="flex-grow-1">
+                                            <h5 class="fw-bold mb-1">{{ info.negocio.nombre }}</h5>
+                                            <p class="text-muted small mb-2">
+                                                <i class="bi bi-geo-alt me-1"></i>{{ info.negocio.direccion }}
+                                            </p>
+                                            <div class="d-flex align-items-center">
+                                                <div class="text-warning me-2">
+                                                    {% for i in "12345" %}
+                                                        {% if info.calificacion_promedio >= i %}
+                                                            <i class="bi bi-star-fill"></i>
+                                                        {% elif info.calificacion_promedio > i|add:"-1" %}
+                                                            <i class="bi bi-star-half"></i>
+                                                        {% else %}
+                                                            <i class="bi bi-star"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                                <small class="text-muted">
+                                                    ({{ info.calificacion_promedio }})
+                                                    {% if info.calificacion_cantidad > 0 %}
+                                                        - {{ info.calificacion_cantidad }} personas lo han calificado
+                                                    {% else %}
+                                                        - 0 personas lo han calificado
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <h6 class="fw-bold mb-2">Profesionales disponibles:</h6>
+                                        <ul>
+                                            {% for profesional in info.profesionales|slice:":3" %}
+                                                <li>{{ profesional.nombre_completo }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% if info.profesionales|length > 3 %}
+                                            <span class="badge bg-secondary">+{{ info.profesionales|length|add:"-3" }} más</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <a href="{% url 'negocios:detalle_negocio' info.negocio.id %}" class="btn btn-outline-primary w-100">
+                                        <i class="bi bi-eye me-2"></i>Ver detalles
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-search display-1 text-muted mb-3"></i>
+                        <h3 class="text-muted">No se encontraron negocios</h3>
+                        <p class="text-muted">Intenta con otros términos de búsqueda</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Sidebar con reservas recientes -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-calendar-check me-2"></i>Mis reservas recientes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if reservas_usuario %}
+                            {% for reserva in reservas_usuario %}
+                            <div class="d-flex align-items-center mb-3 p-3 bg-light rounded-3">
+                                <div class="flex-shrink-0">
+                                    {% if reserva.peluquero.avatar %}
+                                        <img src="{{ reserva.peluquero.avatar.url }}" class="rounded-circle" 
+                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            <i class="bi bi-person text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-1">{{ reserva.peluquero.nombre }}</h6>
+                                    <p class="text-muted small mb-1">{{ reserva.fecha|date:"d/m/Y" }} - {{ reserva.hora_inicio|time:"H:i" }}</p>
+                                    <span class="badge bg-{% if reserva.estado == 'pendiente' %}warning{% elif reserva.estado == 'confirmado' %}success{% else %}secondary{% endif %}">
+                                        {{ reserva.get_estado_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'clientes:mis_reservas' %}" class="btn btn-outline-primary btn-sm">
+                                    Ver todas mis reservas
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-calendar-x display-4 text-muted mb-3"></i>
+                                <p class="text-muted">No tienes reservas aún</p>
+                                <a href="{% url 'clientes:lista_negocios' %}" class="btn btn-primary btn-sm">
+                                    Hacer mi primera reserva
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+    transition: all 0.3s ease;
+}
+</style>
+{% endblock %} 

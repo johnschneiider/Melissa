@@ -1,0 +1,33 @@
+<div class="business-card">
+    {% if negocio.logo %}
+    <img src="{{ negocio.logo.url }}" alt="{{ negocio.nombre }}" class="business-img">
+    {% else %}
+    <div class="business-img bg-secondary d-flex align-items-center justify-content-center">
+        <i class="bi bi-shop text-white" style="font-size: 3rem;"></i>
+    </div>
+    {% endif %}
+    <div class="p-3">
+        <h4>{{ negocio.nombre }}</h4>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="business-rating">
+                <i class="bi bi-star-fill"></i> 
+                {{ negocio.promedio_calificacion|default:"4.5" }} ({{ negocio.total_resenias|default:"25" }})
+            </span>
+            <span>{{ negocio.ciudad|default:"Quito" }}</span>
+        </div>
+        <span class="business-category">{{ negocio.categoria_display }}</span>
+        <div class="mt-2">
+            {% with profesional=negocio.profesionales.0 %}
+            {% if profesional %}
+            <a href="{% url 'clientes:detalle_peluquero' profesional.id %}" class="btn btn-primary btn-sm w-100">
+                Ver detalles
+            </a>
+            {% else %}
+            <button class="btn btn-secondary btn-sm w-100" disabled>
+                Sin profesionales disponibles
+            </button>
+            {% endif %}
+            {% endwith %}
+        </div>
+    </div>
+</div>
