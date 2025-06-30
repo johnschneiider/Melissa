@@ -455,8 +455,6 @@
               <i class="bi bi-house-door"></i> Inicio
             </a>
           </li>
-          
-          <!-- Opciones para Clientes -->
           {% if is_cliente %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'clientes:dashboard' %}">
@@ -468,10 +466,7 @@
                 <i class="bi bi-calendar-check"></i> Mis Reservas
               </a>
             </li>
-          {% endif %}
-          
-          <!-- Opciones para Dueños de Negocio -->
-          {% if is_negocio %}
+          {% elif is_negocio %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'negocios:mis_negocios' %}">
                 <i class="bi bi-shop me-2"></i>Mis Negocios
@@ -482,30 +477,27 @@
                 <i class="bi bi-plus-circle me-2"></i>Crear Negocio
               </a>
             </li>
-          {% endif %}
-          
-          <!-- Opciones para usuarios no autenticados -->
-          {% if not user.is_authenticated %}
+          {% elif is_profesional %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'clientes:dashboard' %}">
-                <i class="bi bi-search"></i> Buscar Negocios
+              <a class="nav-link" href="{% url 'profesionales:panel' %}">
+                <i class="bi bi-person-badge"></i> Panel Profesional
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'profesionales:notificaciones' %}">
+                <i class="bi bi-bell"></i> Notificaciones
               </a>
             </li>
           {% endif %}
         </ul>
-
-        <ul class="navbar-nav">
+        <ul class="navbar-nav ms-auto align-items-center">
           {% if user.is_authenticated %}
-            <!-- Campana de notificaciones global -->
-            <li class="nav-item d-flex align-items-center me-2">
-              <a href="#" class="nav-link position-relative" id="notificacionesBell" data-bs-toggle="modal" data-bs-target="#notificacionesModal" title="Notificaciones">
+            <li class="nav-item me-2">
+              <a href="{% if is_cliente %}{% url 'clientes:notificaciones' %}{% elif is_negocio %}{% url 'negocios:panel_negocio' user.negocios.first.id %}{% elif is_profesional %}{% url 'profesionales:notificaciones' %}{% endif %}" class="nav-link position-relative" title="Notificaciones">
                 <i class="bi bi-bell fs-4"></i>
-                <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
-                  <!-- Contador dinámico -->
-                </span>
+                {# Aquí podrías mostrar un badge con el número de notificaciones no leídas si lo tienes en contexto #}
               </a>
             </li>
-            <!-- Menú de usuario -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-person-circle"></i> {{ user.username }}

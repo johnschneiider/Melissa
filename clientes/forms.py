@@ -67,10 +67,13 @@ class ReservaNegocioForm(forms.ModelForm):
     def __init__(self, *args, negocio=None, profesional_preseleccionado=None, **kwargs):
         super().__init__(*args, **kwargs)
         if negocio:
-            self.fields['servicio'].queryset = ServicioNegocio.objects.filter(negocio=negocio)
-            self.fields['servicio'].label_from_instance = lambda obj: f"{obj.servicio.nombre} ({obj.duracion} min)"
-            from profesionales.models import Matriculacion
+            from profesionales.models import Matriculacion, Profesional
             profesionales = Profesional.objects.filter(matriculaciones__negocio=negocio, matriculaciones__estado='aprobada').distinct()
             self.fields['profesional'].queryset = profesionales
-        if profesional_preseleccionado:
-            self.fields['profesional'].initial = profesional_preseleccionado.id
+            self.fields['servicio'].queryset = ServicioNegocio.objects.filter(negocio=negocio)
+            self.fields['servicio'].label_from_instance = lambda obj: f"{obj.servicio.nombre} ({obj.duracion} min)"
+            # Si hay un profesional preseleccionado, filtrar servicios por los asignados a ese profesional
+            if profesional_preseleccionado:
+                servicios_ids = profesional_preseleccionado.servicios.values_list('id', flat=True)
+                self.fields['servicio'].queryset = ServicioNegocio.objects.filter(negocio=negocio, servicio__id__in=servicios_ids)
+                self.fields['profesional'].initial = profesional_preseleccionado.id

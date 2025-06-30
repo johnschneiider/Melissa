@@ -6,6 +6,8 @@ import os
 import json
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
 
 class Servicio(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -115,11 +117,18 @@ def crear_servicios_iniciales():
     for nombre in SERVICIOS_FIJOS:
         Servicio.objects.get_or_create(nombre=nombre)
 
+# Crear servicios base automáticamente después de migraciones
+@receiver(post_migrate)
+def ensure_servicios_fijos(sender, **kwargs):
+    if sender.name == 'negocios':
+        crear_servicios_iniciales()
+
 class ServicioNegocio(models.Model):
     negocio = models.ForeignKey('Negocio', on_delete=models.CASCADE, related_name='servicios_negocio')
     servicio = models.ForeignKey(Servicio, on_delete=models.CASCADE)
     duracion = models.PositiveIntegerField(default=30, help_text='Duración en minutos')
     precio = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    activo = models.BooleanField(default=True, help_text='¿El servicio está activo/ofrecido por el negocio?')
 
     class Meta:
         unique_together = ('negocio', 'servicio')

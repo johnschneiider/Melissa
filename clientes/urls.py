@@ -7,7 +7,8 @@ from .views import (
     horarios_disponibles,
     mis_reservas,
     dashboard_cliente,
-    reservar_negocio
+    reservar_negocio,
+    notificaciones,
 )
 
 app_name = 'clientes'
@@ -21,4 +22,5 @@ urlpatterns = [
     path('api/horarios-disponibles/<int:peluquero_id>/', horarios_disponibles, name='horarios_disponibles'),
     path('mis-reservas/', mis_reservas, name='mis_reservas'),
     path('negocio/<int:negocio_id>/reservar/', reservar_negocio, name='reservar_negocio'),
+    path('notificaciones/', notificaciones, name='notificaciones'),
 ]

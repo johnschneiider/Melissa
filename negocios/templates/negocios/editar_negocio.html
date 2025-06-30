@@ -151,12 +151,22 @@
 
                             <!-- Servicios -->
                             <div class="col-12 mb-3">
-                                <label for="{{ form.servicios.id_for_label }}" class="form-label fw-bold">Servicios que ofrece el negocio</label>
-                                {{ form.servicios }}
+                                <label class="form-label fw-bold">Servicios que ofrece el negocio</label>
+                                <div class="row">
+                                    {% for sn in servicios_negocio %}
+                                    <div class="col-12 col-md-6 col-lg-4 mb-2">
+                                        <div class="form-check d-flex align-items-center">
+                                            <input class="form-check-input me-2" type="checkbox" name="servicios" id="servicio_{{ sn.id }}" value="{{ sn.id }}" {% if sn.activo %}checked{% endif %}>
+                                            <label class="form-check-label me-2" for="servicio_{{ sn.id }}">
+                                                {{ sn.servicio.nombre }}
+                                            </label>
+                                            <input type="number" name="duracion_{{ sn.id }}" value="{{ sn.duracion }}" min="1" max="480" class="form-control form-control-sm ms-2" style="width: 70px;" title="Duración en minutos">
+                                            <span class="ms-1 small text-muted">min</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
                                 <div class="form-text">Selecciona uno o más servicios de la lista. Si no encuentras el servicio, agrégalo abajo.</div>
-                                {% if form.servicios.errors %}
-                                    <div class="invalid-feedback d-block">{{ form.servicios.errors.0 }}</div>
-                                {% endif %}
                             </div>
                             <div class="col-12 mb-3">
                                 <label for="{{ form.nuevo_servicio.id_for_label }}" class="form-label fw-bold">Agregar nuevo servicio</label>

@@ -444,3 +444,7 @@ def reservar_negocio(request, negocio_id):
         'form': form,
         'profesional_preseleccionado': profesional_preseleccionado,
     })
+
+def notificaciones(request):
+    """Vista de notificaciones para clientes (próximamente)"""
+    return render(request, 'clientes/notificaciones.html')

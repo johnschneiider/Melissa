@@ -55,7 +55,15 @@ def panel(request):
         return redirect('inicio')
     profesional = getattr(user, 'perfil_profesional', None)
     notis_no_leidas = profesional.notificaciones.filter(leida=False).count() if profesional else 0
-    return render(request, 'profesionales/panel.html', {'profesional': profesional, 'notis_no_leidas': notis_no_leidas})
+    servicios = profesional.servicios.all() if profesional else []
+    # Malla de turnos: suponemos que está en profesional.horarios.all()
+    horarios = profesional.horarios.all() if profesional else []
+    return render(request, 'profesionales/panel.html', {
+        'profesional': profesional,
+        'notis_no_leidas': notis_no_leidas,
+        'servicios': servicios,
+        'horarios': horarios,
+    })
 
 @login_required
 def buscar_negocio(request):

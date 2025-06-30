@@ -5,30 +5,49 @@
 <div class="container py-4">
     <h2 class="mb-4">Editar Horario y Servicios de {{ profesional.nombre_completo }}</h2>
 
-    <!-- Asignar horario a todos los días -->
-    <div class="card mb-4 shadow-sm border-primary">
-        <div class="card-body">
-            <h5 class="card-title mb-3">Asignar mismo horario a todos los días</h5>
-            <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-4">
-                    <label for="all_inicio" class="form-label">Hora de inicio</label>
-                    <input type="time" id="all_inicio" class="form-control">
-                </div>
-                <div class="col-12 col-md-4">
-                    <label for="all_fin" class="form-label">Hora de fin</label>
-                    <input type="time" id="all_fin" class="form-control">
-                </div>
-                <div class="col-12 col-md-4 d-grid">
-                    <button type="button" class="btn btn-primary mt-3 mt-md-0" onclick="asignarHorarioTodos()">
-                        Asignar a todos los días
-                    </button>
+    <form method="post">
+        {% csrf_token %}
+        <!-- Asignar servicios al profesional -->
+        <div class="card mb-4 shadow-sm border-success">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Servicios que puede prestar</h5>
+                <div class="row">
+                    {% for s in servicios_negocio %}
+                    <div class="col-12 col-md-6 col-lg-4 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="servicios" id="servicio_{{ s.id }}" value="{{ s.id }}" {% if s.servicio.id in servicios_asignados %}checked{% endif %}>
+                            <label class="form-check-label" for="servicio_{{ s.id }}">
+                                {{ s.servicio.nombre }} <span class="text-muted small">({{ s.duracion }} min)</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-    </div>
 
-    <form method="post">
-        {% csrf_token %}
+        <!-- Asignar horario a todos los días -->
+        <div class="card mb-4 shadow-sm border-primary">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Asignar mismo horario a todos los días</h5>
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label for="all_inicio" class="form-label">Hora de inicio</label>
+                        <input type="time" id="all_inicio" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="all_fin" class="form-label">Hora de fin</label>
+                        <input type="time" id="all_fin" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4 d-grid">
+                        <button type="button" class="btn btn-primary mt-3 mt-md-0" onclick="asignarHorarioTodos()">
+                            Asignar a todos los días
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             {% for dia in dias_semana %}
                 <div class="col-12 col-md-6 mb-3">

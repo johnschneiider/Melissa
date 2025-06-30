@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Calendario de Reservas - {{ negocio.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Calendario de Reservas de {{ negocio.nombre }}</h2>
+    <div id="calendar"></div>
+</div>
+<!-- FullCalendar CSS y JS desde CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'es',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: '/negocios/{{ negocio.id }}/api/reservas/', // Endpoint que crearemos
+        eventClick: function(info) {
+            // Puedes mostrar detalles de la reserva aquí
+            alert('Reserva: ' + info.event.title);
+        }
+    });
+    calendar.render();
+});
+</script>
+{% endblock %} 

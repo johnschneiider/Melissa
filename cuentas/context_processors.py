@@ -31,4 +31,15 @@ def user_type(request):
         context['is_cliente'] = request.user.tipo == 'cliente'
         context['is_negocio'] = request.user.tipo == 'negocio'
     
-    return context 
+    return context
+
+def tipo_usuario(request):
+    user = request.user
+    is_cliente = getattr(user, 'tipo', None) == 'cliente'
+    is_negocio = getattr(user, 'tipo', None) == 'negocio'
+    is_profesional = getattr(user, 'tipo', None) == 'profesional'
+    return {
+        'is_cliente': is_cliente,
+        'is_negocio': is_negocio,
+        'is_profesional': is_profesional,
+    } 

@@ -74,9 +74,13 @@ document.querySelectorAll('.btn-accion-matricula').forEach(btn => {
         mostrarFeedbackGlobal('Acción realizada con éxito.', 'success');
         // Quitar la tarjeta de la solicitud
         card.remove();
-        // Si no quedan solicitudes, mostrar mensaje
+        // Si no quedan solicitudes, mostrar mensaje y redirigir al panel
         if (document.querySelectorAll('.solicitud-card').length === 0) {
           document.getElementById('solicitudesLista').innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay solicitudes pendientes.</p></div>';
+          // Redirigir al panel del negocio después de un breve delay
+          setTimeout(function() {
+            window.location.href = `/negocios/${data.negocio_id}/panel/`;
+          }, 1200);
         }
       } else {
         mostrarFeedbackGlobal(data.error || 'Ocurrió un error.', 'danger');

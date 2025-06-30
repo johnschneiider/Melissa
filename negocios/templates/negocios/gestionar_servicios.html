@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar Servicios - {{ negocio.nombre }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4">Gestionar Servicios de {{ negocio.nombre }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Servicio</th>
+                        <th>Duración (min)</th>
+                        <th>Precio</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                    <tr>
+                        <td>{{ form.servicio }}</td>
+                        <td>{{ form.duracion }}</td>
+                        <td>{{ form.precio }}</td>
+                        <td>{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+            <button type="submit" class="btn btn-success">Guardar Cambios</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

@@ -21,4 +21,7 @@ urlpatterns = [
     path('api/matricula/<int:solicitud_id>/rechazar/', api_responder_matricula, {'accion': 'rechazar'}, name='api_rechazar_matricula'),
     path('<int:negocio_id>/galeria/', views.galeria_negocio, name='galeria_negocio'),
     path('<int:negocio_id>/profesional/<int:profesional_id>/editar/', views.editar_profesional_negocio, name='editar_profesional_negocio'),
+    path('<int:negocio_id>/calendario/', views.calendario_reservas, name='calendario_reservas'),
+    path('<int:negocio_id>/api/reservas/', views.api_reservas_negocio, name='api_reservas_negocio'),
+    path('<int:negocio_id>/servicios/', views.gestionar_servicios, name='gestionar_servicios'),
 ]

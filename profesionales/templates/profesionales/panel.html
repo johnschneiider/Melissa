@@ -70,5 +70,39 @@
             </div>
         </div>
     </div>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card border-success mb-3">
+                <div class="card-header bg-success text-white">Servicios que puedes prestar</div>
+                <div class="card-body">
+                    {% if servicios %}
+                        <ul class="list-group list-group-flush">
+                            {% for s in servicios %}
+                            <li class="list-group-item">{{ s.nombre }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No tienes servicios asignados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-info mb-3">
+                <div class="card-header bg-info text-white">Malla de turnos</div>
+                <div class="card-body">
+                    {% if horarios %}
+                        <ul class="list-group list-group-flush">
+                            {% for h in horarios %}
+                            <li class="list-group-item">{{ h.get_dia_semana_display }}: {{ h.hora_inicio|time:'H:i' }} - {{ h.hora_fin|time:'H:i' }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No tienes turnos asignados.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %} 

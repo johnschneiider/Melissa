@@ -25,6 +25,8 @@ from profesionales.models import Matriculacion, Profesional
 from profesionales.models import Notificacion
 from negocios.models import ImagenNegocio as ImagenGaleria
 from django.db import models
+from django.forms import ModelForm
+from django.forms import modelformset_factory
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,11 @@ def crear_negocio(request):
                 negocio.propietario = request.user
                 negocio.activo = True
                 negocio.save()
+                
+                # Asignar automáticamente todos los servicios base al nuevo negocio
+                from .models import Servicio, ServicioNegocio
+                for servicio in Servicio.objects.all():
+                    ServicioNegocio.objects.get_or_create(negocio=negocio, servicio=servicio)
                 
                 logger.info(f"Negocio '{negocio.nombre}' creado por {request.user.username}")
                 messages.success(request, f'¡Felicidades! Tu negocio "{negocio.nombre}" ha sido creado exitosamente.')
@@ -149,6 +156,8 @@ def configurar_negocio(request, negocio_id):
 def panel_negocio(request, negocio_id):
     try:
         negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+        # Servicios activos del negocio
+        servicios_activos = negocio.servicios_negocio.filter(activo=True).select_related('servicio')
 
         if request.method == 'POST' and 'logo' in request.FILES:
             try:
@@ -204,6 +213,7 @@ def panel_negocio(request, negocio_id):
             'profesionales_aceptados': profesionales_aceptados,
             'dias': dias,
             'horario_guardado': horario_guardado,
+            'servicios_activos': servicios_activos,
         })
     except Exception as e:
         logger.error(f"Error en panel_negocio: {str(e)}")
@@ -362,20 +372,45 @@ def editar_negocio(request, negocio_id):
             nuevo_servicio = form.cleaned_data.get('nuevo_servicio')
             if nuevo_servicio:
                 servicio, creado = Servicio.objects.get_or_create(nombre=nuevo_servicio)
-                negocio.servicios.add(servicio)
+                from .models import ServicioNegocio
+                ServicioNegocio.objects.get_or_create(negocio=negocio, servicio=servicio)
+            # Guardar servicios seleccionados y duración personalizada
+            servicios_ids = request.POST.getlist('servicios')
+            servicios_negocio = negocio.servicios_negocio.all()
+            for sn in servicios_negocio:
+                sn_activo = str(sn.id) in servicios_ids
+                # Actualizar duración personalizada
+                nueva_duracion = request.POST.get(f'duracion_{sn.id}')
+                if nueva_duracion:
+                    try:
+                        sn.duracion = int(nueva_duracion)
+                    except ValueError:
+                        pass
+                if sn_activo and not sn.activo:
+                    sn.activo = True
+                elif not sn_activo and sn.activo:
+                    sn.activo = False
+                sn.save()
             messages.success(request, 'Negocio actualizado exitosamente.')
+            # Log para depuración de redirección
+            logger.warning(f"[DEBUG] Usuario: {request.user.username}, tipo: {getattr(request.user, 'tipo', None)}")
             # Redirige según el tipo de usuario
             if hasattr(request.user, 'tipo') and request.user.tipo == 'negocio':
+                logger.warning(f"[DEBUG] Redirigiendo a panel_negocio para negocio_id={negocio.id}")
                 return redirect('negocios:panel_negocio', negocio_id=negocio.id)
             else:
+                logger.warning(f"[DEBUG] Redirigiendo a detalle_negocio para negocio_id={negocio.id}")
                 return redirect('negocios:detalle_negocio', negocio_id=negocio.id)
     else:
         form = NegocioForm(instance=negocio)
+    # Obtener todos los servicios disponibles para el negocio
+    servicios_negocio = negocio.servicios_negocio.all()
     return render(request, 'negocios/editar_negocio.html', {
         'form': form,
         'negocio': negocio,
         'imagenes': imagenes,
         'imagen_form': imagen_form,
+        'servicios_negocio': servicios_negocio,
     })
 
 @login_required
@@ -434,7 +469,7 @@ def api_responder_matricula(request, solicitud_id, accion):
             )
         else:
             return JsonResponse({'ok': False, 'error': 'Acción no válida.'}, status=400)
-        return JsonResponse({'ok': True})
+        return JsonResponse({'ok': True, 'negocio_id': solicitud.negocio.id})
     except Matriculacion.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Solicitud no encontrada.'}, status=404)
     except Exception as e:
@@ -472,8 +507,9 @@ def editar_profesional_negocio(request, negocio_id, profesional_id):
     if request.method == 'POST':
         # Actualizar servicios asignados
         servicios_ids = request.POST.getlist('servicios')
-        profesional.servicios.set([s.servicio for s in servicios_negocio if str(s.id) in servicios_ids])
-        # Actualizar días y horarios (ejemplo simple, puedes expandirlo)
+        servicios_a_asignar = [s.servicio for s in servicios_negocio if str(s.id) in servicios_ids]
+        profesional.servicios.set(servicios_a_asignar)
+        # Actualizar días y horarios
         dias = request.POST.getlist('dias')
         horario = {}
         for dia in dias:
@@ -497,3 +533,50 @@ def editar_profesional_negocio(request, negocio_id, profesional_id):
         'horario_actual': horario_actual,
         'servicios_asignados': servicios_asignados,
     })
+
+def calendario_reservas(request, negocio_id):
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+    return render(request, 'negocios/calendario_reservas.html', {'negocio': negocio})
+
+def api_reservas_negocio(request, negocio_id):
+    from clientes.models import Reserva
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+    reservas = Reserva.objects.filter(peluquero=negocio)
+    eventos = []
+    for r in reservas:
+        eventos.append({
+            'id': r.id,
+            'title': f'{r.servicio.nombre if r.servicio else "Reserva"} - {r.cliente}',
+            'start': f'{r.fecha}T{r.hora_inicio}',
+            'end': f'{r.fecha}T{r.hora_fin}',
+            'extendedProps': {
+                'profesional': str(r.profesional) if r.profesional else '',
+                'estado': r.estado,
+            }
+        })
+    return JsonResponse(eventos, safe=False)
+
+class ServicioNegocioForm(ModelForm):
+    class Meta:
+        model = ServicioNegocio
+        fields = ['servicio', 'duracion', 'precio']
+
+def gestionar_servicios(request, negocio_id):
+    negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
+    ServicioFormSet = modelformset_factory(ServicioNegocio, form=ServicioNegocioForm, extra=1, can_delete=True)
+    queryset = ServicioNegocio.objects.filter(negocio=negocio)
+    if request.method == 'POST':
+        formset = ServicioFormSet(request.POST, queryset=queryset)
+        if formset.is_valid():
+            instances = formset.save(commit=False)
+            for obj in formset.deleted_objects:
+                obj.delete()
+            for instance in instances:
+                instance.negocio = negocio
+                instance.save()
+            formset.save_m2m()
+            messages.success(request, 'Servicios actualizados correctamente.')
+            return redirect('negocios:gestionar_servicios', negocio_id=negocio.id)
+    else:
+        formset = ServicioFormSet(queryset=queryset)
+    return render(request, 'negocios/gestionar_servicios.html', {'negocio': negocio, 'formset': formset})
