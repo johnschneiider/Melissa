@@ -15,4 +15,5 @@ urlpatterns = [
     path('negocios/', include(('negocios.urls', 'negocios'), namespace='negocios')),
     path('clientes/', include('clientes.urls')),
     path('profesionales/', include(('profesionales.urls', 'profesionales'), namespace='profesionales')),
+    path('chat/', include('chat.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

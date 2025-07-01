@@ -56,12 +56,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'corsheaders',
+    'channels',
     
     # Local apps
     'cuentas',
     'negocios',
     'clientes',
     'profesionales',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -232,4 +234,25 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # Configuración de adaptadores personalizados
 ACCOUNT_ADAPTER = 'cuentas.adapters.CustomAccountAdapter'
 SOCIALACCOUNT_ADAPTER = 'cuentas.adapters.CustomSocialAccountAdapter'
+
+# Django Channels Configuration
+ASGI_APPLICATION = 'melissa.asgi.application'
+
+# Channel Layers Configuration (Redis backend)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+# Configuración para desarrollo (sin Redis)
+if DEBUG:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
 
