@@ -350,7 +350,9 @@ def mis_reservas(request):
     try:
         reservas = Reserva.objects.filter(
             cliente=request.user
-        ).select_related('negocio').order_by('-fecha', '-hora_inicio')
+        ).select_related('peluquero', 'profesional', 'servicio').order_by('-fecha', '-hora_inicio')
+        
+        logger.info(f"Reservas encontradas para {request.user.username}: {reservas.count()}")
         
         # Separar reservas por estado
         reservas_pendientes = reservas.filter(estado='pendiente')
@@ -450,28 +452,77 @@ def reservar_negocio(request, negocio_id):
     
     if request.method == 'POST':
         logger.info(f"POST recibido en reservar_negocio - negocio_id: {negocio_id}")
+        form = ReservaNegocioForm(request.POST, negocio=negocio, profesional_preseleccionado=profesional_preseleccionado)
         
-        # Intentar crear una reserva mínima sin usar el formulario
-        try:
-            from datetime import date, time
-            
-            # Crear reserva con solo campos esenciales
-            reserva = Reserva.objects.create(
-                cliente=request.user,
-                peluquero=negocio,
-                fecha=date.today(),
-                hora_inicio=time(10, 0),
-                hora_fin=time(10, 30),
-                estado='pendiente'
-            )
-            
-            logger.info(f"Reserva creada exitosamente: {reserva.id}")
-            messages.success(request, '¡Reserva realizada con éxito!')
-            return redirect('clientes:confirmacion_reserva', reserva_id=reserva.id)
-            
-        except Exception as e:
-            logger.error(f"Error creando reserva mínima: {str(e)}")
-            messages.error(request, f'Error al crear la reserva: {str(e)}')
+        logger.info(f"Formulario creado - válido: {form.is_valid()}")
+        if not form.is_valid():
+            logger.warning(f"Formulario inválido - errores: {form.errors}")
+            logger.warning(f"Datos POST: {request.POST}")
+        
+        if form.is_valid():
+            try:
+                # Obtener los datos del formulario
+                servicio = form.cleaned_data.get('servicio')
+                profesional = form.cleaned_data.get('profesional')
+                fecha = form.cleaned_data.get('fecha')
+                hora_inicio = form.cleaned_data.get('hora_inicio')
+                notas = form.cleaned_data.get('notas', '')
+                
+                logger.info(f"Datos del formulario - servicio: {servicio}, profesional: {profesional}, fecha: {fecha}, hora_inicio: {hora_inicio}")
+                
+                # Validar que todos los campos requeridos estén presentes
+                if not fecha or not hora_inicio:
+                    logger.error("Fecha o hora_inicio faltantes")
+                    messages.error(request, 'Fecha y hora son obligatorios.')
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                    })
+                
+                # Calcular hora_fin usando la duración del servicio
+                hora_fin = None
+                if servicio and hora_inicio:
+                    duracion = servicio.duracion
+                    from datetime import datetime, timedelta
+                    hora_inicio_dt = datetime.combine(fecha, hora_inicio)
+                    hora_fin_dt = hora_inicio_dt + timedelta(minutes=duracion)
+                    hora_fin = hora_fin_dt.time()
+                    logger.info(f"Hora fin calculada: {hora_fin}")
+                
+                # Crear la reserva
+                reserva = Reserva(
+                    cliente=request.user,
+                    peluquero=negocio,
+                    fecha=fecha,
+                    hora_inicio=hora_inicio,
+                    hora_fin=hora_fin or hora_inicio,
+                    estado='pendiente'
+                )
+                
+                # Agregar campos opcionales solo si existen
+                if profesional:
+                    reserva.profesional = profesional
+                if servicio:
+                    reserva.servicio = servicio
+                if notas:
+                    reserva.notas = notas
+                
+                logger.info(f"Intentando guardar reserva con datos: cliente={reserva.cliente.id}, peluquero={reserva.peluquero.id}, profesional={reserva.profesional.id if reserva.profesional else None}, servicio={reserva.servicio.id if reserva.servicio else None}")
+                
+                reserva.save()
+                
+                logger.info(f"Reserva creada exitosamente: {reserva.id}")
+                messages.success(request, '¡Reserva realizada con éxito!')
+                return redirect('clientes:confirmacion_reserva', reserva_id=reserva.id)
+                
+            except Exception as e:
+                logger.error(f"Error guardando reserva: {str(e)}")
+                messages.error(request, 'Error al guardar la reserva. Por favor, intenta nuevamente.')
+        else:
+            logger.error(f"Formulario inválido: {form.errors}")
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
     
     # Si no es POST, mostrar formulario normal
     form = ReservaNegocioForm(negocio=negocio, profesional_preseleccionado=profesional_preseleccionado)
