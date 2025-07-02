@@ -97,6 +97,10 @@ function asignarHorarioTodos() {
     document.querySelectorAll('.horario-fin').forEach(input => {
         input.value = fin;
     });
+    // Marcar todos los checkboxes de días
+    document.querySelectorAll('input[type="checkbox"][name="dias"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
 }
 </script>
 {% endblock %} 

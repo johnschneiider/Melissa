@@ -16,7 +16,9 @@
                                 <div class="fw-bold">{{ noti.titulo }}</div>
                                 <div class="small text-muted">{{ noti.fecha_creacion|date:'d/m/Y H:i' }}</div>
                                 <div>{{ noti.mensaje }}</div>
-                                {% if noti.url_relacionada %}
+                                {% if noti.tipo == 'matriculacion' %}
+                                    <a href="{% url 'negocios:solicitudes_matricula' %}" class="btn btn-primary btn-sm mt-2">Gestionar Solicitud</a>
+                                {% elif noti.url_relacionada %}
                                     <a href="{{ noti.url_relacionada }}" class="btn btn-link btn-sm">Ver más</a>
                                 {% endif %}
                             </div>

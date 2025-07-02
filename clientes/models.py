@@ -1,5 +1,5 @@
 from django.db import models
-from negocios.models import Negocio, Servicio
+from negocios.models import Negocio, ServicioNegocio
 from django.conf import settings
 from django.utils import timezone
 
@@ -10,7 +10,7 @@ class Reserva(models.Model):
     fecha = models.DateField()
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
-    servicio = models.ForeignKey(Servicio, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservas_servicio')
+    servicio = models.ForeignKey(ServicioNegocio, on_delete=models.SET_NULL, null=True, blank=True, related_name='reservas_servicio')
     creado_en = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(max_length=20, choices=[
         ('pendiente', 'Pendiente'),

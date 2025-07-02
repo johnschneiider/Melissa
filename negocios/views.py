@@ -435,9 +435,15 @@ def ver_perfil_profesional(request, profesional_id):
             negocio = Negocio.objects.get(id=negocio_id, propietario=request.user)
         except Negocio.DoesNotExist:
             negocio = None
+    
+    # Obtener horarios del profesional
+    from profesionales.models import HorarioProfesional
+    horarios = HorarioProfesional.objects.filter(profesional=profesional, disponible=True).order_by('dia_semana')
+    
     return render(request, 'negocios/perfil_profesional.html', {
         'profesional': profesional,
         'negocio': negocio,
+        'horarios': horarios,
     })
 
 @require_POST
@@ -505,33 +511,87 @@ def editar_profesional_negocio(request, negocio_id, profesional_id):
     profesional = get_object_or_404(Profesional, id=profesional_id)
     matriculacion = get_object_or_404(Matriculacion, negocio=negocio, profesional=profesional, estado='aprobada')
     servicios_negocio = ServicioNegocio.objects.filter(negocio=negocio)
+    
     if request.method == 'POST':
         # Actualizar servicios asignados
         servicios_ids = request.POST.getlist('servicios')
         servicios_a_asignar = [s.servicio for s in servicios_negocio if str(s.id) in servicios_ids]
         profesional.servicios.set(servicios_a_asignar)
-        # Actualizar días y horarios
+        
+        # Actualizar horarios usando el modelo HorarioProfesional
+        from profesionales.models import HorarioProfesional
+        from datetime import time
+        
+        # Eliminar horarios existentes
+        profesional.horarios.all().delete()
+        
+        # Crear nuevos horarios
         dias = request.POST.getlist('dias')
-        horario = {}
         for dia in dias:
             inicio = request.POST.get(f'inicio_{dia}')
             fin = request.POST.get(f'fin_{dia}')
             if inicio and fin:
-                horario[dia] = {'inicio': inicio, 'fin': fin}
-        profesional.horario = horario
-        profesional.save()
+                try:
+                    # Convertir strings de tiempo a objetos time
+                    hora_inicio = time.fromisoformat(inicio)
+                    hora_fin = time.fromisoformat(fin)
+                    
+                    # Mapear nombres de días a los valores del modelo
+                    dia_mapping = {
+                        'Lunes': 'lunes',
+                        'Martes': 'martes', 
+                        'Miércoles': 'miercoles',
+                        'Jueves': 'jueves',
+                        'Viernes': 'viernes',
+                        'Sábado': 'sabado',
+                        'Domingo': 'domingo'
+                    }
+                    
+                    dia_semana = dia_mapping.get(dia, dia.lower())
+                    
+                    HorarioProfesional.objects.create(
+                        profesional=profesional,
+                        dia_semana=dia_semana,
+                        hora_inicio=hora_inicio,
+                        hora_fin=hora_fin,
+                        disponible=True
+                    )
+                except (ValueError, TypeError) as e:
+                    messages.error(request, f'Error en el formato de hora para {dia}: {e}')
+                    continue
+        
         messages.success(request, 'Perfil del profesional actualizado correctamente.')
         return redirect('negocios:panel_negocio', negocio_id=negocio.id)
+    
     # Días de la semana
     dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-    horario_actual = getattr(profesional, 'horario', {})
+    
+    # Obtener horarios actuales del modelo HorarioProfesional
+    horarios_actuales = {}
+    for horario in profesional.horarios.all():
+        # Mapear de vuelta a nombres en español
+        dia_mapping_reverse = {
+            'lunes': 'Lunes',
+            'martes': 'Martes',
+            'miercoles': 'Miércoles', 
+            'jueves': 'Jueves',
+            'viernes': 'Viernes',
+            'sabado': 'Sábado',
+            'domingo': 'Domingo'
+        }
+        dia_nombre = dia_mapping_reverse.get(horario.dia_semana, horario.dia_semana)
+        horarios_actuales[dia_nombre] = {
+            'inicio': horario.hora_inicio.strftime('%H:%M'),
+            'fin': horario.hora_fin.strftime('%H:%M')
+        }
+    
     servicios_asignados = profesional.servicios.values_list('id', flat=True)
     return render(request, 'negocios/editar_profesional_negocio.html', {
         'negocio': negocio,
         'profesional': profesional,
         'servicios_negocio': servicios_negocio,
         'dias_semana': dias_semana,
-        'horario_actual': horario_actual,
+        'horario_actual': horarios_actuales,
         'servicios_asignados': servicios_asignados,
     })
 

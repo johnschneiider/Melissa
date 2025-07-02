@@ -43,6 +43,38 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Sección de Horarios Asignados -->
+            {% if horarios %}
+            <div class="card shadow-lg border-0 rounded-4 mt-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Horarios Asignados</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for horario in horarios %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-success">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title text-success">{{ horario.get_dia_semana_display }}</h6>
+                                    <p class="card-text mb-0">
+                                        <i class="bi bi-clock me-1"></i>
+                                        {{ horario.hora_inicio|time:'H:i' }} - {{ horario.hora_fin|time:'H:i' }}
+                                    </p>
+                                    {% if horario.disponible %}
+                                        <span class="badge bg-success">Disponible</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No disponible</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
             {% if profesional.negocio %}
             <div class="mt-4">
                 <a href="{% url 'clientes:reservar_negocio' profesional.negocio.id %}?peluquero={{ profesional.id }}" class="btn btn-primary btn-lg w-100">

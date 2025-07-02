@@ -56,10 +56,17 @@ def panel(request):
         messages.error(request, 'Acceso solo para profesionales.')
         return redirect('inicio')
     profesional = getattr(user, 'perfil_profesional', None)
-    notis_no_leidas = profesional.notificaciones.filter(leida=False).count() if profesional else 0
-    servicios = profesional.servicios.all() if profesional else []
-    # Malla de turnos: suponemos que está en profesional.horarios.all()
-    horarios = profesional.horarios.all() if profesional else []
+    
+    if not profesional:
+        messages.error(request, 'No tienes un perfil profesional configurado.')
+        return redirect('profesionales:completar_perfil')
+    
+    notis_no_leidas = profesional.notificaciones.filter(leida=False).count()
+    servicios = profesional.servicios.all()
+    
+    # Obtener horarios del modelo HorarioProfesional
+    horarios = profesional.horarios.filter(disponible=True).order_by('dia_semana')
+    
     return render(request, 'profesionales/panel.html', {
         'profesional': profesional,
         'notis_no_leidas': notis_no_leidas,

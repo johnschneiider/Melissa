@@ -17,7 +17,7 @@ from django.core.exceptions import ValidationError
 from django.utils.html import escape
 import re
 from django.db.models import Q
-from profesionales.models import Notificacion, Profesional, Matriculacion
+from profesionales.models import Notificacion, Profesional, Matriculacion, HorarioProfesional
 from django.db import models
 
 logger = logging.getLogger(__name__)
@@ -232,93 +232,107 @@ def horarios_disponibles(request, negocio_id):
         negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
         fecha = request.GET.get('fecha')
         servicio_negocio_id = request.GET.get('servicio_negocio_id')
+        profesional_id = request.GET.get('profesional_id')
         duracion = None
+        
+        # Log de depuración
+        logger.info(f"horarios_disponibles - negocio_id: {negocio_id}, fecha: {fecha}, profesional_id: {profesional_id}, servicio_id: {servicio_negocio_id}")
+        
         if servicio_negocio_id:
             try:
                 servicio_negocio = ServicioNegocio.objects.get(id=servicio_negocio_id, negocio=negocio)
                 duracion = servicio_negocio.duracion
+                logger.info(f"Servicio encontrado: {servicio_negocio.servicio.nombre}, duración: {duracion}")
             except ServicioNegocio.DoesNotExist:
+                logger.warning(f"ServicioNegocio no encontrado: {servicio_negocio_id}")
                 pass
-        
-        if not fecha:
-            return JsonResponse({'error': 'Fecha requerida'}, status=400)
-        
+        if not fecha or not profesional_id:
+            logger.warning(f"Faltan parámetros: fecha={fecha}, profesional_id={profesional_id}")
+            return JsonResponse({'error': 'Fecha y profesional requeridos'}, status=400)
         try:
             fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
         except (ValueError, TypeError):
+            logger.warning(f"Formato de fecha inválido: {fecha}")
             return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
-        
         # Verificar si es festivo
         co_holidays = holidays.CountryHoliday('CO')
         nombre_dia = fecha_obj.strftime('%A')
         nombre_dia_es = {
-            'Monday': 'Lunes',
-            'Tuesday': 'Martes',
-            'Wednesday': 'Miércoles',
-            'Thursday': 'Jueves',
-            'Friday': 'Viernes',
-            'Saturday': 'Sábado',
-            'Sunday': 'Domingo'
+            'Monday': 'lunes',
+            'Tuesday': 'martes',
+            'Wednesday': 'miercoles',
+            'Thursday': 'jueves',
+            'Friday': 'viernes',
+            'Saturday': 'sabado',
+            'Sunday': 'domingo'
         }.get(nombre_dia, nombre_dia)
+        es_festivo = fecha_obj in co_holidays or nombre_dia_es == 'domingo'
         
-        es_festivo = fecha_obj in co_holidays or nombre_dia_es == 'Domingo'
+        logger.info(f"Día de la semana: {nombre_dia} -> {nombre_dia_es}, es_festivo: {es_festivo}")
         
         if es_festivo:
+            logger.info("Es festivo, no hay horarios disponibles")
             return JsonResponse({'disponibles': [], 'festivo': True})
+        # Buscar horario del profesional para ese día
+        profesional = get_object_or_404(Profesional, id=profesional_id)
+        logger.info(f"Profesional encontrado: {profesional.nombre_completo}")
         
-        # Obtener horario del negocio para este día
-        horario = negocio.horario_atencion.get(nombre_dia_es, {}) if negocio.horario_atencion else {}
-        turnos = horario.get('turnos', []) if horario else []
+        horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
+        logger.info(f"Horario del profesional para {nombre_dia_es}: {horario_prof}")
         
-        # Obtener reservas existentes para este día
+        if not horario_prof:
+            # Log todos los horarios del profesional para depuración
+            todos_horarios = HorarioProfesional.objects.filter(profesional=profesional)
+            logger.info(f"Todos los horarios del profesional: {list(todos_horarios)}")
+            return JsonResponse({'disponibles': [], 'festivo': False})
+        
+        inicio = horario_prof.hora_inicio
+        fin = horario_prof.hora_fin
+        duracion_turno = duracion or 30
+        
+        logger.info(f"Horario: {inicio} - {fin}, duración turno: {duracion_turno}")
+        
+        # Obtener reservas existentes para este profesional, negocio y día
         reservas = Reserva.objects.filter(
             peluquero=negocio,
+            profesional=profesional,
             fecha=fecha_obj,
             estado__in=['pendiente', 'confirmado']
         ).values_list('hora_inicio', 'hora_fin')
         
-        # Calcular horarios disponibles
+        logger.info(f"Reservas existentes: {list(reservas)}")
+        
+        # Generar slots
         horarios_disponibles = []
-        for turno in turnos:
-            if turno.get('disponible', True):
-                try:
-                    inicio = datetime.strptime(turno['inicio'], '%H:%M').time()
-                    fin = datetime.strptime(turno['fin'], '%H:%M').time()
-                    duracion_turno = duracion or int(turno.get('duracion', 30))
-                    
-                    # Generar intervalos
-                    inicio_minutos = inicio.hour * 60 + inicio.minute
-                    fin_minutos = fin.hour * 60 + fin.minute
-                    tiempo_actual = inicio_minutos
-                    
-                    while tiempo_actual + duracion_turno <= fin_minutos:
-                        hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
-                        hora_fin = time((tiempo_actual + duracion_turno) // 60, (tiempo_actual + duracion_turno) % 60)
-                        
-                        # Verificar si este intervalo está disponible
-                        ocupado = False
-                        for reserva_inicio, reserva_fin in reservas:
-                            if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
-                                ocupado = True
-                                break
-                                
-                        if not ocupado:
-                            horarios_disponibles.append({
-                                'inicio': hora_inicio.strftime('%H:%M'),
-                                'fin': hora_fin.strftime('%H:%M'),
-                                'duracion': duracion_turno
-                            })
-                            
-                        tiempo_actual += duracion_turno
-                except (ValueError, KeyError) as e:
-                    logger.warning(f"Error procesando turno en horarios_disponibles: {str(e)}")
-                    continue
+        inicio_minutos = inicio.hour * 60 + inicio.minute
+        fin_minutos = fin.hour * 60 + fin.minute
+        tiempo_actual = inicio_minutos
+        
+        logger.info(f"Generando slots desde {inicio_minutos} hasta {fin_minutos} minutos")
+        
+        while tiempo_actual + duracion_turno <= fin_minutos:
+            hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
+            hora_fin = time((tiempo_actual + duracion_turno) // 60, (tiempo_actual + duracion_turno) % 60)
+            # Verificar si este slot está ocupado
+            ocupado = False
+            for reserva_inicio, reserva_fin in reservas:
+                if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                    ocupado = True
+                    break
+            if not ocupado:
+                horarios_disponibles.append({
+                    'inicio': hora_inicio.strftime('%H:%M'),
+                    'fin': hora_fin.strftime('%H:%M'),
+                    'duracion': duracion_turno
+                })
+            tiempo_actual += duracion_turno
+        
+        logger.info(f"Slots generados: {len(horarios_disponibles)}")
         
         return JsonResponse({
             'disponibles': horarios_disponibles,
             'festivo': False
         })
-        
     except Exception as e:
         logger.error(f"Error en horarios_disponibles: {str(e)}")
         return JsonResponse({'error': 'Error interno del servidor'}, status=500)

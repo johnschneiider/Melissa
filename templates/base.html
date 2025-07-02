@@ -188,6 +188,7 @@
             {% else %}
               <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:enviar_feedback' %}">Enviar Feedback</a></li>
             {% endif %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
           {% else %}
             <li class="nav-item">
               <a class="nav-link" href="{% url 'cuentas:registro_unificado' %}"><i class="bi bi-person-plus"></i> Registrarse</a>
