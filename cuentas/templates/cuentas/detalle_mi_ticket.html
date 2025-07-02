@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Ticket {{ ticket.numero_ticket }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-0">
+                        <i class="bi bi-ticket-detailed text-primary me-2"></i>
+                        Mi Ticket {{ ticket.numero_ticket }}
+                    </h2>
+                    <p class="text-muted mb-0">{{ ticket.titulo }}</p>
+                </div>
+                <a href="{% url 'cuentas:mis_tickets' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver a Mis Tickets
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Información del ticket -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Información del Ticket
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Estado</label>
+                        <div>
+                            {% if ticket.estado == 'pendiente' %}
+                                <span class="badge bg-warning">Pendiente</span>
+                            {% elif ticket.estado == 'en_proceso' %}
+                                <span class="badge bg-info">En Proceso</span>
+                            {% elif ticket.estado == 'resuelto' %}
+                                <span class="badge bg-success">Resuelto</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Cerrado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Prioridad</label>
+                        <div>
+                            {% if ticket.prioridad == 'urgente' %}
+                                <span class="badge bg-danger">Urgente</span>
+                            {% elif ticket.prioridad == 'alta' %}
+                                <span class="badge bg-warning">Alta</span>
+                            {% elif ticket.prioridad == 'media' %}
+                                <span class="badge bg-info">Media</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Baja</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Categoría</label>
+                        <div>
+                            <span class="badge bg-info">{{ ticket.categoria|title }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de Creación</label>
+                        <div>{{ ticket.fecha|date:'d/m/Y H:i' }}</div>
+                    </div>
+                    
+                    {% if ticket.fecha_resolucion %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha de Resolución</label>
+                        <div>{{ ticket.fecha_resolucion|date:'d/m/Y H:i' }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ticket.tiempo_resolucion %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tiempo de Resolución</label>
+                        <div>{{ ticket.tiempo_resolucion }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Última Actualización</label>
+                        <div>{{ ticket.fecha_ultima_actualizacion|date:'d/m/Y H:i' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conversación -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>
+                        Conversación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Mensaje original -->
+                    <div class="border rounded p-3 mb-4 bg-light">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-person text-primary"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ ticket.usuario.username }}</div>
+                                    <small class="text-muted">{{ ticket.fecha|date:'d/m/Y H:i' }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-primary">Ticket Original</span>
+                        </div>
+                        <div class="mt-2">
+                            <h6>{{ ticket.titulo }}</h6>
+                            <p class="mb-2">{{ ticket.mensaje }}</p>
+                            {% if ticket.imagen %}
+                                <img src="{{ ticket.imagen.url }}" class="img-fluid rounded" style="max-width: 200px;">
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Respuestas -->
+                    {% for respuesta in respuestas %}
+                    <div class="border rounded p-3 mb-3 {% if respuesta.es_sistema %}bg-light{% else %}bg-white{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-{% if respuesta.es_sistema %}secondary{% else %}success{% endif %} bg-opacity-10 rounded-circle p-2 me-2">
+                                    <i class="bi bi-{% if respuesta.es_sistema %}gear{% else %}person-check{% endif %} text-{% if respuesta.es_sistema %}secondary{% else %}success{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">
+                                        {% if respuesta.es_sistema %}
+                                            Sistema
+                                        {% else %}
+                                            {{ respuesta.autor.username }}
+                                        {% endif %}
+                                    </div>
+                                    <small class="text-muted">{{ respuesta.fecha|date:'d/m/Y H:i' }}</small>
+                                </div>
+                            </div>
+                            {% if respuesta.es_sistema %}
+                                <span class="badge bg-secondary">Sistema</span>
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <p class="mb-0">{{ respuesta.mensaje }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Formulario de respuesta (solo si el ticket no está cerrado) -->
+                    {% if ticket.estado != 'cerrado' %}
+                    <div class="border rounded p-3 bg-light">
+                        <h6 class="mb-3">
+                            <i class="bi bi-reply me-2"></i>
+                            Responder al Ticket
+                        </h6>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {{ form_respuesta.mensaje }}
+                            </div>
+                            <button type="submit" name="responder" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>Enviar Respuesta
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="border rounded p-3 bg-light">
+                        <div class="text-center">
+                            <i class="bi bi-lock text-muted" style="font-size: 2rem;"></i>
+                            <h6 class="mt-2 text-muted">Ticket Cerrado</h6>
+                            <p class="text-muted mb-0">Este ticket ha sido cerrado y no se pueden agregar más respuestas.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+</style>
+{% endblock %} 

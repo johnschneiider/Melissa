@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import UsuarioPersonalizado
+from .models import UsuarioPersonalizado, Feedback, RespuestaTicket
+from django.db import models
 
 class RegistroUnificadoForm(UserCreationForm):
     TIPO_CHOICES = [
@@ -97,3 +98,96 @@ class NegocioRegistroForm(UserCreationForm):
         if commit:
             user.save()
         return user
+
+class FeedbackForm(forms.ModelForm):
+    categoria = forms.ChoiceField(
+        choices=[
+            ('', 'Selecciona una categoría'),
+            ('bug', 'Bug/Error'),
+            ('sugerencia', 'Sugerencia'),
+            ('consulta', 'Consulta'),
+            ('mejora', 'Solicitud de Mejora'),
+            ('otro', 'Otro'),
+        ],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    prioridad = forms.ChoiceField(
+        choices=[
+            ('baja', 'Baja'),
+            ('media', 'Media'),
+            ('alta', 'Alta'),
+            ('urgente', 'Urgente'),
+        ],
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    titulo = forms.CharField(
+        max_length=200,
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Título del ticket (ej: Problema con las reservas)'
+        })
+    )
+    
+    etiquetas = forms.ModelMultipleChoiceField(
+        queryset=UsuarioPersonalizado.objects.filter(
+            models.Q(is_superuser=True) | models.Q(tipo='super_admin')
+        ),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = Feedback
+        fields = ['titulo', 'categoria', 'prioridad', 'mensaje', 'imagen', 'etiquetas']
+        widgets = {
+            'mensaje': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 4,
+                'placeholder': 'Describe detalladamente tu feedback, problema o sugerencia...'
+            }),
+            'imagen': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['etiquetas'].queryset = UsuarioPersonalizado.objects.filter(
+            models.Q(is_superuser=True) | models.Q(tipo='super_admin')
+        )
+        self.fields['etiquetas'].required = False
+
+class RespuestaTicketForm(forms.ModelForm):
+    """Formulario para responder a tickets"""
+    
+    class Meta:
+        model = RespuestaTicket
+        fields = ['mensaje']
+        widgets = {
+            'mensaje': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Escribe tu respuesta...'
+            })
+        }
+
+class CambiarEstadoTicketForm(forms.Form):
+    """Formulario para cambiar el estado de un ticket"""
+    estado = forms.ChoiceField(
+        choices=Feedback.ESTADO_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    mensaje = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 3,
+            'placeholder': 'Mensaje opcional para el cambio de estado...'
+        }),
+        required=False
+    )

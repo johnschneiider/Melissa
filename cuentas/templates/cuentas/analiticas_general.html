@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Panel General de Analíticas</h2>
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Turnos Hoy</h5>
+          <p class="card-text display-6">{{ turnos_hoy }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Turnos Semana</h5>
+          <p class="card-text display-6">{{ turnos_semana }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Turnos Mes</h5>
+          <p class="card-text display-6">{{ turnos_mes }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Calificación Promedio</h5>
+          <p class="card-text display-6">{{ calificacion_promedio }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <h4>Tasa de Cancelaciones</h4>
+      <p class="display-6">{{ tasa_cancelaciones }}%</p>
+      <h4>Tiempo Promedio entre Servicios</h4>
+      <p class="display-6">{{ tiempo_promedio_servicio }} min</p>
+    </div>
+    <div class="col-md-6">
+      <h4>Ingresos Estimados</h4>
+      <p class="display-6">${{ ingresos_estimados|floatformat:2 }}</p>
+      <h4>Horas trabajadas vs disponibles</h4>
+      <ul class="list-group">
+        <li class="list-group-item">Trabajadas: <span class="badge bg-info">{{ horas_trabajadas }}</span></li>
+        <li class="list-group-item">Disponibles: <span class="badge bg-secondary">{{ horas_disponibles }}</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Eliminar Calificación - {{ calificacion.profesional.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-gradient-danger text-white py-4">
+                    <div class="text-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Eliminar Calificación
+                        </h3>
+                        <p class="mb-0 mt-2 opacity-75">
+                            ¿Estás seguro de que quieres eliminar tu calificación?
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <!-- Información de la calificación -->
+                    <div class="alert alert-warning mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                <h6 class="mb-1">{{ calificacion.profesional.nombre_completo }}</h6>
+                                <small class="text-muted">{{ calificacion.negocio.nombre }}</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Estrellas -->
+                        <div class="mb-3">
+                            <span class="text-warning fs-5">
+                                {% for i in "12345" %}
+                                    {% if calificacion.puntaje >= i %}
+                                        <i class="bi bi-star-fill"></i>
+                                    {% elif calificacion.puntaje > i|add:"-1" %}
+                                        <i class="bi bi-star-half"></i>
+                                    {% else %}
+                                        <i class="bi bi-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </span>
+                            <span class="ms-2 text-muted">{{ calificacion.puntaje }}/5</span>
+                        </div>
+                        
+                        <!-- Comentario -->
+                        {% if calificacion.comentario %}
+                            <div class="mb-2">
+                                <strong>Tu comentario:</strong>
+                                <p class="mb-0 text-muted">{{ calificacion.comentario }}</p>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Fecha -->
+                        <small class="text-muted">
+                            <i class="bi bi-calendar me-1"></i>
+                            Calificada el {{ calificacion.fecha_calificacion|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+
+                    <!-- Advertencia -->
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        <strong>Esta acción no se puede deshacer.</strong> Una vez eliminada, tendrás que crear una nueva calificación si cambias de opinión.
+                    </div>
+
+                    <!-- Formulario de confirmación -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'negocios:detalle_negocio' calificacion.negocio.id %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash me-2"></i>Eliminar Calificación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle text-danger me-2"></i>
+                        ¿Por qué eliminar una calificación?
+                    </h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Cambio de opinión:</strong> Tu experiencia cambió después de la calificación
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Error en la calificación:</strong> Seleccionaste una puntuación incorrecta
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle text-success me-2"></i>
+                            <strong>Comentario inapropiado:</strong> Quieres reescribir tu comentario
+                        </li>
+                    </ul>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-lightbulb me-2"></i>
+                        <strong>Consejo:</strong> En lugar de eliminar, considera editar tu calificación para mantener la consistencia de las reseñas.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.3);
+}
+
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+}
+</style>
+{% endblock %} 

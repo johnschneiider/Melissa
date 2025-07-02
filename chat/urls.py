@@ -10,4 +10,5 @@ urlpatterns = [
     path('conversacion/<int:conversacion_id>/', views.chat_individual, name='chat_individual'),
     path('api/mensajes/<int:conversacion_id>/', views.api_mensajes, name='api_mensajes'),
     path('api/enviar/<int:conversacion_id>/', views.enviar_mensaje, name='enviar_mensaje'),
+    path('api/mensajes-no-leidos/', views.api_mensajes_no_leidos, name='api_mensajes_no_leidos'),
 ] 

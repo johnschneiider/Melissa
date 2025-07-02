@@ -3,7 +3,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import ProfesionalPerfilForm
 from .models import Profesional, Matriculacion, Notificacion
-from negocios.models import Negocio
+from negocios.models import Negocio, NotificacionNegocio
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 
@@ -90,7 +92,15 @@ def buscar_negocio(request):
                 matricula_existente.save()
                 messages.success(request, f'Solicitud reenviada a {negocio.nombre}.')
             else:
-                Matriculacion.objects.create(profesional=profesional, negocio=negocio, mensaje_solicitud=mensaje)
+                matricula = Matriculacion.objects.create(profesional=profesional, negocio=negocio, mensaje_solicitud=mensaje)
+                # Crear notificación para el negocio
+                NotificacionNegocio.objects.create(
+                    negocio=negocio,
+                    tipo='matriculacion',
+                    titulo='Nueva solicitud de matriculación',
+                    mensaje=f'El profesional {profesional.nombre_completo} ha enviado una solicitud para unirse a tu negocio.',
+                    url_relacionada='',
+                )
                 messages.success(request, f'Solicitud enviada a {negocio.nombre}.')
         return redirect('profesionales:buscar_negocio')
     return render(request, 'profesionales/buscar_negocio.html', {
@@ -123,3 +133,17 @@ def notificaciones(request):
     profesional = getattr(user, 'perfil_profesional', None)
     notificaciones = Notificacion.objects.filter(profesional=profesional).order_by('-fecha_creacion')
     return render(request, 'profesionales/notificaciones.html', {'notificaciones': notificaciones})
+
+@require_POST
+@login_required
+def eliminar_notificacion(request, notificacion_id):
+    user = request.user
+    if user.tipo != 'profesional':
+        return JsonResponse({'ok': False, 'error': 'Solo profesionales.'}, status=403)
+    profesional = getattr(user, 'perfil_profesional', None)
+    try:
+        noti = Notificacion.objects.get(id=notificacion_id, profesional=profesional)
+        noti.delete()
+        return JsonResponse({'ok': True})
+    except Notificacion.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'No encontrada'}, status=404)

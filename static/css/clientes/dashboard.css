@@ -1,0 +1,68 @@
+/* Dashboard de Clientes */
+.dashboard-stats {
+  background: var(--gradient-primary);
+  color: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-label {
+  color: var(--gray);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Negocios destacados */
+.negocio-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  background: white;
+}
+
+.negocio-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.negocio-image {
+  height: 200px;
+  object-fit: cover;
+  width: 100%;
+}
+
+.negocio-info {
+  padding: 1.5rem;
+}
+
+.negocio-rating {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.negocio-distance {
+  color: var(--gray);
+  font-size: 0.9rem;
+} 

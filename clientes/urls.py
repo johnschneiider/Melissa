@@ -8,7 +8,13 @@ from .views import (
     mis_reservas,
     dashboard_cliente,
     reservar_negocio,
-    notificaciones,
+    cancelar_reserva,
+    reagendar_reserva,
+    notificaciones_cliente,
+    eliminar_notificacion_cliente,
+    crear_calificacion,
+    editar_calificacion,
+    eliminar_calificacion,
 )
 
 app_name = 'clientes'
@@ -22,5 +28,13 @@ urlpatterns = [
     path('api/horarios-disponibles/<int:peluquero_id>/', horarios_disponibles, name='horarios_disponibles'),
     path('mis-reservas/', mis_reservas, name='mis_reservas'),
     path('negocio/<int:negocio_id>/reservar/', reservar_negocio, name='reservar_negocio'),
-    path('notificaciones/', notificaciones, name='notificaciones'),
+    path('notificaciones/', notificaciones_cliente, name='notificaciones'),
+    path('notificaciones/eliminar/<int:notificacion_id>/', eliminar_notificacion_cliente, name='eliminar_notificacion'),
+    path('reserva/<int:reserva_id>/cancelar/', cancelar_reserva, name='cancelar_reserva'),
+    path('reserva/<int:reserva_id>/reagendar/', reagendar_reserva, name='reagendar_reserva'),
+    
+    # URLs de calificaciones
+    path('calificar/<int:negocio_id>/<int:profesional_id>/', crear_calificacion, name='crear_calificacion'),
+    path('editar-calificacion/<int:calificacion_id>/', editar_calificacion, name='editar_calificacion'),
+    path('eliminar-calificacion/<int:calificacion_id>/', eliminar_calificacion, name='eliminar_calificacion'),
 ]

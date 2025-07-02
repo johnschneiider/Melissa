@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Dashboard Super Administrador</h2>
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card text-white bg-primary mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Negocios</span>
+          <a href="/admin/negocios/negocio/" class="btn btn-light btn-sm">Gestionar</a>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ total_negocios }}</h5>
+          <a href="{% url 'cuentas:analiticas_negocios' %}" class="btn btn-outline-light btn-sm mt-2">Ver Detalles</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-success mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Clientes</span>
+          <a href="/admin/cuentas/usuariopersonalizado/?tipo=cliente" class="btn btn-light btn-sm">Gestionar</a>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ total_clientes }}</h5>
+          <a href="{% url 'cuentas:analiticas_clientes' %}" class="btn btn-outline-light btn-sm mt-2">Ver Detalles</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-white bg-info mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>Profesionales</span>
+          <a href="/admin/cuentas/usuariopersonalizado/?tipo=profesional" class="btn btn-light btn-sm">Gestionar</a>
+        </div>
+        <div class="card-body">
+          <h5 class="card-title">{{ total_profesionales }}</h5>
+          <a href="{% url 'cuentas:analiticas_profesionales' %}" class="btn btn-outline-light btn-sm mt-2">Ver Detalles</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <a href="{% url 'cuentas:analiticas_general' %}" class="btn btn-lg btn-warning fw-bold">Panel General de Analíticas</a>
+    </div>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-12">
+      <h3>Estadísticas Totales</h3>
+      <canvas id="kpiChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <div class="row mt-5">
+    <div class="col-12">
+      <h3>Evolución Mensual de Registros</h3>
+      <canvas id="evolucionChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <h3 class="mt-5">Feedbacks Recibidos</h3>
+  <table class="table table-striped mt-3">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Mensaje</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for feedback in feedbacks %}
+      <tr>
+        <td>{{ feedback.usuario.username }}</td>
+        <td>{{ feedback.mensaje }}</td>
+        <td>{{ feedback.fecha|date:"Y-m-d H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No hay feedbacks aún.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Aquí puedes agregar más funcionalidades visuales -->
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Gráfica de KPIs totales
+  const ctx = document.getElementById('kpiChart').getContext('2d');
+  const kpiChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Negocios', 'Clientes', 'Profesionales', 'Feedbacks'],
+      datasets: [{
+        label: 'Totales',
+        data: [{{ total_negocios }}, {{ total_clientes }}, {{ total_profesionales }}, {{ feedbacks|length }}],
+        backgroundColor: [
+          'rgba(13, 110, 253, 0.7)',
+          'rgba(25, 135, 84, 0.7)',
+          'rgba(13, 202, 240, 0.7)',
+          'rgba(255, 193, 7, 0.7)'
+        ],
+        borderColor: [
+          'rgba(13, 110, 253, 1)',
+          'rgba(25, 135, 84, 1)',
+          'rgba(13, 202, 240, 1)',
+          'rgba(255, 193, 7, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  // Gráfica de evolución mensual
+  const evolucionCtx = document.getElementById('evolucionChart').getContext('2d');
+  const evolucionChart = new Chart(evolucionCtx, {
+    type: 'line',
+    data: {
+      labels: {{ meses|safe }},
+      datasets: [
+        {
+          label: 'Negocios',
+          data: {{ negocios_mensual|safe }},
+          borderColor: 'rgba(13, 110, 253, 1)',
+          backgroundColor: 'rgba(13, 110, 253, 0.2)',
+          fill: true
+        },
+        {
+          label: 'Clientes',
+          data: {{ clientes_mensual|safe }},
+          borderColor: 'rgba(25, 135, 84, 1)',
+          backgroundColor: 'rgba(25, 135, 84, 0.2)',
+          fill: true
+        },
+        {
+          label: 'Profesionales',
+          data: {{ profesionales_mensual|safe }},
+          borderColor: 'rgba(13, 202, 240, 1)',
+          backgroundColor: 'rgba(13, 202, 240, 0.2)',
+          fill: true
+        },
+        {
+          label: 'Feedbacks',
+          data: {{ feedbacks_mensual|safe }},
+          borderColor: 'rgba(255, 193, 7, 1)',
+          backgroundColor: 'rgba(255, 193, 7, 0.2)',
+          fill: true
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'top' }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+{% endblock %} 

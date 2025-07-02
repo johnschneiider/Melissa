@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'corsheaders',
     'channels',
+    'widget_tweaks',
     
     # Local apps
     'cuentas',
@@ -64,6 +65,7 @@ INSTALLED_APPS = [
     'clientes',
     'profesionales',
     'chat',
+    'ia_visagismo',
 ]
 
 MIDDLEWARE = [
@@ -93,8 +95,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'cuentas.context_processors.user_context',
-                'cuentas.context_processors.user_type',
                 'cuentas.context_processors.tipo_usuario',
             ],
         },
@@ -176,7 +176,7 @@ ACCOUNT_PASSWORD_MIN_LENGTH = 8
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_LOGOUT_ON_GET = False
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGIN_REDIRECT_URL = '/cuentas/dashboard/'
 ACCOUNT_SIGNUP_REDIRECT_URL = '/'
 
 # Custom User Model
@@ -255,4 +255,14 @@ if DEBUG:
             "BACKEND": "channels.layers.InMemoryChannelLayer"
         }
     }
+
+# Configuración de Replicate (IA Generativa)
+REPLICATE_API_TOKEN = "r8_M7zncfjMLgBqddVWgOqwALGli6CZo8z247ADC"  # Configurar con tu API token de Replicate
+
+# Celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 

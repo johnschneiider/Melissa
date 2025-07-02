@@ -84,16 +84,15 @@
     </div>
 </section>
 
-<!-- Barra de búsqueda premium -->
-<div class="search-section py-5">
+<!-- Buscador principal elevado -->
+<section class="search-bar-section position-relative" style="z-index: 10; margin-top: -60px;">
     <div class="container">
-        <div class="search-bar">
-            <div class="row g-4 align-items-end">
-                <div class="col-lg-4">
-                    <label class="form-label fw-bold text-dark mb-2">
-                        <i class="bi bi-geo-alt text-primary me-2"></i>Ubicación
-                    </label>
-                    <select class="form-select form-select-lg">
+        <!-- Desktop: barra con 3 campos -->
+        <div class="d-none d-md-flex search-bar-elevated bg-white rounded-pill shadow-lg mx-auto align-items-center" style="max-width: 1100px; min-height: 80px;">
+            <div class="d-flex align-items-center flex-grow-1 w-100">
+                <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-3" style="min-width: 200px; height: 70px;">
+                    <label class="form-label fw-bold text-muted mb-1 ms-2 small">Ubicación</label>
+                    <select class="form-select border-0 bg-transparent ps-2" style="box-shadow: none; font-size: 1.1rem;">
                         <option selected>Selecciona tu ciudad</option>
                         <option>Buenos Aires</option>
                         <option>Córdoba</option>
@@ -101,11 +100,12 @@
                         <option>Mendoza</option>
                     </select>
                 </div>
-                <div class="col-lg-4">
-                    <label class="form-label fw-bold text-dark mb-2">
-                        <i class="bi bi-scissors text-primary me-2"></i>Servicio
-                    </label>
-                    <select class="form-select form-select-lg">
+                <div class="d-flex align-items-center" style="height: 70px;">
+                    <div class="vr mx-2" style="height: 40px;"></div>
+                </div>
+                <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-3" style="min-width: 200px; height: 70px;">
+                    <label class="form-label fw-bold text-muted mb-1 ms-2 small">Servicio</label>
+                    <select class="form-select border-0 bg-transparent ps-2" style="box-shadow: none; font-size: 1.1rem;">
                         <option selected>Todos los servicios</option>
                         <option>Corte de cabello</option>
                         <option>Coloración</option>
@@ -113,14 +113,97 @@
                         <option>Peinados</option>
                     </select>
                 </div>
-                <div class="col-lg-4">
-                    <a href="{% url 'clientes:dashboard' %}" class="btn btn-primary btn-lg w-100">
-                        <i class="bi bi-search me-2"></i>Buscar Negocios
-                    </a>
+                <div class="d-flex align-items-center" style="height: 70px;">
+                    <div class="vr mx-2" style="height: 40px;"></div>
                 </div>
+                <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-3" style="min-width: 200px; height: 70px;">
+                    <label class="form-label fw-bold text-muted mb-1 ms-2 small">Nombre de negocio</label>
+                    <input type="text" class="form-control border-0 bg-transparent ps-2" placeholder="Ej: Glamour Studio" style="box-shadow: none; font-size: 1.1rem;">
+                </div>
+            </div>
+            <div class="d-flex align-items-center ms-3 me-3">
+                <button class="btn btn-lg rounded-circle d-flex align-items-center justify-content-center btn-search" style="background: #ff3366; color: #fff; width: 56px; height: 56px; box-shadow: 0 4px 16px rgba(255,51,102,0.15);" type="button">
+                    <i class="bi bi-search fs-4"></i>
+                </button>
+            </div>
+        </div>
+        <!-- Mobile: barra visual que abre modal -->
+        <div class="d-block d-md-none">
+            <div class="search-bar-mobile bg-white rounded-pill shadow-lg mx-auto d-flex align-items-center px-3 py-3" style="max-width: 100%; min-height: 60px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#busquedaModal">
+                <i class="bi bi-search fs-4 text-muted me-2"></i>
+                <span class="text-muted flex-grow-1" style="font-size: 1.1rem;">¿Qué reserva buscar hoy?</span>
             </div>
         </div>
     </div>
+</section>
+
+<!-- Modal búsqueda mobile -->
+<div class="modal fade" id="busquedaModal" tabindex="-1" aria-labelledby="busquedaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 p-2" style="background: #fff;">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="busquedaModalLabel">¿Dónde?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <div class="input-group mb-3">
+          <span class="input-group-text bg-white border-0"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control border-0" placeholder="Explora destinos">
+        </div>
+        <div class="mb-3">
+          <div class="small text-muted mb-2">Destinaciones sugeridas</div>
+          <ul class="list-unstyled mb-0">
+            <li class="d-flex align-items-center mb-2">
+              <span class="me-2"><i class="bi bi-geo-alt text-primary fs-5"></i></span>
+              <div>
+                <div class="fw-bold">Cerca</div>
+                <div class="text-muted small">Descubre qué hay a tu alrededor</div>
+              </div>
+            </li>
+            <li class="d-flex align-items-center mb-2">
+              <span class="me-2"><i class="bi bi-building text-success fs-5"></i></span>
+              <div>
+                <div class="fw-bold">Cartagena, Bolívar</div>
+                <div class="text-muted small">Una destinación de playa popular</div>
+              </div>
+            </li>
+            <li class="d-flex align-items-center mb-2">
+              <span class="me-2"><i class="bi bi-tree text-success fs-5"></i></span>
+              <div>
+                <div class="fw-bold">Santa Marta, Magdalena</div>
+                <div class="text-muted small">Por lugares emblemáticos como este: Parque Nacional Natural Tayrona</div>
+              </div>
+            </li>
+            <li class="d-flex align-items-center mb-2">
+              <span class="me-2"><i class="bi bi-house text-warning fs-5"></i></span>
+              <div>
+                <div class="fw-bold">Cali, Valle del Cauca</div>
+                <div class="text-muted small">Popular entre viajeros de tu zona</div>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 px-3 py-2 mb-2">
+              <span class="fw-bold">¿Cuándo?</span>
+              <span class="text-muted">Agrega fechas</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center bg-light rounded-3 px-3 py-2">
+              <span class="fw-bold">Quién</span>
+              <span class="text-muted">Agrega huéspedes</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <a href="#" class="text-muted small text-decoration-underline">Limpiar todo</a>
+          <button class="btn btn-lg rounded-pill px-4" style="background: #ff3366; color: #fff;" type="button">
+            <i class="bi bi-search me-2"></i>Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Características principales -->
@@ -330,9 +413,36 @@
         font-size: 2.5rem;
     }
     
-    .search-bar {
-        margin: 2rem 1rem;
-        padding: 2rem 1.5rem;
+    .search-bar-elevated {
+        display: none !important;
+    }
+    .search-bar-mobile {
+        display: flex !important;
+    }
+}
+@media (min-width: 768px) {
+    .search-bar-mobile {
+        display: none !important;
+    }
+}
+/* Hover ovalado para labels de la barra de búsqueda */
+@media (min-width: 768px) {
+    .search-bar-elevated label.form-label {
+        transition: background 0.2s, color 0.2s;
+        border-radius: 2rem;
+        padding: 0.25rem 1.2rem 0.25rem 1.2rem;
+        cursor: pointer;
+    }
+    .search-bar-elevated label.form-label:hover {
+        background: #f3f4f6;
+        color: #3b82f6;
+    }
+    .search-bar-elevated .btn-search {
+        transition: background 0.2s, box-shadow 0.2s;
+    }
+    .search-bar-elevated .btn-search:hover {
+        background: #d81b60 !important;
+        box-shadow: 0 6px 20px rgba(216,27,96,0.18);
     }
 }
 </style>

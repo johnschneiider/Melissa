@@ -9,9 +9,9 @@
             <div class="card shadow-lg border-0 rounded-4">
                 <div class="card-body p-5">
                     <h2 class="fw-bold mb-4 text-center">Notificaciones</h2>
-                    <ul class="list-group list-group-flush">
+                    <ul class="list-group list-group-flush" id="notificaciones-lista">
                         {% for noti in notificaciones %}
-                        <li class="list-group-item d-flex justify-content-between align-items-start {% if not noti.leida %}bg-light{% endif %}">
+                        <li class="list-group-item d-flex justify-content-between align-items-start {% if not noti.leida %}bg-light{% endif %}" id="noti-{{ noti.id }}">
                             <div class="ms-2 me-auto">
                                 <div class="fw-bold">{{ noti.titulo }}</div>
                                 <div class="small text-muted">{{ noti.fecha_creacion|date:'d/m/Y H:i' }}</div>
@@ -20,8 +20,9 @@
                                     <a href="{{ noti.url_relacionada }}" class="btn btn-link btn-sm">Ver más</a>
                                 {% endif %}
                             </div>
+                            <button class="btn btn-sm btn-outline-danger ms-2 btn-eliminar-noti" data-id="{{ noti.id }}" title="Eliminar"><i class="bi bi-trash"></i></button>
                             {% if not noti.leida %}
-                                <span class="badge bg-primary rounded-pill">Nuevo</span>
+                                <span class="badge bg-primary rounded-pill ms-2">Nuevo</span>
                             {% endif %}
                         </li>
                         {% empty %}
@@ -36,4 +37,34 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.btn-eliminar-noti').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const notiId = this.dataset.id;
+                fetch(`eliminar/${notiId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.getElementById('csrf_token_js').value,
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (data.ok) {
+                        const li = document.getElementById('noti-' + notiId);
+                        if (li) {
+                            li.style.transition = 'opacity 0.4s';
+                            li.style.opacity = 0;
+                            setTimeout(() => li.remove(), 400);
+                        }
+                    }
+                });
+            });
+        });
+    });
+</script>
 {% endblock %} 

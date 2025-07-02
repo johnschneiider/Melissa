@@ -11,7 +11,8 @@ class Command(BaseCommand):
         parser.add_argument('--username', type=str, required=True)
         parser.add_argument('--email', type=str, required=True)
         parser.add_argument('--password', type=str, required=True)
-        parser.add_argument('--tipo', type=str, choices=['cliente', 'negocio'], default='cliente')
+        # El tipo siempre será super_admin
+        # parser.add_argument('--tipo', type=str, choices=['cliente', 'negocio'], default='cliente')
         parser.add_argument('--first-name', type=str, default='')
         parser.add_argument('--last-name', type=str, default='')
         parser.add_argument('--telefono', type=str, default='')
@@ -33,7 +34,7 @@ class Command(BaseCommand):
                     password=options['password'],
                     first_name=options['first_name'],
                     last_name=options['last_name'],
-                    tipo=options['tipo'],
+                    tipo='super_admin',
                     telefono=options['telefono']
                 )
 

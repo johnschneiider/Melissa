@@ -8,8 +8,8 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST, require_GET
 from negocios.models import Negocio, ServicioNegocio
-from .models import Reserva
-from .forms import ReservaForm, ReservaNegocioForm
+from .models import Reserva, NotificacionCliente, Calificacion
+from .forms import ReservaForm, ReservaNegocioForm, CalificacionForm
 import json
 import holidays
 import logging
@@ -18,6 +18,7 @@ from django.utils.html import escape
 import re
 from django.db.models import Q
 from profesionales.models import Notificacion, Profesional, Matriculacion
+from django.db import models
 
 logger = logging.getLogger(__name__)
 
@@ -357,57 +358,61 @@ def mis_reservas(request):
             'total_reservas': 0,
         })
 
+@login_required
 def dashboard_cliente(request):
-    """Dashboard principal para clientes - Marketplace estilo Airbnb"""
-    negocios = Negocio.objects.filter(activo=True)
+    """Dashboard principal del cliente"""
     query = request.GET.get('q', '')
+    
+    # Obtener negocios con información adicional
+    negocios = Negocio.objects.filter(activo=True)
     if query:
         negocios = negocios.filter(
-            Q(nombre__icontains=query) |
-            Q(peluqueros__nombre__icontains=query) |
-            Q(direccion__icontains=query)
+            models.Q(nombre__icontains=query) |
+            models.Q(direccion__icontains=query) |
+            models.Q(profesionales__nombre_completo__icontains=query)
         ).distinct()
-
-    # Calificaciones para cada negocio
+    
     negocios_info = []
     for negocio in negocios:
-        profesionales_activos = Profesional.objects.filter(
+        # Obtener profesionales del negocio
+        profesionales = Profesional.objects.filter(
             matriculaciones__negocio=negocio,
-            matriculaciones__estado='aprobada',
-            disponible=True
-        )
-        calificaciones = Reserva.objects.filter(profesional__in=profesionales_activos).count()
-        if calificaciones > 0:
-            promedio = round(sum([
-                r.servicio.puntaje for r in Reserva.objects.filter(profesional__in=profesionales_activos) if r.servicio and hasattr(r.servicio, 'puntaje')
-            ]) / calificaciones, 1)
-        else:
-            promedio = 5.0
+            matriculaciones__estado='aprobada'
+        ).distinct()
+        
+        # Calcular calificación promedio
+        calificaciones = Calificacion.objects.filter(negocio=negocio)
+        calificacion_promedio = calificaciones.aggregate(avg=models.Avg('puntaje'))['avg'] or 0
+        calificacion_cantidad = calificaciones.count()
+        
         negocios_info.append({
             'negocio': negocio,
-            'profesionales_activos': profesionales_activos,
-            'calificaciones': calificaciones,
-            'promedio': promedio,
+            'profesionales': profesionales,
+            'calificacion_promedio': round(calificacion_promedio, 1),
+            'calificacion_cantidad': calificacion_cantidad,
         })
-
-    reservas_usuario = None
-    total_reservas = 0
-    reservas_pendientes = 0
-    reservas_completadas = 0
-    if request.user.is_authenticated:
-        reservas_usuario = Reserva.objects.filter(cliente=request.user).order_by('-fecha', '-hora_inicio')
-        total_reservas = reservas_usuario.count()
-        reservas_pendientes = reservas_usuario.filter(estado='pendiente').count()
-        reservas_completadas = reservas_usuario.filter(estado='completado').count()
-
+    
+    # Obtener reservas del usuario
+    reservas_usuario = Reserva.objects.filter(cliente=request.user).order_by('-creado_en')[:5]
+    
+    # Obtener calificaciones del usuario
+    calificaciones_usuario = Calificacion.objects.filter(cliente=request.user).order_by('-fecha_calificacion')[:5]
+    
+    # Estadísticas del usuario
+    total_reservas = Reserva.objects.filter(cliente=request.user).count()
+    reservas_pendientes = Reserva.objects.filter(cliente=request.user, estado='pendiente').count()
+    reservas_completadas = Reserva.objects.filter(cliente=request.user, estado='completado').count()
+    
     context = {
         'negocios_info': negocios_info,
-        'reservas_usuario': reservas_usuario[:5] if reservas_usuario else [],
+        'reservas_usuario': reservas_usuario,
+        'calificaciones_usuario': calificaciones_usuario,
+        'query': query,
         'total_reservas': total_reservas,
         'reservas_pendientes': reservas_pendientes,
         'reservas_completadas': reservas_completadas,
-        'query': query,
     }
+    
     return render(request, 'clientes/dashboard.html', context)
 
 @login_required
@@ -445,6 +450,232 @@ def reservar_negocio(request, negocio_id):
         'profesional_preseleccionado': profesional_preseleccionado,
     })
 
-def notificaciones(request):
-    """Vista de notificaciones para clientes (próximamente)"""
-    return render(request, 'clientes/notificaciones.html')
+@login_required
+def notificaciones_cliente(request):
+    notificaciones = NotificacionCliente.objects.filter(cliente=request.user).order_by('-fecha_creacion')
+    return render(request, 'clientes/notificaciones.html', {'notificaciones': notificaciones})
+
+@require_POST
+@login_required
+def eliminar_notificacion_cliente(request, notificacion_id):
+    try:
+        noti = NotificacionCliente.objects.get(id=notificacion_id, cliente=request.user)
+        noti.delete()
+        return JsonResponse({'ok': True})
+    except NotificacionCliente.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'No encontrada'}, status=404)
+
+@login_required
+def cancelar_reserva(request, reserva_id):
+    reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
+    if reserva.estado not in ['cancelado', 'completado']:
+        reserva.estado = 'cancelado'
+        reserva.save()
+        msg = 'Reserva cancelada exitosamente.'
+        success = True
+    else:
+        msg = 'No se puede cancelar una reserva ya cancelada o completada.'
+        success = False
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'success': success, 'message': msg})
+    if success:
+        messages.success(request, msg)
+    else:
+        messages.warning(request, msg)
+    return redirect('clientes:mis_reservas')
+
+@login_required
+def reagendar_reserva(request, reserva_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+    
+    try:
+        reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
+        
+        if reserva.estado in ['cancelado', 'completado']:
+            return JsonResponse({
+                'success': False, 
+                'message': 'No se puede reagendar una reserva cancelada o completada'
+            })
+        
+        data = json.loads(request.body)
+        nueva_fecha = data.get('fecha')
+        nueva_hora = data.get('hora_inicio')
+        
+        if not nueva_fecha or not nueva_hora:
+            return JsonResponse({
+                'success': False,
+                'errors': {'fecha': ['Fecha requerida'], 'hora_inicio': ['Hora requerida']}
+            })
+        
+        # Validar fecha
+        try:
+            fecha_obj = datetime.strptime(nueva_fecha, '%Y-%m-%d').date()
+            if fecha_obj < timezone.now().date():
+                return JsonResponse({
+                    'success': False,
+                    'errors': {'fecha': ['No puedes seleccionar una fecha pasada']}
+                })
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'errors': {'fecha': ['Formato de fecha inválido']}
+            })
+        
+        # Validar hora
+        try:
+            hora_obj = datetime.strptime(nueva_hora, '%H:%M').time()
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'errors': {'hora_inicio': ['Formato de hora inválido']}
+            })
+        
+        # Verificar disponibilidad
+        hora_fin = (timezone.make_aware(
+            datetime.combine(fecha_obj, hora_obj) + timedelta(minutes=reserva.servicio.duracion if reserva.servicio else 30)
+        ).time())
+        
+        # Verificar si hay conflictos
+        reservas_conflicto = Reserva.objects.filter(
+            peluquero=reserva.peluquero,
+            fecha=fecha_obj,
+            estado__in=['pendiente', 'confirmado']
+        ).exclude(id=reserva.id)
+        
+        for otra_reserva in reservas_conflicto:
+            if not (hora_fin <= otra_reserva.hora_inicio or hora_obj >= otra_reserva.hora_fin):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'El horario seleccionado no está disponible'
+                })
+        
+        # Actualizar reserva
+        reserva.fecha = fecha_obj
+        reserva.hora_inicio = hora_obj
+        reserva.hora_fin = hora_fin
+        reserva.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Reserva reagendada exitosamente'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Datos JSON inválidos'
+        })
+    except Exception as e:
+        logger.error(f"Error reagendando reserva: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': 'Error interno del servidor'
+        })
+
+@login_required
+def crear_calificacion(request, negocio_id, profesional_id):
+    """Vista para crear una calificación"""
+    negocio = get_object_or_404(Negocio, id=negocio_id)
+    profesional = get_object_or_404(Profesional, id=profesional_id)
+    
+    # Verificar que el usuario tenga reservas completadas con este profesional en este negocio
+    reservas_completadas = Reserva.objects.filter(
+        cliente=request.user,
+        peluquero=negocio,
+        profesional=profesional,
+        estado='completado'
+    )
+    
+    if not reservas_completadas.exists():
+        messages.error(request, 'Solo puedes calificar a profesionales con los que hayas completado una reserva.')
+        return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+    
+    # Verificar que no haya calificado ya
+    calificacion_existente = Calificacion.objects.filter(
+        cliente=request.user,
+        negocio=negocio,
+        profesional=profesional
+    ).first()
+    
+    if calificacion_existente:
+        messages.info(request, 'Ya has calificado a este profesional en este negocio.')
+        return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+    
+    if request.method == 'POST':
+        form = CalificacionForm(request.POST)
+        if form.is_valid():
+            calificacion = form.save(commit=False)
+            calificacion.cliente = request.user
+            calificacion.negocio = negocio
+            calificacion.profesional = profesional
+            calificacion.save()
+            
+            # Notificar al profesional sobre la nueva calificación
+            Notificacion.objects.create(
+                destinatario=profesional.usuario,
+                tipo='calificacion',
+                titulo=f'Nueva calificación de {request.user.username}',
+                mensaje=f'Has recibido una calificación de {calificacion.puntaje}/5 estrellas en {negocio.nombre}',
+                url_relacionada=f'/negocios/detalle-negocio/{negocio.id}/',
+            )
+            
+            # Notificar al dueño del negocio
+            if negocio.usuario != profesional.usuario:
+                Notificacion.objects.create(
+                    destinatario=negocio.usuario,
+                    tipo='calificacion',
+                    titulo=f'Nueva calificación en {negocio.nombre}',
+                    mensaje=f'{request.user.username} calificó a {profesional.nombre_completo} con {calificacion.puntaje}/5 estrellas',
+                    url_relacionada=f'/negocios/detalle-negocio/{negocio.id}/',
+                )
+            
+            messages.success(request, '¡Gracias por tu calificación!')
+            return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+    else:
+        form = CalificacionForm()
+    
+    context = {
+        'form': form,
+        'negocio': negocio,
+        'profesional': profesional,
+    }
+    return render(request, 'clientes/crear_calificacion.html', context)
+
+@login_required
+def editar_calificacion(request, calificacion_id):
+    """Vista para editar una calificación existente"""
+    calificacion = get_object_or_404(Calificacion, id=calificacion_id, cliente=request.user)
+    
+    if request.method == 'POST':
+        form = CalificacionForm(request.POST, instance=calificacion)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Calificación actualizada correctamente.')
+            return redirect('negocios:detalle_negocio', negocio_id=calificacion.negocio.id)
+    else:
+        form = CalificacionForm(instance=calificacion)
+    
+    context = {
+        'form': form,
+        'calificacion': calificacion,
+        'negocio': calificacion.negocio,
+        'profesional': calificacion.profesional,
+    }
+    return render(request, 'clientes/editar_calificacion.html', context)
+
+@login_required
+def eliminar_calificacion(request, calificacion_id):
+    """Vista para eliminar una calificación"""
+    calificacion = get_object_or_404(Calificacion, id=calificacion_id, cliente=request.user)
+    
+    if request.method == 'POST':
+        negocio_id = calificacion.negocio.id
+        calificacion.delete()
+        messages.success(request, 'Calificación eliminada correctamente.')
+        return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+    
+    context = {
+        'calificacion': calificacion,
+    }
+    return render(request, 'clientes/eliminar_calificacion.html', context)

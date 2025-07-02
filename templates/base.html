@@ -2,8 +2,22 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>{% block title %}Melissa Citas | Gestión de turnos para peluquerías{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Melissa{% endblock %}</title>
+  
+  {% load static %}
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
   <meta name="description" content="{% block description %}Melissa es una app para peluquerías que facilita la gestión de citas y turnos con un calendario intuitivo, presencia profesional y estilo minimalista.{% endblock %}">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="{{ request.build_absolute_uri }}">
@@ -32,535 +46,159 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
   <!-- FullCalendar CSS -->
   <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css' rel='stylesheet' />
-
-  <style>
-    :root {
-      --primary: #6e48aa;
-      --primary-dark: #4b2d7f;
-      --secondary: #9d50bb;
-      --accent: #d4af37;
-      --light: #f8f9fa;
-      --dark: #212529;
-      --gray: #6c757d;
-      --light-gray: #e9ecef;
-      --success: #28a745;
-      --danger: #dc3545;
-      --warning: #ffc107;
-      --info: #17a2b8;
-      --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      --gradient-accent: linear-gradient(135deg, var(--accent) 0%, #f5d76e 100%);
-      --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.08);
-      --shadow-md: 0 5px 20px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
-      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-
-    body {
-      font-family: 'Manrope', 'Segoe UI', sans-serif;
-      background-color: #f9f5f0;
-      color: var(--dark);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      scroll-behavior: smooth;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      font-family: 'Playfair Display', serif;
-      font-weight: 700;
-    }
-
-    /* Header */
-    .header {
-      padding: 1rem 2rem;
-      background-color: rgba(255, 255, 255, 0.98);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      transition: var(--transition);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .header.scrolled {
-      padding: 0.8rem 2rem;
-      box-shadow: var(--shadow-md);
-    }
-
-    .logo {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: var(--gradient-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 1.5rem;
-      font-family: 'Playfair Display', serif;
-      box-shadow: var(--shadow-sm);
-      border: 2px solid rgba(212, 175, 55, 0.3);
-      transition: var(--transition);
-    }
-
-    .logo:hover {
-      transform: scale(1.05);
-      box-shadow: var(--shadow-md);
-    }
-
-    /* Botones */
-    .btn-primary {
-      background: var(--gradient-primary);
-      border: none;
-      color: white;
-      font-weight: 500;
-      transition: var(--transition);
-      padding: 0.7rem 1.8rem;
-      border-radius: 50px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      color: white;
-    }
-
-    .btn-outline-primary {
-      border-color: var(--primary);
-      color: var(--primary);
-      transition: var(--transition);
-    }
-
-    .btn-outline-primary:hover {
-      background-color: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-
-    .btn-accent {
-      background: var(--gradient-accent);
-      color: var(--dark);
-      font-weight: 500;
-      border: none;
-      transition: var(--transition);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .btn-accent:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      color: var(--dark);
-    }
-
-    /* Mensajes de alerta mejorados */
-    .alert {
-      border: none;
-      border-radius: 12px;
-      padding: 1rem 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .alert::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: currentColor;
-    }
-
-    .alert-success {
-      background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-      color: #155724;
-      border-left: 4px solid var(--success);
-    }
-
-    .alert-danger {
-      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-      color: #721c24;
-      border-left: 4px solid var(--danger);
-    }
-
-    .alert-warning {
-      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-      color: #856404;
-      border-left: 4px solid var(--warning);
-    }
-
-    .alert-info {
-      background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-      color: #0c5460;
-      border-left: 4px solid var(--info);
-    }
-
-    /* Formularios mejorados */
-    .form-control, .form-select {
-      border-radius: 8px;
-      border: 2px solid var(--light-gray);
-      padding: 0.75rem 1rem;
-      transition: var(--transition);
-      background-color: white;
-    }
-
-    .form-control:focus, .form-select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 0.2rem rgba(110, 72, 170, 0.25);
-      background-color: white;
-    }
-
-    .form-label {
-      font-weight: 600;
-      color: var(--dark);
-      margin-bottom: 0.5rem;
-    }
-
-    /* Cards mejoradas */
-    .card {
-      border: none;
-      border-radius: 16px;
-      box-shadow: var(--shadow-sm);
-      transition: var(--transition);
-      overflow: hidden;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-md);
-    }
-
-    .card-header {
-      background: var(--gradient-primary);
-      color: white;
-      border: none;
-      padding: 1.5rem;
-    }
-
-    .card-body {
-      padding: 1.5rem;
-    }
-
-    /* Navegación mejorada */
-    .nav-link {
-      color: var(--dark);
-      font-weight: 500;
-      transition: var(--transition);
-      position: relative;
-      padding: 0.5rem 1rem;
-    }
-
-    .nav-link:hover {
-      color: var(--primary);
-    }
-
-    .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 0;
-      height: 2px;
-      background: var(--gradient-primary);
-      transition: var(--transition);
-      transform: translateX(-50%);
-    }
-
-    .nav-link:hover::after {
-      width: 100%;
-    }
-
-    /* Footer */
-    footer {
-      background-color: var(--dark);
-      color: white;
-      padding: 3rem 0;
-      position: relative;
-      margin-top: 4rem;
-    }
-
-    footer::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 5px;
-      background: var(--gradient-accent);
-    }
-
-    footer a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      transition: var(--transition);
-    }
-
-    footer a:hover {
-      color: var(--accent);
-      transform: translateX(3px);
-    }
-
-    .footer-links {
-      list-style: none;
-      padding: 0;
-    }
-
-    .footer-links li {
-      margin-bottom: 0.8rem;
-      position: relative;
-      padding-left: 1.5rem;
-    }
-
-    .footer-links li::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 8px;
-      height: 2px;
-      background: var(--accent);
-      transition: var(--transition);
-    }
-
-    .footer-links li:hover::before {
-      width: 12px;
-    }
-
-    /* Loading spinner */
-    .loading {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      border-top-color: #fff;
-      animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .header {
-        padding: 0.8rem 1rem;
-      }
-      
-      .logo {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-      }
-      
-      .btn {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.9rem;
-      }
-    }
-
-    /* Accesibilidad */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    /* Focus visible para accesibilidad */
-    .btn:focus-visible,
-    .form-control:focus-visible,
-    .nav-link:focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    /* Animaciones suaves */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Mejoras para formularios */
-    .form-floating {
-      position: relative;
-    }
-
-    .form-floating > .form-control,
-    .form-floating > .form-select {
-      height: calc(3.5rem + 2px);
-      line-height: 1.25;
-    }
-
-    .form-floating > label {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 100%;
-      padding: 1rem 0.75rem;
-      pointer-events: none;
-      border: 1px solid transparent;
-      transform-origin: 0 0;
-      transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
-    }
-
-    .form-floating > .form-control:focus ~ label,
-    .form-floating > .form-control:not(:placeholder-shown) ~ label {
-      opacity: 0.65;
-      transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-    }
-  </style>
-
+  
+  <!-- CSS Modular -->
+  <link href="{% static 'css/base/variables.css' %}" rel="stylesheet">
+  <link href="{% static 'css/base/main.css' %}" rel="stylesheet">
+  <link href="{% static 'css/base/components.css' %}" rel="stylesheet">
+  
   {% block extra_css %}{% endblock %}
 </head>
 
 <body>
   <!-- Header -->
   <header class="header" id="header">
-    <div class="d-flex align-items-center">
-      <a href="{% url 'inicio' %}" class="logo me-3" aria-label="Melissa - Inicio">
-        M
+    <!-- Header PC: logo + iconos -->
+    <div class="d-none d-md-flex align-items-center w-100 justify-content-between">
+      <a href="{% url 'inicio' %}" class="logo" aria-label="Melissa - Inicio">
+        <span class="logo-letter">M</span>
       </a>
-      <h1 class="h4 mb-0 d-none d-md-block">Melissa</h1>
+      <div class="d-flex align-items-center gap-3">
+        <a href="{% if user.is_authenticated %}{% url 'cuentas:enviar_feedback' %}{% else %}{% url 'account_login' %}?next={% url 'cuentas:enviar_feedback' %}{% endif %}" class="btn btn-outline-primary fw-bold d-flex align-items-center" style="gap:0.5em;">
+          <i class="bi bi-lightbulb"></i> Dinos cómo mejoramos
+        </a>
+        <a href="{% url 'chat:lista_conversaciones' %}" class="nav-link position-relative" title="Chat">
+          <i class="bi bi-chat-dots fs-4 position-relative" id="chatIcon"></i>
+          <span id="chatCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
+        </a>
+        <a href="{% if is_cliente %}{% url 'clientes:notificaciones' %}
+                 {% elif is_negocio %}{% url 'negocios:notificaciones' %}
+                 {% elif is_profesional %}{% url 'profesionales:notificaciones' %}
+                 {% elif user.is_superuser or user.tipo == 'super_admin' %}{% url 'cuentas:notificaciones_super_admin' %}
+                 {% else %}#{% endif %}" class="nav-link position-relative" title="Notificaciones">
+          <i class="bi bi-bell fs-4 position-relative" id="notificacionesBell"></i>
+          <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
+        </a>
+        {% if user.is_authenticated %}
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle"></i> {{ user.username }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            {% if user.is_superuser or user.tipo == 'super_admin' %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{% url 'chat:lista_conversaciones' %}"><i class="bi bi-chat-dots"></i> Chat</a></li>
+            {% if is_cliente %}
+              <li><a class="dropdown-item" href="{% url 'clientes:mis_reservas' %}"><i class="bi bi-calendar-check"></i> Mis Reservas</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% elif is_negocio %}
+              <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a></li>
+              <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% elif is_profesional %}
+              <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% else %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+          </ul>
+        </div>
+        {% else %}
+        <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-primary fw-bold me-2">
+          <i class="bi bi-person-plus"></i> Registrarse
+        </a>
+        <a href="{% url 'account_login' %}" class="btn btn-outline-secondary fw-bold">
+          <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
+        </a>
+        {% endif %}
+      </div>
     </div>
-
-    <nav class="navbar navbar-expand-lg">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <!-- Header móvil: logo + hamburguesa -->
+    <div class="d-flex d-md-none align-items-center w-100 justify-content-between">
+      <a href="{% url 'inicio' %}" class="logo" aria-label="Melissa - Inicio">
+        <span class="logo-letter">M</span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu" aria-controls="mainMenu" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav me-auto">
+    </div>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="mainMenu" aria-labelledby="mainMenuLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mainMenuLabel">Menú</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+      </div>
+      <div class="offcanvas-body">
+        <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'inicio' %}">
-              <i class="bi bi-house-door"></i> Inicio
+            <a class="nav-link position-relative" href="{% url 'chat:lista_conversaciones' %}" title="Chat">
+              <i class="bi bi-chat-dots"></i> Chat
+              <span id="chatCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
             </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="{% if is_cliente %}{% url 'clientes:notificaciones' %}{% elif is_negocio %}{% url 'negocios:notificaciones' %}{% elif is_profesional %}{% url 'profesionales:notificaciones' %}{% endif %}" title="Notificaciones">
+              <i class="bi bi-bell"></i> Notificaciones
+              <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'inicio' %}"><i class="bi bi-house-door"></i> Inicio</a>
           </li>
           {% if is_cliente %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'clientes:dashboard' %}">
-                <i class="bi bi-search"></i> Buscar Negocios
-              </a>
+              <a class="nav-link" href="{% url 'clientes:dashboard' %}"><i class="bi bi-search"></i> Buscar Negocios</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'clientes:mis_reservas' %}">
-                <i class="bi bi-calendar-check"></i> Mis Reservas
-              </a>
+              <a class="nav-link" href="{% url 'clientes:mis_reservas' %}"><i class="bi bi-calendar-check"></i> Mis Reservas</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
             </li>
           {% elif is_negocio %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'negocios:mis_negocios' %}">
-                <i class="bi bi-shop me-2"></i>Mis Negocios
-              </a>
+              <a class="nav-link" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'negocios:crear_negocio' %}">
-                <i class="bi bi-plus-circle me-2"></i>Crear Negocio
-              </a>
+              <a class="nav-link" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
             </li>
           {% elif is_profesional %}
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'profesionales:panel' %}">
-                <i class="bi bi-person-badge"></i> Panel Profesional
-              </a>
+              <a class="nav-link" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'profesionales:notificaciones' %}">
-                <i class="bi bi-bell"></i> Notificaciones
-              </a>
+              <a class="nav-link" href="{% url 'profesionales:notificaciones' %}"><i class="bi bi-bell"></i> Notificaciones</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
             </li>
           {% endif %}
-        </ul>
-        <ul class="navbar-nav ms-auto align-items-center">
           {% if user.is_authenticated %}
-            <li class="nav-item me-2">
-              <a href="{% url 'chat:lista_conversaciones' %}" class="nav-link position-relative" title="Chat">
-                <i class="bi bi-chat-dots fs-4"></i>
-              </a>
-            </li>
-            <li class="nav-item me-2">
-              <a href="{% if is_cliente %}{% url 'clientes:notificaciones' %}{% elif is_negocio %}{% url 'negocios:panel_negocio' user.negocios.first.id %}{% elif is_profesional %}{% url 'profesionales:notificaciones' %}{% endif %}" class="nav-link position-relative" title="Notificaciones">
-                <i class="bi bi-bell fs-4"></i>
-                {# Aquí podrías mostrar un badge con el número de notificaciones no leídas si lo tienes en contexto #}
-              </a>
-            </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-person-circle"></i> {{ user.username }}
-                {% if is_cliente %}
-                  <span class="badge bg-primary ms-1">Cliente</span>
-                {% elif is_negocio %}
-                  <span class="badge bg-success ms-1">Negocio</span>
-                {% elif is_profesional %}
-                  <span class="badge bg-info ms-1">Profesional</span>
-                {% endif %}
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                <li><a class="dropdown-item" href="{% url 'chat:lista_conversaciones' %}">
-                  <i class="bi bi-chat-dots"></i> Chat
-                </a></li>
-                {% if is_cliente %}
-                  <li><a class="dropdown-item" href="{% url 'clientes:mis_reservas' %}">
-                    <i class="bi bi-calendar-check"></i> Mis Reservas
-                  </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                {% elif is_negocio %}
-                  <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}">
-                    <i class="bi bi-shop me-2"></i>Mis Negocios
-                  </a></li>
-                  <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}">
-                    <i class="bi bi-plus-circle me-2"></i>Crear Negocio
-                  </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                {% elif is_profesional %}
-                  <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}">
-                    <i class="bi bi-person-badge"></i> Panel Profesional
-                  </a></li>
-                  <li><hr class="dropdown-divider"></li>
-                {% endif %}
-                <li><a class="dropdown-item" href="{% url 'account_logout' %}">
-                  <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
-                </a></li>
-              </ul>
-            </li>
+            {% if user.is_superuser or user.tipo == 'super_admin' %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:dashboard_super_admin' %}">Dashboard Admin</a></li>
+            {% else %}
+              <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:enviar_feedback' %}">Enviar Feedback</a></li>
+            {% endif %}
           {% else %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="authDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-person"></i> Acceder
-              </a>
-              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="authDropdown">
-                <li><a class="dropdown-item" href="{% url 'account_login' %}">
-                  <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
-                </a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-outline-light d-none d-md-inline-flex">
-                  <i class="bi bi-person-plus me-2"></i>Registrarse
-                </a></li>
-              </ul>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'cuentas:registro_unificado' %}"><i class="bi bi-person-plus"></i> Registrarse</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'account_login' %}"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</a>
             </li>
           {% endif %}
         </ul>
       </div>
-    </nav>
+    </div>
   </header>
 
   <!-- Mensajes de alerta -->
@@ -742,92 +380,8 @@
     }
   </script>
 
-  {% block extra_js %}{% endblock %}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const bell = document.getElementById('notificacionesBell');
-      const countSpan = document.getElementById('notificacionesCount');
-      const modal = document.getElementById('notificacionesModal');
-      const loader = document.getElementById('notificacionesLoader');
-      const lista = document.getElementById('notificacionesLista');
-      let notificacionesCargadas = false;
-
-      // Función para cargar notificaciones
-      async function cargarNotificaciones() {
-        loader.classList.remove('d-none');
-        lista.classList.add('d-none');
-        lista.innerHTML = '';
-        try {
-          const resp = await fetch('/cuentas/api/notificaciones/');
-          if (!resp.ok) throw new Error('Error al cargar notificaciones');
-          const data = await resp.json();
-          // Actualizar contador
-          if (data.no_leidas > 0) {
-            countSpan.textContent = data.no_leidas;
-            countSpan.classList.remove('d-none');
-          } else {
-            countSpan.classList.add('d-none');
-          }
-          // Renderizar notificaciones
-          if (data.notificaciones.length === 0) {
-            lista.innerHTML = '<div class="list-group-item text-center text-muted py-4">No tienes notificaciones.</div>';
-          } else {
-            data.notificaciones.forEach(function(noti) {
-              let html = `<div class="list-group-item d-flex justify-content-between align-items-start ${!noti.leida ? 'bg-light' : ''}">`;
-              html += `<div class="ms-2 me-auto">
-                <div class="fw-bold">${noti.titulo}</div>
-                <div class="small text-muted">${noti.fecha}</div>
-                <div>${noti.mensaje || ''}</div>`;
-              if (noti.url) {
-                html += `<a href="${noti.url}" class="btn btn-link btn-sm">Ver más</a>`;
-              }
-              html += '</div>';
-              if (!noti.leida) {
-                html += '<span class="badge bg-primary rounded-pill">Nuevo</span>';
-              }
-              // Si es negocio y es solicitud de matriculación
-              if (noti.tipo === 'matriculacion' && noti.profesional_id) {
-                html += `<div class="ms-3 d-flex flex-column gap-2">
-                  <button class="btn btn-success btn-sm mb-1 aceptar-matricula" data-id="${noti.id}" data-prof="${noti.profesional_id}">Aceptar</button>
-                  <button class="btn btn-danger btn-sm rechazar-matricula" data-id="${noti.id}" data-prof="${noti.profesional_id}">Rechazar</button>
-                </div>`;
-              }
-              html += '</div>';
-              lista.innerHTML += html;
-            });
-          }
-          loader.classList.add('d-none');
-          lista.classList.remove('d-none');
-        } catch (e) {
-          loader.classList.add('d-none');
-          lista.classList.remove('d-none');
-          lista.innerHTML = '<div class="list-group-item text-danger text-center py-4">Error al cargar notificaciones</div>';
-        }
-      }
-
-      // Cargar notificaciones al abrir el modal
-      if (modal) {
-        modal.addEventListener('show.bs.modal', function() {
-          cargarNotificaciones();
-        });
-      }
-      // También cargar al cargar la página (para el contador)
-      cargarNotificaciones();
-
-      // Delegar eventos para aceptar/rechazar
-      if (lista) {
-        lista.addEventListener('click', async function(e) {
-          if (e.target.classList.contains('aceptar-matricula') || e.target.classList.contains('rechazar-matricula')) {
-            const id = e.target.getAttribute('data-id');
-            const prof = e.target.getAttribute('data-prof');
-            const accion = e.target.classList.contains('aceptar-matricula') ? 'aceptar' : 'rechazar';
-            e.target.disabled = true;
-            e.target.textContent = 'Procesando...';
-            await responderMatricula(id, accion);
-          }
-        });
-      }
-    });
-  </script>
+  {% block extra_js %}
+  <script src="{% static 'js/base/notificaciones.js' %}"></script>
+  {% endblock %}
 </body>
 </html>

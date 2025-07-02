@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
+from django.utils import timezone
 
 class Servicio(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -137,4 +138,32 @@ class ServicioNegocio(models.Model):
 
     def __str__(self):
         return f"{self.negocio.nombre} - {self.servicio.nombre} ({self.duracion} min)"
+
+class NotificacionNegocio(models.Model):
+    TIPO_CHOICES = (
+        ('matriculacion', 'Nueva Solicitud de Matriculación'),
+        ('reserva', 'Nueva Reserva'),
+        ('sistema', 'Notificación del Sistema'),
+    )
+    negocio = models.ForeignKey('Negocio', on_delete=models.CASCADE, related_name='notificaciones_negocio')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    titulo = models.CharField(max_length=200)
+    mensaje = models.TextField()
+    leida = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_lectura = models.DateTimeField(null=True, blank=True)
+    url_relacionada = models.URLField(blank=True)
+
+    class Meta:
+        verbose_name = 'Notificación Negocio'
+        verbose_name_plural = 'Notificaciones Negocio'
+        ordering = ['-fecha_creacion']
+
+    def __str__(self):
+        return f"{self.negocio.nombre} - {self.titulo}"
+
+    def marcar_como_leida(self):
+        self.leida = True
+        self.fecha_lectura = timezone.now()
+        self.save()
 

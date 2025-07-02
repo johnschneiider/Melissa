@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2>Analíticas de Negocios</h2>
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Total de Turnos</h5>
+          <p class="card-text display-6">{{ total_turnos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Tasa de Ocupación</h5>
+          <p class="card-text display-6">{{ tasa_ocupacion }}%</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Prom. Cancelaciones</h5>
+          <p class="card-text display-6">{{ promedio_cancelaciones }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Calificación Promedio</h5>
+          <p class="card-text display-6">{{ calificacion_promedio }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <canvas id="graficoTopNegocios" height="100"></canvas>
+    </div>
+    <div class="col-md-6 mt-4">
+      <canvas id="graficoServiciosSolicitados" height="100"></canvas>
+    </div>
+    <div class="col-md-6 mt-4">
+      <canvas id="graficoProfesionalesReservados" height="100"></canvas>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <h4>Top 10 Negocios con más reservas</h4>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Negocio</th>
+            <th>Reservas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for negocio in top_negocios %}
+          <tr>
+            <td>{{ negocio.nombre }}</td>
+            <td>{{ negocio.num_reservas }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h4>Servicios más solicitados</h4>
+      <ul class="list-group mb-3">
+        {% for servicio in servicios_mas_solicitados %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ servicio.nombre }}
+          <span class="badge bg-primary rounded-pill">{{ servicio.num }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+      <h4>Profesionales más reservados</h4>
+      <ul class="list-group">
+        {% for profesional in profesionales_mas_reservados %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ profesional.nombre_completo }}
+          <span class="badge bg-success rounded-pill">{{ profesional.num }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <h4>Clientes recurrentes vs nuevos</h4>
+      <ul class="list-group">
+        <li class="list-group-item">Recurrentes: <span class="badge bg-info">{{ clientes_recurrentes }}</span></li>
+        <li class="list-group-item">Nuevos: <span class="badge bg-secondary">{{ clientes_nuevos }}</span></li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h4>Ingresos generados</h4>
+      <h6>Por día (últimos 7 días)</h6>
+      <ul class="list-group mb-2">
+        {% for ingreso in ingresos_dia %}
+        <li class="list-group-item">{{ ingreso.dia }}: ${{ ingreso.total|floatformat:2 }}</li>
+        {% endfor %}
+      </ul>
+      <h6>Por semana (últimas 4 semanas)</h6>
+      <ul class="list-group mb-2">
+        {% for ingreso in ingresos_semana %}
+        <li class="list-group-item">Semana {{ ingreso.semana }}: ${{ ingreso.total|floatformat:2 }}</li>
+        {% endfor %}
+      </ul>
+      <h6>Por mes (últimos 6 meses)</h6>
+      <ul class="list-group">
+        {% for ingreso in ingresos_mes %}
+        <li class="list-group-item">Mes {{ ingreso.mes }}: ${{ ingreso.total|floatformat:2 }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const topNegociosLabels = {{ top_negocios_labels|safe }};
+const topNegociosData = {{ top_negocios_data|safe }};
+new Chart(document.getElementById('graficoTopNegocios'), {
+  type: 'bar',
+  data: {
+    labels: topNegociosLabels,
+    datasets: [{
+      label: 'Reservas',
+      data: topNegociosData,
+      backgroundColor: 'rgba(54, 162, 235, 0.6)'
+    }]
+  },
+  options: {responsive: true, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}
+});
+const serviciosLabels = {{ servicios_labels|safe }};
+const serviciosData = {{ servicios_data|safe }};
+new Chart(document.getElementById('graficoServiciosSolicitados'), {
+  type: 'bar',
+  data: {
+    labels: serviciosLabels,
+    datasets: [{
+      label: 'Veces Solicitado',
+      data: serviciosData,
+      backgroundColor: 'rgba(255, 206, 86, 0.6)'
+    }]
+  },
+  options: {responsive: true, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}
+});
+const profLabels = {{ prof_labels|safe }};
+const profData = {{ prof_data|safe }};
+new Chart(document.getElementById('graficoProfesionalesReservados'), {
+  type: 'bar',
+  data: {
+    labels: profLabels,
+    datasets: [{
+      label: 'Reservas',
+      data: profData,
+      backgroundColor: 'rgba(75, 192, 192, 0.6)'
+    }]
+  },
+  options: {responsive: true, plugins: {legend: {display: false}}, scales: {y: {beginAtZero: true}}}
+});
+</script>
+{% endblock %} 

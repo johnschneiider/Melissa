@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
@@ -8,12 +8,19 @@ from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.urls import reverse
-from .forms import RegistroUnificadoForm
-from .models import UsuarioPersonalizado
+from .forms import RegistroUnificadoForm, FeedbackForm, RespuestaTicketForm, CambiarEstadoTicketForm
+from .models import UsuarioPersonalizado, Feedback, NotificacionAdmin, RespuestaTicket
 import logging
 from django.http import JsonResponse
-from profesionales.models import Notificacion, Profesional, Matriculacion
-from negocios.models import Negocio
+from profesionales.models import Notificacion, Profesional, Matriculacion, MetricaProfesional
+from negocios.models import Negocio, ServicioNegocio, Servicio, MetricaNegocio, ReporteMensual
+from django.utils import timezone
+from django.db.models.functions import TruncMonth
+from django.db.models import Count, Avg, Q, Sum
+import calendar
+from datetime import datetime, timedelta
+from django.db import models
+from clientes.models import MetricaCliente
 
 logger = logging.getLogger(__name__)
 
@@ -96,11 +103,16 @@ class LoginPersonalizadoView(View):
         return render(request, 'account/login.html', {'form': form})
     
     def redirect_by_user_type(self, user):
-        """Redirige al usuario según su tipo de cuenta"""
-        if user.tipo == 'cliente':
+        if user.is_superuser or getattr(user, 'tipo', None) == 'super_admin':
+            return redirect('dashboard_super_admin')
+        elif getattr(user, 'tipo', None) == 'cliente':
             return redirect('clientes:dashboard')
-        else:
+        elif getattr(user, 'tipo', None) == 'profesional':
+            return redirect('profesionales:panel')
+        elif getattr(user, 'tipo', None) == 'negocio':
             return redirect('negocios:mis_negocios')
+        else:
+            return redirect('inicio')
 
 @login_required
 @require_http_methods(["POST"])
@@ -250,6 +262,518 @@ def api_notificaciones(request):
         # Si implementas notificaciones para clientes, agrégalas aquí
         pass
     return JsonResponse({'notificaciones': data, 'no_leidas': count_no_leidas})
+
+# Helper para verificar si es super admin
+def es_super_admin(user):
+    return user.is_authenticated and user.tipo == 'super_admin'
+
+@login_required
+@user_passes_test(es_super_admin)
+def dashboard_super_admin(request):
+    total_negocios = UsuarioPersonalizado.objects.filter(tipo='negocio').count()
+    total_clientes = UsuarioPersonalizado.objects.filter(tipo='cliente').count()
+    total_profesionales = UsuarioPersonalizado.objects.filter(tipo='profesional').count()
+    feedbacks = Feedback.objects.all().order_by('-fecha')
+
+    # Evolución mensual (últimos 6 meses)
+    today = timezone.now().date().replace(day=1)
+    meses = []
+    negocios_mensual = []
+    clientes_mensual = []
+    profesionales_mensual = []
+    feedbacks_mensual = []
+    for i in range(5, -1, -1):
+        mes = (today.replace(day=1) - timezone.timedelta(days=30*i))
+        year = mes.year
+        month = mes.month
+        label = f"{calendar.month_abbr[month]} {year}"
+        meses.append(label)
+        negocios_mensual.append(UsuarioPersonalizado.objects.filter(tipo='negocio', date_joined__year=year, date_joined__month=month).count())
+        clientes_mensual.append(UsuarioPersonalizado.objects.filter(tipo='cliente', date_joined__year=year, date_joined__month=month).count())
+        profesionales_mensual.append(UsuarioPersonalizado.objects.filter(tipo='profesional', date_joined__year=year, date_joined__month=month).count())
+        feedbacks_mensual.append(Feedback.objects.filter(fecha__year=year, fecha__month=month).count())
+
+    context = {
+        'total_negocios': total_negocios,
+        'total_clientes': total_clientes,
+        'total_profesionales': total_profesionales,
+        'feedbacks': feedbacks,
+        'meses': meses,
+        'negocios_mensual': negocios_mensual,
+        'clientes_mensual': clientes_mensual,
+        'profesionales_mensual': profesionales_mensual,
+        'feedbacks_mensual': feedbacks_mensual,
+    }
+    return render(request, 'cuentas/dashboard_super_admin.html', context)
+
+@login_required
+def enviar_feedback(request):
+    if request.user.tipo == 'super_admin':
+        messages.error(request, 'El super admin no puede enviarse feedback a sí mismo.')
+        return redirect('inicio')
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST, request.FILES)
+        if form.is_valid():
+            feedback = form.save(commit=False)
+            feedback.usuario = request.user
+            feedback.save()
+            form.save_m2m()
+            
+            # Crear notificación para todos los superadmins
+            superadmins = UsuarioPersonalizado.objects.filter(models.Q(is_superuser=True) | models.Q(tipo='super_admin'))
+            for admin in superadmins:
+                NotificacionAdmin.objects.create(
+                    destinatario=admin,
+                    tipo='ticket',
+                    titulo=f'Nuevo ticket: {feedback.titulo}',
+                    mensaje=f'Se ha creado un nuevo ticket #{feedback.numero_ticket} de {request.user.username}: "{feedback.mensaje[:100]}"',
+                    url_relacionada=f'/cuentas/ticket/{feedback.id}/',
+                )
+            messages.success(request, f'¡Gracias por tu feedback! Tu ticket #{feedback.numero_ticket} ha sido creado.')
+            return redirect('inicio')
+    else:
+        form = FeedbackForm()
+    return render(request, 'cuentas/enviar_feedback.html', {'form': form})
+
+@login_required
+def redireccion_dashboard(request):
+    user = request.user
+    # Si es superusuario de Django o super_admin personalizado
+    if user.is_superuser or getattr(user, 'tipo', None) == 'super_admin':
+        return redirect('dashboard_super_admin')
+    # Si es cliente
+    elif getattr(user, 'tipo', None) == 'cliente':
+        return redirect('dashboard_cliente')
+    # Si es profesional
+    elif getattr(user, 'tipo', None) == 'profesional':
+        return redirect('dashboard_profesional')
+    # Si es negocio
+    elif getattr(user, 'tipo', None) == 'negocio':
+        return redirect('dashboard_negocio')
+    # Por defecto, home
+    return redirect('home')
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def analiticas_negocios(request):
+    from negocios.models import Negocio
+    from clientes.models import Reserva
+    from profesionales.models import Profesional
+    # Top 10 negocios con más reservas (último mes)
+    from django.utils import timezone
+    today = timezone.now().date()
+    mes = today.month
+    año = today.year
+    top_negocios = Negocio.objects.annotate(
+        num_reservas=models.Sum(
+            models.Case(
+                models.When(metricas__fecha__month=mes, metricas__fecha__year=año, then='metricas__total_reservas'),
+                default=0,
+                output_field=models.IntegerField()
+            )
+        )
+    ).order_by('-num_reservas')[:10]
+    # KPIs generales (hoy)
+    metricas_hoy = MetricaNegocio.objects.filter(fecha=today)
+    total_turnos = metricas_hoy.aggregate(total=models.Sum('total_reservas'))['total'] or 0
+    tasa_ocupacion = 0  # Puedes calcularlo si tienes horas trabajadas/disponibles en MetricaNegocio
+    # Servicios más solicitados y profesionales más reservados requieren lógica adicional o modelos agregados
+    # Clientes recurrentes/nuevos, ingresos, cancelaciones, etc. pueden obtenerse de los modelos agregados
+    # Ingresos generados (últimos 7 días, semanas, meses)
+    ingresos_dia = []
+    for m in metricas_hoy:
+        ingresos_dia.append({
+            'dia': m.fecha.strftime('%d/%m'),
+            'total': float(m.ingresos_totales or 0)
+        })
+    metricas_mes = MetricaNegocio.objects.filter(fecha__month=mes, fecha__year=año)
+    ingresos_mes = metricas_mes.aggregate(total=models.Sum('ingresos_totales'))['total'] or 0
+    # Promedio de cancelaciones
+    promedio_cancelaciones = metricas_hoy.aggregate(avg=models.Avg('reservas_canceladas'))['avg'] or 0
+    
+    # Variables faltantes para el template
+    servicios_mas_solicitados = []  # Placeholder
+    profesionales_mas_reservados = []  # Placeholder
+    clientes_recurrentes = 0  # Placeholder
+    clientes_nuevos = 0  # Placeholder
+    ingresos_semana = []  # Placeholder - lista de diccionarios con 'semana' y 'total'
+    calificacion_promedio = 0  # Placeholder
+    
+    # Corregir ingresos_mes para que sea una lista de diccionarios
+    ingresos_mes_list = []
+    # Crear datos de ejemplo para los últimos 6 meses
+    for i in range(6):
+        mes_num = (mes - i - 1) % 12 + 1
+        año_mes = año if mes_num <= mes else año - 1
+        ingresos_mes_list.append({
+            'mes': f"{mes_num:02d}/{año_mes}",
+            'total': float(ingresos_mes / 6)  # Distribuir el total entre los meses
+        })
+    
+    # Para gráficas
+    top_negocios_labels = [n.nombre for n in top_negocios]
+    top_negocios_data = [n.num_reservas for n in top_negocios]
+    servicios_labels = []
+    servicios_data = []
+    prof_labels = []
+    prof_data = []
+    
+    context = {
+        'top_negocios': top_negocios,
+        'total_turnos': total_turnos,
+        'tasa_ocupacion': tasa_ocupacion,
+        'ingresos_dia': ingresos_dia,
+        'ingresos_mes': ingresos_mes_list,  # Ahora es una lista de diccionarios
+        'promedio_cancelaciones': promedio_cancelaciones,
+        'servicios_mas_solicitados': servicios_mas_solicitados,
+        'profesionales_mas_reservados': profesionales_mas_reservados,
+        'clientes_recurrentes': clientes_recurrentes,
+        'clientes_nuevos': clientes_nuevos,
+        'ingresos_semana': ingresos_semana,
+        'calificacion_promedio': calificacion_promedio,
+        'top_negocios_labels': top_negocios_labels,
+        'top_negocios_data': top_negocios_data,
+        'servicios_labels': servicios_labels,
+        'servicios_data': servicios_data,
+        'prof_labels': prof_labels,
+        'prof_data': prof_data,
+    }
+    return render(request, 'cuentas/analiticas_negocios.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def analiticas_profesionales(request):
+    from django.utils import timezone
+    today = timezone.now().date()
+    mes = today.month
+    año = today.year
+    # Top 10 profesionales con más turnos (mes actual)
+    top_profesionales = Profesional.objects.annotate(
+        num_turnos=models.Sum(
+            models.Case(
+                models.When(metricas__fecha__month=mes, metricas__fecha__year=año, then='metricas__total_turnos'),
+                default=0,
+                output_field=models.IntegerField()
+            )
+        )
+    ).order_by('-num_turnos')[:10]
+    # Turnos agendados (hoy / semana / mes)
+    turnos_hoy = MetricaProfesional.objects.filter(fecha=today).aggregate(total=models.Sum('total_turnos'))['total'] or 0
+    turnos_semana = MetricaProfesional.objects.filter(fecha__week=today.isocalendar()[1], fecha__year=today.year).aggregate(total=models.Sum('total_turnos'))['total'] or 0
+    turnos_mes = MetricaProfesional.objects.filter(fecha__month=mes, fecha__year=año).aggregate(total=models.Sum('total_turnos'))['total'] or 0
+    # Tiempo promedio entre servicios y horas trabajadas (usando horas_trabajadas)
+    metricas_mes = MetricaProfesional.objects.filter(fecha__month=mes, fecha__year=año)
+    horas_trabajadas = metricas_mes.aggregate(total=models.Sum('horas_trabajadas'))['total'] or 0
+    # Calificación promedio
+    calificacion_promedio = metricas_mes.aggregate(avg=models.Avg('calificacion_promedio'))['avg'] or 0
+    # Ingresos estimados
+    ingresos_estimados = metricas_mes.aggregate(total=models.Sum('ingresos_totales'))['total'] or 0
+    # Tasa de cancelaciones por profesional
+    tasa_cancelaciones = []
+    for profesional in top_profesionales:
+        metricas_prof = profesional.metricas.filter(fecha__month=mes, fecha__year=año)
+        total = metricas_prof.aggregate(total=models.Sum('total_turnos'))['total'] or 0
+        canceladas = metricas_prof.aggregate(total=models.Sum('turnos_cancelados'))['total'] or 0
+        tasa = (canceladas / total * 100) if total else 0
+        tasa_cancelaciones.append({'profesional': profesional, 'tasa': round(tasa, 2)})
+    # Horas disponibles (asumimos 8h por día con métricas)
+    dias_con_reservas = metricas_mes.values('fecha').distinct().count()
+    horas_disponibles = dias_con_reservas * 8 if dias_con_reservas else 1
+    # Para gráficas en template (profesionales)
+    top_prof_labels = [p.nombre_completo for p in top_profesionales]
+    top_prof_data = [p.num_turnos for p in top_profesionales]
+    cancel_labels = [t['profesional'].nombre_completo for t in tasa_cancelaciones]
+    cancel_data = [t['tasa'] for t in tasa_cancelaciones]
+    context = {
+        'top_profesionales': top_profesionales,
+        'turnos_hoy': turnos_hoy,
+        'turnos_semana': turnos_semana,
+        'turnos_mes': turnos_mes,
+        'tiempo_promedio_servicio': 0,  # No disponible directo, opcional: calcularlo si se almacena
+        'ingresos_estimados': ingresos_estimados,
+        'calificacion_promedio': round(calificacion_promedio, 2),
+        'tasa_cancelaciones': tasa_cancelaciones,
+        'horas_trabajadas': horas_trabajadas,
+        'horas_disponibles': horas_disponibles,
+        'top_prof_labels': top_prof_labels,
+        'top_prof_data': top_prof_data,
+        'cancel_labels': cancel_labels,
+        'cancel_data': cancel_data,
+    }
+    return render(request, 'cuentas/analiticas_profesionales.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def analiticas_clientes(request):
+    from cuentas.models import UsuarioPersonalizado
+    from profesionales.models import Profesional
+    from django.utils import timezone
+    today = timezone.now().date()
+    mes = today.month
+    año = today.year
+    # Top 10 clientes con más turnos (mes actual)
+    top_clientes = UsuarioPersonalizado.objects.filter(tipo='cliente').annotate(
+        num_turnos=models.Sum(
+            models.Case(
+                models.When(metricas_cliente__fecha__month=mes, metricas_cliente__fecha__year=año, then='metricas_cliente__total_turnos'),
+                default=0,
+                output_field=models.IntegerField()
+            )
+        )
+    ).order_by('-num_turnos')[:10]
+    # Total de turnos agendados
+    total_turnos = MetricaCliente.objects.filter(fecha__month=mes, fecha__year=año).aggregate(total=models.Sum('total_turnos'))['total'] or 0
+    # Servicios más solicitados y profesionales más reservados (usando campos agregados)
+    metricas_mes = MetricaCliente.objects.filter(fecha__month=mes, fecha__year=año)
+    from collections import Counter
+    servicios = []
+    profesionales = []
+    for m in metricas_mes:
+        servicios += m.servicios_mas_solicitados.split(',') if m.servicios_mas_solicitados else []
+        profesionales += m.profesionales_mas_reservados.split(',') if m.profesionales_mas_reservados else []
+    servicios_mas_solicitados = Counter([s.strip() for s in servicios if s.strip()])
+    profesionales_mas_reservados = Counter([p.strip() for p in profesionales if p.strip()])
+    servicios_mas_solicitados = [{'nombre': s, 'num': n} for s, n in servicios_mas_solicitados.most_common(5)]
+    profesionales_mas_reservados = [{'nombre_completo': p, 'num': n} for p, n in profesionales_mas_reservados.most_common(5)]
+    # Tasa de asistencia vs cancelaciones
+    total_cancelaciones = metricas_mes.aggregate(total=models.Sum('turnos_cancelados'))['total'] or 0
+    tasa_asistencia = ((total_turnos - total_cancelaciones) / total_turnos * 100) if total_turnos else 0
+    tasa_cancelaciones = (total_cancelaciones / total_turnos * 100) if total_turnos else 0
+    # Tiempo promedio entre reservas (no disponible directo)
+    tiempo_promedio = 0
+    # Para gráficas en template (clientes)
+    top_clientes_labels = [c.username for c in top_clientes]
+    top_clientes_data = [c.num_turnos for c in top_clientes]
+    servicios_labels = [s['nombre'] for s in servicios_mas_solicitados]
+    servicios_data = [s['num'] for s in servicios_mas_solicitados]
+    prof_labels = [p['nombre_completo'] for p in profesionales_mas_reservados]
+    prof_data = [p['num'] for p in profesionales_mas_reservados]
+    context = {
+        'top_clientes': top_clientes,
+        'total_turnos': total_turnos,
+        'servicios_mas_solicitados': servicios_mas_solicitados,
+        'tasa_asistencia': round(tasa_asistencia, 2),
+        'tasa_cancelaciones': round(tasa_cancelaciones, 2),
+        'tiempo_promedio': round(tiempo_promedio, 2),
+        'profesionales_mas_reservados': profesionales_mas_reservados,
+        'ingresos_estimados': 0,  # No disponible directo
+        'top_clientes_labels': top_clientes_labels,
+        'top_clientes_data': top_clientes_data,
+        'servicios_labels': servicios_labels,
+        'servicios_data': servicios_data,
+        'prof_labels': prof_labels,
+        'prof_data': prof_data,
+    }
+    return render(request, 'cuentas/analiticas_clientes.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def analiticas_general(request):
+    from django.utils import timezone
+    today = timezone.now().date()
+    metricas_hoy = MetricaNegocio.objects.filter(fecha=today)
+    turnos_hoy = metricas_hoy.aggregate(total=models.Sum('total_reservas'))['total'] or 0
+    turnos_semana = metricas_hoy.aggregate(total=models.Sum('total_reservas'))['total'] or 0  # Puedes ajustar el filtro para la semana
+    turnos_mes = metricas_hoy.aggregate(total=models.Sum('total_reservas'))['total'] or 0  # Puedes ajustar el filtro para el mes
+    ingresos_estimados = metricas_hoy.aggregate(total=models.Sum('ingresos_totales'))['total'] or 0
+    # ...otros KPIs...
+    context = {
+        'turnos_hoy': turnos_hoy,
+        'turnos_semana': turnos_semana,
+        'turnos_mes': turnos_mes,
+        'ingresos_estimados': ingresos_estimados,
+        # ...otros datos...
+    }
+    return render(request, 'cuentas/analiticas_general.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def notificaciones_super_admin(request):
+    notificaciones = NotificacionAdmin.objects.filter(destinatario=request.user).order_by('-fecha_creacion')
+    
+    # Estadísticas de tickets
+    tickets_pendientes = Feedback.objects.filter(estado='pendiente').count()
+    tickets_en_proceso = Feedback.objects.filter(estado='en_proceso').count()
+    tickets_resueltos = Feedback.objects.filter(estado='resuelto').count()
+    tickets_urgentes = Feedback.objects.filter(prioridad='urgente').count()
+    
+    context = {
+        'notificaciones': notificaciones,
+        'tickets_pendientes': tickets_pendientes,
+        'tickets_en_proceso': tickets_en_proceso,
+        'tickets_resueltos': tickets_resueltos,
+        'tickets_urgentes': tickets_urgentes,
+    }
+    return render(request, 'cuentas/notificaciones_super_admin.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def lista_tickets(request):
+    """Vista para listar todos los tickets (solo super admin)"""
+    tickets = Feedback.objects.all().order_by('-fecha')
+    
+    # Filtros
+    estado = request.GET.get('estado')
+    prioridad = request.GET.get('prioridad')
+    categoria = request.GET.get('categoria')
+    
+    if estado:
+        tickets = tickets.filter(estado=estado)
+    if prioridad:
+        tickets = tickets.filter(prioridad=prioridad)
+    if categoria:
+        tickets = tickets.filter(categoria=categoria)
+    
+    context = {
+        'tickets': tickets,
+        'estados': Feedback.ESTADO_CHOICES,
+        'prioridades': Feedback.PRIORIDAD_CHOICES,
+        'categorias': Feedback.objects.values_list('categoria', flat=True).distinct(),
+        'filtros_activos': {
+            'estado': estado,
+            'prioridad': prioridad,
+            'categoria': categoria,
+        }
+    }
+    return render(request, 'cuentas/lista_tickets.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def detalle_ticket(request, ticket_id):
+    """Vista para ver el detalle de un ticket y sus respuestas"""
+    ticket = get_object_or_404(Feedback, id=ticket_id)
+    respuestas = ticket.respuestas.all()
+    form_respuesta = RespuestaTicketForm()
+    form_estado = CambiarEstadoTicketForm(initial={'estado': ticket.estado})
+
+    if request.method == 'POST':
+        print(f"POST data: {request.POST}")  # Debug
+        print(f"Current ticket state: {ticket.estado}")  # Debug
+        
+        # Detectar qué formulario se envió basándose en los campos presentes
+        if 'estado' in request.POST:
+            # Formulario de cambio de estado
+            form_estado = CambiarEstadoTicketForm(request.POST)
+            print(f"Estado form valid: {form_estado.is_valid()}")  # Debug
+            if form_estado.is_valid():
+                nuevo_estado = form_estado.cleaned_data['estado']
+                mensaje = form_estado.cleaned_data['mensaje']
+                print(f"Changing state from {ticket.estado} to {nuevo_estado}")  # Debug
+                
+                # Cambiar el estado del ticket
+                ticket.cambiar_estado(nuevo_estado, request.user)
+                print(f"State changed to: {ticket.estado}")  # Debug
+                
+                # Si hay mensaje adicional, crear respuesta
+                if mensaje:
+                    RespuestaTicket.objects.create(
+                        ticket=ticket,
+                        autor=request.user,
+                        mensaje=mensaje
+                    )
+                
+                # Notificar al usuario que creó el ticket sobre el cambio de estado
+                estado_display = dict(Feedback.ESTADO_CHOICES)[nuevo_estado]
+                NotificacionAdmin.objects.create(
+                    destinatario=ticket.usuario,
+                    tipo='respuesta_ticket',
+                    titulo=f'Estado actualizado en ticket #{ticket.numero_ticket}',
+                    mensaje=f'El estado de tu ticket ha sido cambiado a: {estado_display}',
+                    url_relacionada=f'/cuentas/ticket/{ticket.id}/',
+                )
+                
+                messages.success(request, f'Estado del ticket cambiado a: {estado_display}')
+                return redirect('cuentas:detalle_ticket', ticket_id=ticket.id)
+            else:
+                print(f"Estado form errors: {form_estado.errors}")  # Debug
+        elif 'mensaje' in request.POST and 'estado' not in request.POST:
+            # Formulario de respuesta (solo mensaje, sin estado)
+            form_respuesta = RespuestaTicketForm(request.POST)
+            print(f"Respuesta form valid: {form_respuesta.is_valid()}")  # Debug
+            if form_respuesta.is_valid():
+                respuesta = form_respuesta.save(commit=False)
+                respuesta.ticket = ticket
+                respuesta.autor = request.user
+                respuesta.save()
+                print(f"Respuesta saved with ID: {respuesta.id}")  # Debug
+                
+                # Notificar al usuario que creó el ticket
+                NotificacionAdmin.objects.create(
+                    destinatario=ticket.usuario,
+                    tipo='respuesta_ticket',
+                    titulo=f'Nueva respuesta en ticket #{ticket.numero_ticket}',
+                    mensaje=f'El administrador ha respondido a tu ticket: "{respuesta.mensaje[:100]}"',
+                    url_relacionada=f'/cuentas/ticket/{ticket.id}/',
+                )
+                
+                messages.success(request, 'Respuesta enviada correctamente.')
+                return redirect('cuentas:detalle_ticket', ticket_id=ticket.id)
+            else:
+                print(f"Respuesta form errors: {form_respuesta.errors}")  # Debug
+
+    # Marcar como leído por admin
+    if not ticket.leido_por_admin:
+        ticket.leido_por_admin = True
+        ticket.save()
+
+    context = {
+        'ticket': ticket,
+        'respuestas': respuestas,
+        'form_respuesta': form_respuesta,
+        'form_estado': form_estado,
+    }
+    return render(request, 'cuentas/detalle_ticket.html', context)
+
+@login_required
+def mis_tickets(request):
+    """Vista para que los usuarios vean sus propios tickets"""
+    tickets = Feedback.objects.filter(usuario=request.user).order_by('-fecha')
+    context = {
+        'tickets': tickets,
+    }
+    return render(request, 'cuentas/mis_tickets.html', context)
+
+@login_required
+def detalle_mi_ticket(request, ticket_id):
+    """Vista para que los usuarios vean el detalle de su ticket"""
+    ticket = get_object_or_404(Feedback, id=ticket_id, usuario=request.user)
+    respuestas = ticket.respuestas.all()
+    
+    if request.method == 'POST':
+        form_respuesta = RespuestaTicketForm(request.POST)
+        if form_respuesta.is_valid():
+            respuesta = form_respuesta.save(commit=False)
+            respuesta.ticket = ticket
+            respuesta.autor = request.user
+            respuesta.save()
+            
+            # Notificar a los super admins
+            superadmins = UsuarioPersonalizado.objects.filter(models.Q(is_superuser=True) | models.Q(tipo='super_admin'))
+            for admin in superadmins:
+                NotificacionAdmin.objects.create(
+                    destinatario=admin,
+                    tipo='respuesta_ticket',
+                    titulo=f'Nueva respuesta de usuario en ticket #{ticket.numero_ticket}',
+                    mensaje=f'El usuario {request.user.username} ha respondido: "{respuesta.mensaje[:100]}"',
+                    url_relacionada=f'/cuentas/ticket/{ticket.id}/',
+                )
+            
+            messages.success(request, 'Respuesta enviada correctamente.')
+            return redirect('cuentas:detalle_mi_ticket', ticket_id=ticket.id)
+    else:
+        form_respuesta = RespuestaTicketForm()
+    
+    # Marcar como leído por usuario
+    if not ticket.leido_por_usuario:
+        ticket.leido_por_usuario = True
+        ticket.save()
+    
+    context = {
+        'ticket': ticket,
+        'respuestas': respuestas,
+        'form_respuesta': form_respuesta,
+    }
+    return render(request, 'cuentas/detalle_mi_ticket.html', context)
 
 
 

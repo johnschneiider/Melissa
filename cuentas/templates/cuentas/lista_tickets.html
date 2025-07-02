@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Tickets - Super Admin{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold mb-0">
+                    <i class="bi bi-ticket-detailed text-primary me-2"></i>
+                    Gestión de Tickets
+                </h2>
+                <a href="{% url 'cuentas:notificaciones_super_admin' %}" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Estado</label>
+                            <select name="estado" class="form-select">
+                                <option value="">Todos los estados</option>
+                                {% for estado in estados %}
+                                    <option value="{{ estado.0 }}" {% if filtros_activos.estado == estado.0 %}selected{% endif %}>
+                                        {{ estado.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Prioridad</label>
+                            <select name="prioridad" class="form-select">
+                                <option value="">Todas las prioridades</option>
+                                {% for prioridad in prioridades %}
+                                    <option value="{{ prioridad.0 }}" {% if filtros_activos.prioridad == prioridad.0 %}selected{% endif %}>
+                                        {{ prioridad.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Categoría</label>
+                            <select name="categoria" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                {% for categoria in categorias %}
+                                    <option value="{{ categoria }}" {% if filtros_activos.categoria == categoria %}selected{% endif %}>
+                                        {{ categoria|title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-funnel me-1"></i>Filtrar
+                            </button>
+                            <a href="{% url 'cuentas:lista_tickets' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de tickets -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-gradient-primary text-white py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Tickets ({{ tickets.count }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if tickets %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ticket</th>
+                                        <th>Título</th>
+                                        <th>Usuario</th>
+                                        <th>Categoría</th>
+                                        <th>Prioridad</th>
+                                        <th>Estado</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ticket in tickets %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ ticket.numero_ticket }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold">{{ ticket.titulo }}</div>
+                                            <small class="text-muted">{{ ticket.mensaje|truncatechars:50 }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                    <i class="bi bi-person text-primary"></i>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold">{{ ticket.usuario.username }}</div>
+                                                    <small class="text-muted">{{ ticket.usuario.tipo|title }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ ticket.categoria|title }}</span>
+                                        </td>
+                                        <td>
+                                            {% if ticket.prioridad == 'urgente' %}
+                                                <span class="badge bg-danger">Urgente</span>
+                                            {% elif ticket.prioridad == 'alta' %}
+                                                <span class="badge bg-warning">Alta</span>
+                                            {% elif ticket.prioridad == 'media' %}
+                                                <span class="badge bg-info">Media</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Baja</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if ticket.estado == 'pendiente' %}
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            {% elif ticket.estado == 'en_proceso' %}
+                                                <span class="badge bg-info">En Proceso</span>
+                                            {% elif ticket.estado == 'resuelto' %}
+                                                <span class="badge bg-success">Resuelto</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Cerrado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="small">
+                                                <div>{{ ticket.fecha|date:'d/m/Y' }}</div>
+                                                <div class="text-muted">{{ ticket.fecha|date:'H:i' }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'cuentas:detalle_ticket' ticket.id %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye me-1"></i>Ver
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                            <h5 class="mt-3 text-muted">No hay tickets</h5>
+                            <p class="text-muted">No se encontraron tickets con los filtros aplicados</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.5em 0.75em;
+}
+</style>
+{% endblock %} 

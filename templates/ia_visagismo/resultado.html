@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resultado Análisis - IA Visagismo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-magic me-2"></i>
+                        Resultado del Análisis
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <!-- Estado del análisis -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h5>Estado: 
+                                    <span class="badge bg-{% if analisis.estado == 'completado' %}success{% elif analisis.estado == 'procesando' %}warning{% else %}secondary{% endif %}">
+                                        {{ analisis.get_estado_display }}
+                                    </span>
+                                </h5>
+                                {% if analisis.estado == 'procesando' %}
+                                    <p class="mb-0">El análisis está en progreso. Esta página se actualizará automáticamente.</p>
+                                {% elif analisis.estado == 'completado' %}
+                                    <p class="mb-0">Análisis completado exitosamente.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Imágenes -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Tu Foto Original</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    {% if analisis.imagen_original %}
+                                        <img src="{{ analisis.imagen_original.url }}" 
+                                             alt="Foto original" 
+                                             class="img-fluid rounded" 
+                                             style="max-height: 400px;">
+                                    {% else %}
+                                        <p class="text-muted">No hay imagen disponible</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Información del Análisis</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if analisis.forma_cara %}
+                                        <h6>Forma de Cara: <span class="badge bg-primary">{{ analisis.forma_cara|title }}</span></h6>
+                                    {% endif %}
+                                    
+                                    {% if analisis.medidas_faciales %}
+                                        <h6>Medidas:</h6>
+                                        <ul class="list-unstyled">
+                                            <li><small>Ancho: {{ analisis.medidas_faciales.ancho_cara|floatformat:0 }}px</small></li>
+                                            <li><small>Alto: {{ analisis.medidas_faciales.alto_cara|floatformat:0 }}px</small></li>
+                                            <li><small>Relación: {{ analisis.medidas_faciales.relacion_ancho_alto|floatformat:2 }}</small></li>
+                                        </ul>
+                                    {% endif %}
+                                    
+                                    <small class="text-muted">
+                                        Análisis realizado el {{ analisis.fecha_creacion|date:"d/m/Y H:i" }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recomendaciones -->
+                    {% if analisis.estado == 'completado' and cortes_recomendados %}
+                        <div class="row">
+                            <div class="col-12">
+                                <h4>Recomendaciones de Cortes</h4>
+                                <p class="text-muted">Basadas en tu forma de cara: <strong>{{ analisis.forma_cara|title }}</strong></p>
+                                
+                                <div class="row">
+                                    {% for corte in cortes_recomendados %}
+                                        <div class="col-md-6 col-lg-4 mb-4">
+                                            <div class="card h-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">{{ corte.nombre_corte }}</h5>
+                                                    <p class="card-text">{{ corte.descripcion }}</p>
+                                                    
+                                                    <div class="mb-3">
+                                                        <span class="badge bg-{{ corte.categoria }}">{{ corte.get_categoria_display }}</span>
+                                                        <span class="badge bg-info">{{ corte.confianza|floatformat:0 }}% confianza</span>
+                                                    </div>
+                                                    
+                                                    <!-- Imagen generada o placeholder -->
+                                                    <div class="text-center mb-3 imagen-generada-container" id="imagen-generada-{{ corte.id }}">
+                                                        {% if corte.imagen_ejemplo %}
+                                                            <img src="{{ corte.imagen_ejemplo.url }}" 
+                                                                 alt="{{ corte.nombre_corte }}" 
+                                                                 class="img-fluid rounded" 
+                                                                 style="max-height: 200px;">
+                                                        {% else %}
+                                                            <div class="placeholder-image bg-light rounded d-flex align-items-center justify-content-center" 
+                                                                 style="height: 200px;">
+                                                                <div class="text-center">
+                                                                    <i class="fas fa-image fa-3x text-muted mb-2"></i>
+                                                                    <p class="text-muted mb-0">Sin imagen</p>
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <!-- Botones de acción -->
+                                                    <div class="d-grid gap-2">
+                                                        <button class="btn btn-outline-primary btn-sm guardar-seleccion-btn"
+                                                                data-analisis-id="{{ analisis.id }}" 
+                                                                data-corte-id="{{ corte.id }}">
+                                                            <i class="fas fa-heart me-2"></i>
+                                                            Me Gusta
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% elif analisis.estado == 'procesando' %}
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Procesando...</span>
+                                </div>
+                                <p class="mt-3">Analizando tu rostro y generando recomendaciones...</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="alert alert-warning">
+                                    <h5>No hay recomendaciones disponibles</h5>
+                                    <p class="mb-0">El análisis no se completó correctamente o no se encontraron recomendaciones.</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const analisisId = {{ analisis.id }};
+    const estado = '{{ analisis.estado }}';
+    
+    // Si está procesando, verificar estado cada 5 segundos
+    if (estado === 'procesando') {
+        const checkStatus = setInterval(function() {
+            fetch(`/ia-visagismo/api/estado/${analisisId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.completado) {
+                        clearInterval(checkStatus);
+                        location.reload();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }, 5000);
+    }
+    
+    // Botones para guardar selección
+    document.querySelectorAll('.guardar-seleccion-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const analisisId = this.dataset.analisisId;
+            const corteId = this.dataset.corteId;
+            
+            // Mostrar modal de satisfacción
+            const satisfaccion = prompt('¿Qué te pareció esta recomendación? (1-5 estrellas)');
+            if (satisfaccion && satisfaccion >= 1 && satisfaccion <= 5) {
+                const comentarios = prompt('Comentarios adicionales (opcional):');
+                
+                fetch('/ia-visagismo/api/guardar-seleccion/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        analisis_id: analisisId,
+                        corte_id: corteId,
+                        satisfaccion: parseInt(satisfaccion),
+                        comentarios: comentarios || ''
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.innerHTML = '<i class="fas fa-check me-2"></i>Guardado';
+                        this.classList.remove('btn-outline-primary');
+                        this.classList.add('btn-success');
+                        this.disabled = true;
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al guardar la selección');
+                });
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.placeholder-image {
+    border: 2px dashed #dee2e6;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

@@ -216,6 +216,7 @@
 <!-- Modal para asignar horario -->
 <div class="modal fade" id="horarioModal" tabindex="-1" aria-labelledby="horarioModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
+        {% if negocio.id %}
         <form method="POST" action="{% url 'negocios:panel_negocio' negocio.id %}">
             {% csrf_token %}
             <div class="modal-content border-0 shadow">
@@ -294,12 +295,16 @@
                 </div>
             </div>
         </form>
+        {% else %}
+        <div class="alert alert-warning m-4">Debes guardar el negocio antes de asignar horarios.</div>
+        {% endif %}
     </div>
 </div>
 
 <!-- Modal para editar logo -->
 <div class="modal fade" id="editarLogoModal" tabindex="-1" aria-labelledby="editarLogoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
+        {% if negocio.id %}
         <form method="POST" action="{% url 'negocios:panel_negocio' negocio.id %}" enctype="multipart/form-data">
             {% csrf_token %}
             <div class="modal-content border-0 shadow">
@@ -328,6 +333,9 @@
                 </div>
             </div>
         </form>
+        {% else %}
+        <div class="alert alert-warning m-4">Debes guardar el negocio antes de editar el logo.</div>
+        {% endif %}
     </div>
 </div>
 

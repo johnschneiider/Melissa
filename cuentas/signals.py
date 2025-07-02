@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from allauth.account.signals import user_signed_up
 from allauth.socialaccount.signals import pre_social_login
+from django.conf import settings
 from .models import UsuarioPersonalizado
 
 @receiver(user_signed_up)
@@ -32,4 +33,10 @@ def handle_pre_social_login(sender, request, sociallogin, **kwargs):
             sociallogin.state['next'] = reverse('cuentas:seleccionar_tipo_google')
     else:
         # Usuario nuevo, redirigir a seleccionar tipo después del registro
-        sociallogin.state['next'] = reverse('cuentas:seleccionar_tipo_google') 
+        sociallogin.state['next'] = reverse('cuentas:seleccionar_tipo_google')
+
+@receiver(post_save, sender=UsuarioPersonalizado)
+def ensure_super_admin(sender, instance, **kwargs):
+    if instance.is_superuser and instance.tipo != 'super_admin':
+        instance.tipo = 'super_admin'
+        instance.save(update_fields=['tipo']) 

@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.db.models import Q, Max
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 import json
 from .models import Conversacion, Mensaje
 
@@ -165,3 +165,18 @@ def buscar_usuarios(request):
         'usuarios': usuarios,
         'query': query
     })
+
+@login_required
+@require_GET
+def api_mensajes_no_leidos(request):
+    """API para obtener el total de mensajes no leídos del usuario autenticado"""
+    user = request.user
+    # Buscar todas las conversaciones donde el usuario participa
+    conversaciones = Conversacion.objects.filter(
+        Q(participante1=user) | Q(participante2=user)
+    )
+    total_no_leidos = 0
+    for conv in conversaciones:
+        otro = conv.participante2 if conv.participante1 == user else conv.participante1
+        total_no_leidos += conv.mensajes.filter(remitente=otro, leido=False).count()
+    return JsonResponse({'no_leidos': total_no_leidos})

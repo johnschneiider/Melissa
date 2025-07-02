@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subir Foto - IA Visagismo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>
+                        Subir Foto para Análisis
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <label for="imagen" class="form-label fw-bold">Selecciona tu foto:</label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="imagen" 
+                                           name="imagen" 
+                                           accept="image/*" 
+                                           required>
+                                    <div class="form-text">
+                                        Formatos soportados: JPG, PNG, GIF. Máximo 5MB.
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="terminos" required>
+                                        <label class="form-check-label" for="terminos">
+                                            Acepto que mi foto será procesada por IA para análisis de visagismo
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                    <i class="fas fa-magic me-2"></i>
+                                    Iniciar Análisis
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="upload-preview text-center">
+                                <div id="previewContainer" class="border rounded p-4" style="min-height: 300px; display: none;">
+                                    <img id="imagePreview" class="img-fluid rounded" style="max-height: 250px;">
+                                    <div class="mt-3">
+                                        <small class="text-muted" id="imageInfo"></small>
+                                    </div>
+                                </div>
+                                
+                                <div id="placeholderContainer" class="border rounded p-4" style="min-height: 300px;">
+                                    <i class="fas fa-camera fa-4x text-muted mb-3"></i>
+                                    <h5 class="text-muted">Vista Previa</h5>
+                                    <p class="text-muted">Selecciona una imagen para ver la vista previa</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <h5>Consejos para mejores resultados:</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Foto frontal con buena iluminación
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Rostro centrado y visible
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-check text-success me-2"></i>
+                                            Sin gafas o accesorios que cubran el rostro
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2">
+                                            <i class="fas fa-times text-danger me-2"></i>
+                                            Evita fotos borrosas o muy oscuras
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-times text-danger me-2"></i>
+                                            No uses filtros o efectos
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-times text-danger me-2"></i>
+                                            Evita fotos grupales
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('imagen');
+    const previewContainer = document.getElementById('previewContainer');
+    const placeholderContainer = document.getElementById('placeholderContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const imageInfo = document.getElementById('imageInfo');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file) {
+            // Validar tipo de archivo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor selecciona una imagen válida');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Validar tamaño (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('La imagen debe ser menor a 5MB');
+                fileInput.value = '';
+                return;
+            }
+            
+            // Mostrar vista previa
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                previewContainer.style.display = 'block';
+                placeholderContainer.style.display = 'none';
+                
+                // Mostrar información del archivo
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                imageInfo.textContent = `${file.name} (${sizeMB} MB)`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewContainer.style.display = 'none';
+            placeholderContainer.style.display = 'block';
+        }
+    });
+    
+    uploadForm.addEventListener('submit', function(e) {
+        if (!fileInput.files[0]) {
+            e.preventDefault();
+            alert('Por favor selecciona una imagen');
+            return;
+        }
+        
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+    });
+});
+</script>
+
+<style>
+.upload-preview {
+    background: #f8f9fa;
+}
+
+#previewContainer {
+    background: white;
+}
+
+#imagePreview {
+    max-width: 100%;
+    height: auto;
+}
+</style>
+{% endblock %} 

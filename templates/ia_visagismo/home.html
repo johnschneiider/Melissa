@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}IA Visagismo - Melissa{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">
+                        <i class="fas fa-magic me-2"></i>
+                        IA Visagismo
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4>Descubre tu estilo perfecto con IA</h4>
+                            <p class="lead">
+                                Nuestra inteligencia artificial analiza tu rostro y te recomienda 
+                                los cortes de cabello que mejor se adaptan a tu forma de cara.
+                            </p>
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <div class="feature-card text-center p-3 border rounded">
+                                        <i class="fas fa-camera fa-3x text-primary mb-3"></i>
+                                        <h5>Sube tu foto</h5>
+                                        <p>Simplemente sube una foto clara de tu rostro</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature-card text-center p-3 border rounded">
+                                        <i class="fas fa-brain fa-3x text-success mb-3"></i>
+                                        <h5>Análisis IA</h5>
+                                        <p>Nuestra IA analiza tu forma de cara y características</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <div class="feature-card text-center p-3 border rounded">
+                                        <i class="fas fa-cut fa-3x text-warning mb-3"></i>
+                                        <h5>Recomendaciones</h5>
+                                        <p>Recibe sugerencias personalizadas de cortes</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="feature-card text-center p-3 border rounded">
+                                        <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                                        <h5>Guarda favoritos</h5>
+                                        <p>Guarda los estilos que más te gusten</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <a href="{% url 'ia_visagismo:subir_foto' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-upload me-2"></i>
+                                    Comenzar Análisis
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5>Análisis Recientes</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if analisis_recientes %}
+                                        {% for analisis in analisis_recientes %}
+                                            <div class="d-flex align-items-center mb-3 p-2 border rounded">
+                                                {% if analisis.imagen_original %}
+                                                    <img src="{{ analisis.imagen_original.url }}" 
+                                                         alt="Foto" 
+                                                         class="rounded me-3" 
+                                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                                {% endif %}
+                                                <div class="flex-grow-1">
+                                                    <small class="text-muted">{{ analisis.fecha_creacion|date:"d/m/Y" }}</small>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="badge bg-{% if analisis.estado == 'completado' %}success{% elif analisis.estado == 'procesando' %}warning{% else %}secondary{% endif %} me-2">
+                                                            {{ analisis.get_estado_display }}
+                                                        </span>
+                                                        {% if analisis.forma_cara %}
+                                                            <span class="text-muted">{{ analisis.forma_cara|title }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% if analisis.estado == 'completado' %}
+                                                    <a href="{% url 'ia_visagismo:resultado' analisis.id %}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        Ver
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted text-center">No hay análisis recientes</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5>Enlaces Rápidos</h5>
+                                </div>
+                                <div class="card-body">
+                                    <a href="{% url 'ia_visagismo:historial' %}" class="btn btn-outline-secondary w-100 mb-2">
+                                        <i class="fas fa-history me-2"></i>
+                                        Historial
+                                    </a>
+                                    <a href="{% url 'ia_visagismo:subir_foto' %}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-plus me-2"></i>
+                                        Nuevo Análisis
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.feature-card {
+    transition: transform 0.2s;
+    background: white;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

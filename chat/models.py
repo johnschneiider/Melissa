@@ -20,7 +20,7 @@ class Conversacion(models.Model):
 
 class Mensaje(models.Model):
     conversacion = models.ForeignKey(Conversacion, related_name='mensajes', on_delete=models.CASCADE)
-    remitente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    remitente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='mensajes_enviados')
     texto = models.TextField(blank=True)
     archivo = models.FileField(upload_to='chat_adjuntos/', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)

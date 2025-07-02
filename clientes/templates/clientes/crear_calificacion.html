@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}Calificar a {{ profesional.nombre_completo }} - {{ negocio.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-gradient-primary text-white py-4">
+                    <div class="text-center">
+                        <h3 class="mb-0">
+                            <i class="bi bi-star me-2"></i>
+                            Calificar Experiencia
+                        </h3>
+                        <p class="mb-0 mt-2 opacity-75">
+                            {{ profesional.nombre_completo }} en {{ negocio.nombre }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card-body p-5">
+                    <form method="post" id="calificacionForm">
+                        {% csrf_token %}
+                        
+                        <!-- Sistema de estrellas -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-star-fill text-warning me-2"></i>
+                                Calificación
+                            </label>
+                            <div class="rating-stars mb-3">
+                                <div class="stars-container">
+                                    <i class="bi bi-star star" data-rating="1"></i>
+                                    <i class="bi bi-star star" data-rating="2"></i>
+                                    <i class="bi bi-star star" data-rating="3"></i>
+                                    <i class="bi bi-star star" data-rating="4"></i>
+                                    <i class="bi bi-star star" data-rating="5"></i>
+                                </div>
+                                <div class="rating-text mt-2">
+                                    <span class="text-muted">Selecciona tu calificación</span>
+                                </div>
+                            </div>
+                            {{ form.puntaje }}
+                        </div>
+
+                        <!-- Comentario -->
+                        <div class="mb-4">
+                            <label for="{{ form.comentario.id_for_label }}" class="form-label fw-bold">
+                                <i class="bi bi-chat-text me-2"></i>
+                                Comentario (Opcional)
+                            </label>
+                            {{ form.comentario }}
+                            {% if form.comentario.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.comentario.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Comparte tu experiencia para ayudar a otros usuarios
+                            </div>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'negocios:detalle_negocio' negocio.id %}" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-2"></i>Enviar Calificación
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-info-circle text-primary me-2"></i>
+                        ¿Cómo calificar?
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    <strong>5 estrellas:</strong> Excelente servicio
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    <strong>4 estrellas:</strong> Muy buen servicio
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    <strong>3 estrellas:</strong> Buen servicio
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    <strong>2 estrellas:</strong> Servicio regular
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    <strong>1 estrella:</strong> Servicio deficiente
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.rating-stars {
+    text-align: center;
+}
+
+.stars-container {
+    display: inline-block;
+    font-size: 2rem;
+}
+
+.star {
+    cursor: pointer;
+    color: #dee2e6;
+    transition: all 0.2s ease;
+    margin: 0 0.1rem;
+}
+
+.star:hover,
+.star.active {
+    color: #ffc107;
+    transform: scale(1.1);
+}
+
+.star.filled {
+    color: #ffc107;
+}
+
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.form-label {
+    color: #495057;
+    font-weight: 600;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('{{ form.puntaje.id_for_label }}');
+    const ratingText = document.querySelector('.rating-text span');
+    
+    let currentRating = 0;
+    
+    const ratingDescriptions = {
+        1: 'Servicio deficiente',
+        2: 'Servicio regular',
+        3: 'Buen servicio',
+        4: 'Muy buen servicio',
+        5: 'Excelente servicio'
+    };
+    
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            currentRating = rating;
+            ratingInput.value = rating;
+            
+            // Actualizar estrellas
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.remove('bi-star');
+                    s.classList.add('bi-star-fill', 'filled');
+                } else {
+                    s.classList.remove('bi-star-fill', 'filled');
+                    s.classList.add('bi-star');
+                }
+            });
+            
+            // Actualizar texto
+            ratingText.textContent = ratingDescriptions[rating];
+            ratingText.className = 'text-warning fw-bold';
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            
+            stars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseleave', function() {
+            stars.forEach(s => {
+                s.classList.remove('active');
+            });
+        });
+    });
+    
+    // Inicializar con 5 estrellas
+    stars.forEach((star, index) => {
+        if (index < 5) {
+            star.classList.remove('bi-star');
+            star.classList.add('bi-star-fill', 'filled');
+        }
+    });
+    currentRating = 5;
+    ratingInput.value = 5;
+    ratingText.textContent = ratingDescriptions[5];
+    ratingText.className = 'text-warning fw-bold';
+});
+</script>
+{% endblock %} 

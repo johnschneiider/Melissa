@@ -1,35 +1,10 @@
-{% extends 'clientes/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Mis Reservas - Melissa{% endblock %}
+
 {% block extra_css %}
-
-
-<style>
-    .reserva-card {
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    .reserva-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .badge-estado {
-        font-size: 0.8rem;
-    }
-    .pendiente {
-        background-color: #ffc107;
-        color: #000;
-    }
-    .confirmado {
-        background-color: #28a745;
-    }
-    .cancelado {
-        background-color: #dc3545;
-    }
-    .completado {
-        background-color: #17a2b8;
-    }
-</style>
+<link href="{% static 'css/clientes/reservas.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block content %}

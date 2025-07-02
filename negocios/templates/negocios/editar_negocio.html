@@ -180,9 +180,11 @@
 
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-5">
+                            {% if negocio.id %}
                             <a href="{% url 'negocios:panel_negocio' negocio.id %}" class="btn btn-outline-secondary btn-lg px-4">
                                 <i class="bi bi-arrow-left me-2"></i>Cancelar
                             </a>
+                            {% endif %}
                             <button type="submit" class="btn btn-primary btn-lg px-5">
                                 <i class="bi bi-check-circle me-2"></i>Guardar Cambios
                             </button>

@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import api_notificaciones
+from .views import api_notificaciones, redireccion_dashboard, dashboard_super_admin, analiticas_negocios, analiticas_profesionales, analiticas_clientes, analiticas_general
 
 app_name = 'cuentas'
 
@@ -13,4 +13,16 @@ urlpatterns = [
     path('seleccionar-tipo-google/', views.seleccionar_tipo_cuenta_google, name='seleccionar_tipo_google'),
     path('completar-perfil-google/', views.completar_perfil_google, name='completar_perfil_google'),
     path('api/notificaciones/', api_notificaciones, name='api_notificaciones'),
+    path('dashboard/', redireccion_dashboard, name='dashboard'),
+    path('dashboard/super-admin/', dashboard_super_admin, name='dashboard_super_admin'),
+    path('enviar-feedback/', views.enviar_feedback, name='enviar_feedback'),
+    path('analiticas/negocios/', analiticas_negocios, name='analiticas_negocios'),
+    path('analiticas/profesionales/', analiticas_profesionales, name='analiticas_profesionales'),
+    path('analiticas/clientes/', analiticas_clientes, name='analiticas_clientes'),
+    path('analiticas/general/', analiticas_general, name='analiticas_general'),
+    path('notificaciones/super-admin/', views.notificaciones_super_admin, name='notificaciones_super_admin'),
+    path('tickets/', views.lista_tickets, name='lista_tickets'),
+    path('ticket/<int:ticket_id>/', views.detalle_ticket, name='detalle_ticket'),
+    path('mis-tickets/', views.mis_tickets, name='mis_tickets'),
+    path('mi-ticket/<int:ticket_id>/', views.detalle_mi_ticket, name='detalle_mi_ticket'),
 ]

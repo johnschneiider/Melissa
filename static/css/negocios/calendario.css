@@ -1,0 +1,66 @@
+/* Calendario de Reservas */
+.calendar-header {
+  background: var(--gradient-primary);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 12px 12px 0 0;
+}
+
+.calendar-body {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0 0 12px 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fc-toolbar {
+  margin-bottom: 1.5rem;
+}
+
+.fc-button {
+  background: var(--primary);
+  border-color: var(--primary);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.fc-button:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+.fc-event {
+  border-radius: 6px;
+  border: none;
+  padding: 3px 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.fc-event:hover {
+  transform: scale(1.02);
+}
+
+.fc-event-pendiente {
+  background-color: var(--warning);
+  color: var(--dark);
+}
+
+.fc-event-confirmado {
+  background-color: var(--success);
+  color: white;
+}
+
+.fc-event-cancelado {
+  background-color: var(--danger);
+  color: white;
+}
+
+.fc-event-completado {
+  background-color: var(--info);
+  color: white;
+} 

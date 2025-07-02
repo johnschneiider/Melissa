@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n account socialaccount static %}
+{% load i18n account socialaccount static widget_tweaks %}
 
 {% block content %}
 <div class="container py-5">
@@ -10,7 +10,7 @@
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
                 <!-- Cabecera con efecto premium -->
                 <div class="card-header bg-gradient-primary text-white text-center py-4 position-relative">
-                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: url('{% static "images/melissa-pattern.png" %}')"></div>
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background: url('{% static "images/ui/melissa-pattern.png" %}')"></div>
                     <h3 class="position-relative mb-0">
                         <i class="bi bi-person-plus me-2"></i> Crear cuenta premium
                     </h3>

@@ -8,33 +8,56 @@
         <div class="col-lg-10">
             <div class="card shadow-lg border-0 rounded-4">
                 <div class="card-body p-5">
-                    <h2 class="fw-bold mb-4 text-center">Solicitudes de Matrícula</h2>
+                    <h2 class="fw-bold mb-4 text-center">Solicitudes de profesionales a tus negocios</h2>
                     <!-- CSRF token para JS -->
                     <input type="hidden" id="csrf_token_js" value="{{ csrf_token }}">
                     <!-- Feedback global -->
-                    <div id="feedbackGlobal"></div>
-                    <div class="row g-4" id="solicitudesLista">
-                        {% for solicitud in solicitudes %}
-                        <div class="col-md-6 col-lg-4 solicitud-card" id="solicitud-{{ solicitud.id }}">
-                            <div class="card h-100 border-0 shadow-sm">
-                                <div class="card-body">
-                                    <h5 class="card-title fw-bold">{{ solicitud.negocio.nombre }}</h5>
-                                    <p class="mb-2"><i class="bi bi-person me-1"></i> <a href="{% url 'negocios:ver_perfil_profesional' solicitud.profesional.id %}" target="_blank">{{ solicitud.profesional.nombre_completo }}</a></p>
-                                    <p class="mb-2"><i class="bi bi-envelope me-1"></i> {{ solicitud.profesional.usuario.email }}</p>
-                                    <p class="mb-2"><i class="bi bi-chat-left-text me-1"></i> {{ solicitud.mensaje_solicitud|default:'Sin mensaje' }}</p>
-                                    <div class="d-flex gap-2 mt-3">
-                                        <button class="btn btn-success btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="aceptar">Aceptar</button>
-                                        <button class="btn btn-danger btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="rechazar">Rechazar</button>
+                    <div id="feedbackGlobal" aria-live="polite" style="position:relative;z-index:10;"></div>
+                    {% regroup solicitudes by negocio as solicitudes_por_negocio %}
+                    {% if solicitudes_por_negocio %}
+                        {% for grupo in solicitudes_por_negocio %}
+                        <div class="mb-5">
+                            <div class="d-flex align-items-center mb-3">
+                                {% if grupo.grouper.logo %}
+                                    <img src="{{ grupo.grouper.logo.url }}" alt="Logo {{ grupo.grouper.nombre }}" class="rounded-circle me-3" style="width:48px;height:48px;object-fit:cover;">
+                                {% else %}
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width:48px;height:48px;">
+                                        <i class="bi bi-shop fs-3 text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <h4 class="fw-bold mb-0">{{ grupo.grouper.nombre }}</h4>
+                            </div>
+                            <div class="row g-4" id="solicitudesLista-{{ grupo.grouper.id }}">
+                                {% for solicitud in grupo.list %}
+                                <div class="col-md-6 col-lg-4 solicitud-card" id="solicitud-{{ solicitud.id }}">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h5 class="card-title fw-bold mb-2">
+                                                <a href="{% url 'negocios:ver_perfil_profesional' solicitud.profesional.id %}" target="_blank">{{ solicitud.profesional.nombre_completo }}</a>
+                                            </h5>
+                                            <p class="mb-1"><i class="bi bi-envelope me-1"></i> {{ solicitud.profesional.usuario.email }}</p>
+                                            <p class="mb-1"><i class="bi bi-person-badge me-1"></i> {{ solicitud.profesional.especialidad|default:'Sin especialidad' }}</p>
+                                            <p class="mb-2"><i class="bi bi-chat-left-text me-1"></i> {{ solicitud.mensaje_solicitud|default:'Sin mensaje' }}</p>
+                                            <div class="d-flex gap-2 mt-3">
+                                                <button class="btn btn-success btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="aceptar">Aceptar</button>
+                                                <button class="btn btn-danger btn-sm btn-accion-matricula" data-id="{{ solicitud.id }}" data-accion="rechazar">Rechazar</button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                                {% empty %}
+                                <div class="col-12 text-center">
+                                    <p class="text-muted">No hay solicitudes pendientes para este negocio.</p>
+                                </div>
+                                {% endfor %}
                             </div>
                         </div>
-                        {% empty %}
+                        {% endfor %}
+                    {% else %}
                         <div class="col-12 text-center">
                             <p class="text-muted">No hay solicitudes pendientes.</p>
                         </div>
-                        {% endfor %}
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -46,7 +69,30 @@ const csrftoken = document.getElementById('csrf_token_js').value;
 
 function mostrarFeedbackGlobal(mensaje, tipo) {
   const feedback = document.getElementById('feedbackGlobal');
-  feedback.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">${mensaje}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+  feedback.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show slide-in-feedback" role="alert">${mensaje}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+}
+
+// Animación slide-in para feedback
+const style = document.createElement('style');
+style.innerHTML = `
+.slide-in-feedback {
+  animation: slideInFeedback 0.5s cubic-bezier(.4,2,.6,1) 1;
+}
+@keyframes slideInFeedback {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.fade-out-card {
+  transition: opacity 0.5s, transform 0.5s;
+  opacity: 0 !important;
+  transform: translateY(30px) scale(0.98);
+}
+`;
+document.head.appendChild(style);
+
+function fadeOutAndRemove(card) {
+  card.classList.add('fade-out-card');
+  setTimeout(() => card.remove(), 500);
 }
 
 document.querySelectorAll('.btn-accion-matricula').forEach(btn => {
@@ -54,10 +100,8 @@ document.querySelectorAll('.btn-accion-matricula').forEach(btn => {
     const id = this.dataset.id;
     const accion = this.dataset.accion;
     const card = document.getElementById('solicitud-' + id);
-    // Spinner y deshabilitar
     this.disabled = true;
     this.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
-    // Deshabilitar el otro botón
     const sibling = card.querySelector('.btn-accion-matricula[data-accion="' + (accion === 'aceptar' ? 'rechazar' : 'aceptar') + '"]');
     if (sibling) sibling.disabled = true;
     try {
@@ -71,17 +115,24 @@ document.querySelectorAll('.btn-accion-matricula').forEach(btn => {
       });
       const data = await resp.json();
       if (data.ok) {
-        mostrarFeedbackGlobal('Acción realizada con éxito.', 'success');
-        // Quitar la tarjeta de la solicitud
-        card.remove();
-        // Si no quedan solicitudes, mostrar mensaje y redirigir al panel
-        if (document.querySelectorAll('.solicitud-card').length === 0) {
-          document.getElementById('solicitudesLista').innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay solicitudes pendientes.</p></div>';
-          // Redirigir al panel del negocio después de un breve delay
+        this.innerHTML = accion === 'aceptar' ? '¡Aceptado!' : '¡Rechazado!';
+        this.classList.remove('btn-success','btn-danger');
+        this.classList.add('btn-primary');
+        setTimeout(() => {
+          mostrarFeedbackGlobal('Acción realizada con éxito.', 'success');
+          fadeOutAndRemove(card);
           setTimeout(function() {
-            window.location.href = `/negocios/${data.negocio_id}/panel/`;
-          }, 1200);
-        }
+            // Si no quedan solicitudes en ningún grupo, mostrar mensaje general
+            if (document.querySelectorAll('.solicitud-card').length === 0) {
+              document.querySelectorAll('[id^="solicitudesLista-"]').forEach(function(lista){
+                lista.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay solicitudes pendientes para este negocio.</p></div>';
+              });
+              setTimeout(function() {
+                window.location.href = `/negocios/${data.negocio_id}/panel/`;
+              }, 1200);
+            }
+          }, 500);
+        }, 600);
       } else {
         mostrarFeedbackGlobal(data.error || 'Ocurrió un error.', 'danger');
         this.disabled = false;

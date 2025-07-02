@@ -1,7 +1,7 @@
 from django import forms
 from django.utils import timezone
 from datetime import datetime
-from .models import Reserva
+from .models import Reserva, Calificacion
 from negocios.models import Servicio, ServicioNegocio
 from profesionales.models import Profesional
 
@@ -77,3 +77,22 @@ class ReservaNegocioForm(forms.ModelForm):
                 servicios_ids = profesional_preseleccionado.servicios.values_list('id', flat=True)
                 self.fields['servicio'].queryset = ServicioNegocio.objects.filter(negocio=negocio, servicio__id__in=servicios_ids)
                 self.fields['profesional'].initial = profesional_preseleccionado.id
+
+class CalificacionForm(forms.ModelForm):
+    """Formulario para crear calificaciones con estrellas"""
+    
+    class Meta:
+        model = Calificacion
+        fields = ['puntaje', 'comentario']
+        widgets = {
+            'puntaje': forms.HiddenInput(),  # Se manejará con JavaScript
+            'comentario': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Comparte tu experiencia con este negocio y profesional...'
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['puntaje'].initial = 5

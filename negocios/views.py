@@ -27,6 +27,7 @@ from negocios.models import ImagenNegocio as ImagenGaleria
 from django.db import models
 from django.forms import ModelForm
 from django.forms import modelformset_factory
+from .models import NotificacionNegocio
 
 logger = logging.getLogger(__name__)
 
@@ -419,7 +420,7 @@ def solicitudes_matricula(request):
     if user.tipo != 'negocio':
         messages.error(request, 'Acceso solo para negocios.')
         return redirect('inicio')
-    negocios = user.negocio_set.all()
+    negocios = user.negocios.all()
     solicitudes = Matriculacion.objects.filter(negocio__in=negocios, estado='pendiente').select_related('profesional', 'negocio')
     return render(request, 'negocios/solicitudes_matricula.html', {'solicitudes': solicitudes})
 
@@ -580,3 +581,13 @@ def gestionar_servicios(request, negocio_id):
     else:
         formset = ServicioFormSet(queryset=queryset)
     return render(request, 'negocios/gestionar_servicios.html', {'negocio': negocio, 'formset': formset})
+
+@login_required
+def notificaciones_negocio(request):
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Solo negocios pueden ver esta página.')
+    # Obtener todas las notificaciones de los negocios del usuario
+    negocios_usuario = request.user.negocios.all()
+    notificaciones = NotificacionNegocio.objects.filter(negocio__in=negocios_usuario).order_by('-fecha_creacion')
+    return render(request, 'negocios/notificaciones.html', {'notificaciones': notificaciones})

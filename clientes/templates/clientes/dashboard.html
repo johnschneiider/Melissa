@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard Cliente - Melissa{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/clientes/dashboard.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid">
@@ -155,7 +160,8 @@
 
             <!-- Sidebar con reservas recientes -->
             <div class="col-lg-4">
-                <div class="card shadow-sm border-0">
+                <!-- Reservas recientes -->
+                <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-transparent border-0">
                         <h5 class="fw-bold mb-0">
                             <i class="bi bi-calendar-check me-2"></i>Mis reservas recientes
@@ -197,6 +203,72 @@
                                 <a href="{% url 'clientes:lista_negocios' %}" class="btn btn-primary btn-sm">
                                     Hacer mi primera reserva
                                 </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Mis calificaciones -->
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-transparent border-0">
+                        <h5 class="fw-bold mb-0">
+                            <i class="bi bi-star me-2"></i>Mis calificaciones
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if calificaciones_usuario %}
+                            {% for calificacion in calificaciones_usuario %}
+                            <div class="d-flex align-items-start mb-3 p-3 bg-light rounded-3">
+                                <div class="flex-shrink-0">
+                                    {% if calificacion.profesional.avatar %}
+                                        <img src="{{ calificacion.profesional.avatar.url }}" class="rounded-circle" 
+                                             style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-warning rounded-circle d-flex align-items-center justify-content-center" 
+                                             style="width: 50px; height: 50px;">
+                                            <i class="bi bi-star text-white"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="fw-bold mb-1">{{ calificacion.profesional.nombre_completo }}</h6>
+                                    <p class="text-muted small mb-1">{{ calificacion.negocio.nombre }}</p>
+                                    <div class="mb-2">
+                                        <span class="text-warning">
+                                            {% for i in "12345" %}
+                                                {% if calificacion.puntaje >= i %}
+                                                    <i class="bi bi-star-fill"></i>
+                                                {% elif calificacion.puntaje > i|add:"-1" %}
+                                                    <i class="bi bi-star-half"></i>
+                                                {% else %}
+                                                    <i class="bi bi-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </span>
+                                        <span class="ms-2 text-muted small">{{ calificacion.puntaje }}/5</span>
+                                    </div>
+                                    {% if calificacion.comentario %}
+                                        <p class="text-muted small mb-1">{{ calificacion.comentario|truncatechars:50 }}</p>
+                                    {% endif %}
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'clientes:editar_calificacion' calificacion.id %}" class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'clientes:eliminar_calificacion' calificacion.id %}" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Mostrando las 5 calificaciones más recientes</small>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="bi bi-star display-4 text-muted mb-3"></i>
+                                <p class="text-muted">No has calificado ningún servicio aún</p>
+                                <small class="text-muted">Las calificaciones aparecerán aquí después de completar reservas</small>
                             </div>
                         {% endif %}
                     </div>

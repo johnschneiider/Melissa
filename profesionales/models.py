@@ -123,3 +123,18 @@ class HorarioProfesional(models.Model):
 
     def __str__(self):
         return f"{self.profesional.nombre_completo} - {self.dia_semana} ({self.hora_inicio}-{self.hora_fin})"
+
+class MetricaProfesional(models.Model):
+    profesional = models.ForeignKey('Profesional', on_delete=models.CASCADE, related_name='metricas')
+    fecha = models.DateField()
+    total_turnos = models.IntegerField(default=0)
+    turnos_completados = models.IntegerField(default=0)
+    turnos_cancelados = models.IntegerField(default=0)
+    ingresos_totales = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    calificacion_promedio = models.FloatField(default=0)
+    horas_trabajadas = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    class Meta:
+        unique_together = ['profesional', 'fecha']
+        ordering = ['-fecha']
+    def __str__(self):
+        return f"{self.profesional.nombre_completo} - {self.fecha}"

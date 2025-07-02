@@ -1,0 +1,83 @@
+/* Estilos específicos para Mis Reservas */
+.reserva-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.reserva-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.badge-estado {
+    font-size: 0.8rem;
+}
+
+.pendiente {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.confirmado {
+    background-color: #28a745;
+}
+
+.cancelado {
+    background-color: #dc3545;
+}
+
+.completado {
+    background-color: #17a2b8;
+}
+
+/* Modal de reserva */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--light-gray);
+}
+
+/* Formulario de reagendamiento */
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(110, 72, 170, 0.25);
+}
+
+/* Toast notifications */
+.toast {
+    transition: opacity 0.3s ease;
+    margin-bottom: 10px;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-error {
+    background-color: #dc3545 !important;
+}
+
+.spinner-border {
+    margin-left: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .reserva-card {
+        margin-bottom: 1rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+} 
