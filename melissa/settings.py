@@ -257,7 +257,7 @@ if DEBUG:
     }
 
 # Configuración de Replicate (IA Generativa)
-REPLICATE_API_TOKEN = "r8_M7zncfjMLgBqddVWgOqwALGli6CZo8z247ADC"  # Configurar con tu API token de Replicate
+  # Configurar con tu API token de Replicate
 
 # Celery settings
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
