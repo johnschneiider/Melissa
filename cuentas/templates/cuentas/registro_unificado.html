@@ -6,9 +6,9 @@
 {% block content %}
 <div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="row w-100 justify-content-center">
-        <div class="col-md-6 col-lg-5 col-xl-4">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-body p-5">
+        <div class="col-md-8 col-lg-7 col-xl-6">
+            <div class="card shadow-lg border-0 rounded-4 mt-4 mb-4">
+                <div class="card-body p-4 p-md-5" style="margin-top: 2.5rem; margin-bottom: 2.5rem;">
                     <!-- Header -->
                     <div class="text-center mb-4">
                         <div class="logo mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">M</div>
@@ -23,34 +23,40 @@
                         <!-- Selección de tipo de cuenta -->
                         <div class="mb-4">
                             <label class="form-label fw-bold text-dark">¿Qué tipo de cuenta quieres crear?</label>
-                            <div class="row g-3">
-                                <div class="col-4">
-                                    <div class="form-check h-100">
+                            <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-center align-items-md-stretch">
+                                <div class="flex-fill">
+                                    <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_cliente" value="cliente" required>
-                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_cliente">
-                                            <i class="bi bi-person-circle fs-1 text-primary mb-2"></i>
-                                            <span class="fw-bold">Cliente</span>
-                                            <small class="text-muted">Reservar servicios</small>
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_cliente" style="min-width: 0;">
+                                            <div class="text-start flex-grow-1">
+                                                <span class="fw-bold">Cliente</span><br>
+                                                <small class="text-muted">Reservar servicios</small>
+                                            </div>
+                                            <i class="bi bi-person-circle text-primary ms-2 icon-responsive"></i>
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-4">
-                                    <div class="form-check h-100">
+                                <div class="flex-fill">
+                                    <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_negocio" value="negocio" required>
-                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_negocio">
-                                            <i class="bi bi-shop fs-1 text-warning mb-2"></i>
-                                            <span class="fw-bold">Negocio</span>
-                                            <small class="text-muted">Ofrecer servicios</small>
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_negocio" style="min-width: 0;">
+                                            <div class="text-start flex-grow-1">
+                                                <span class="fw-bold">Negocio</span><br>
+                                                <small class="text-muted">Ofrecer servicios</small>
+                                            </div>
+                                            <i class="bi bi-shop text-warning ms-2 icon-responsive"></i>
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-4">
-                                    <div class="form-check h-100">
+                                <div class="flex-fill">
+                                    <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_profesional" value="profesional" required>
-                                        <label class="form-check-label h-100 p-3 border rounded-3 d-flex flex-column align-items-center text-center" for="tipo_profesional">
-                                            <i class="bi bi-scissors fs-1 text-success mb-2"></i>
-                                            <span class="fw-bold">Profesional</span>
-                                            <small class="text-muted">Soy peluquero</small>
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_profesional" style="min-width: 0;">
+                                            <div class="text-start flex-grow-1">
+                                                <span class="fw-bold">Profesional</span><br>
+                                                <small class="text-muted">Soy peluquero</small>
+                                            </div>
+                                            <i class="bi bi-scissors text-success ms-2 icon-responsive"></i>
                                         </label>
                                     </div>
                                 </div>
@@ -172,6 +178,25 @@
     background-color: #f8f9fa;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Más espacio arriba y abajo del formulario */
+@media (min-width: 768px) {
+  .card.shadow-lg {
+    margin-top: 2.5rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+}
+
+/* Iconos más pequeños en escritorio para que quepan las 3 opciones */
+.icon-responsive {
+  font-size: 2.1rem;
+}
+
+@media (min-width: 768px) {
+  .icon-responsive {
+    font-size: 1.7rem;
+  }
 }
 </style>
 
