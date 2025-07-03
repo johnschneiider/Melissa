@@ -3,7 +3,31 @@ version: "3.9"
 services:
   web:
     build: .
-    ports:
-      - "8000:8000"
+    command: gunicorn melissa.wsgi:application --bind 0.0.0.0:8000
+    env_file:
+      - .env
+    expose:
+      - "8000"
     volumes:
       - .:/app
+      - ./media:/app/media
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+  redis:
+    image: redis:7
+    restart: always
+    volumes:
+      - redis_data:/data
+  nginx:
+    image: nginx:1.25
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./media:/app/media
+      - ./staticfiles:/app/staticfiles
+    depends_on:
+      - web
+volumes:
+  redis_data:

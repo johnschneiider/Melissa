@@ -65,7 +65,14 @@ class Feedback(models.Model):
             # Generar número de ticket único
             ultimo_ticket = Feedback.objects.order_by('-id').first()
             if ultimo_ticket:
-                ultimo_numero = int(ultimo_ticket.numero_ticket.split('-')[1]) if '-' in ultimo_ticket.numero_ticket else 0
+                parte = ultimo_ticket.numero_ticket.split('-')[1] if '-' in ultimo_ticket.numero_ticket else '0'
+                try:
+                    ultimo_numero = int(parte)
+                except ValueError:
+                    try:
+                        ultimo_numero = int(parte, 16)  # intenta como hexadecimal
+                    except ValueError:
+                        ultimo_numero = 0  # valor por defecto si no es número
                 self.numero_ticket = f"TICKET-{ultimo_numero + 1:06d}"
             else:
                 self.numero_ticket = "TICKET-000001"

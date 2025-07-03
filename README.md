@@ -1,118 +1,79 @@
 # Melissa - Sistema de Gestión de Citas para Peluquerías
 
-Melissa es una plataforma web moderna para la gestión de citas y turnos en peluquerías, con un enfoque en la experiencia del usuario y la seguridad.
+Melissa es una plataforma SaaS para la gestión de reservas en peluquerías, con módulos para clientes, negocios, profesionales y administración. Incluye autenticación social, análisis de visagismo con IA, sistema de notificaciones y paneles diferenciados.
 
-## 🚀 Características
+---
 
-- **Gestión de Negocios**: Los propietarios pueden crear y administrar sus peluquerías
-- **Sistema de Reservas**: Clientes pueden reservar citas con peluqueros específicos
-- **Calendario Intuitivo**: Interfaz moderna para visualizar y gestionar horarios
-- **Autenticación Social**: Login con Google y Facebook
-- **Galería de Trabajos**: Los peluqueros pueden mostrar sus trabajos
-- **Notificaciones**: Sistema de mensajes para confirmaciones y recordatorios
+## 🚀 Características principales
+- Gestión de negocios y peluqueros
+- Sistema de reservas y calendario
+- Autenticación social (Google, Facebook)
+- Paneles diferenciados para cada tipo de usuario
+- Chat en tiempo real
+- Análisis de visagismo con IA
+- Sistema de feedback y soporte
+- Seguridad avanzada y validación de archivos
 
-## 🛠️ Tecnologías
+## 🏗️ Estructura del Proyecto
+- `melissa/`: Configuración principal de Django
+- `cuentas/`: Gestión de usuarios, autenticación, feedback y tickets
+- `negocios/`: Gestión de negocios, peluqueros y servicios
+- `clientes/`: Reservas, calificaciones y dashboard de clientes
+- `profesionales/`: Panel y perfil de profesionales
+- `chat/`: Mensajería y chat en tiempo real
+- `ia_visagismo/`: Análisis de rostro y recomendaciones de cortes con IA
+- `static/` y `media/`: Archivos estáticos y subidos
+- `templates/`: Plantillas HTML para cada módulo
 
-- **Backend**: Django 5.2.3
-- **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
-- **Base de Datos**: SQLite (desarrollo) / PostgreSQL (producción)
-- **Autenticación**: Django Allauth
-- **Imágenes**: Pillow
-- **Calendario**: FullCalendar.js
+## 👤 Tipos de Usuario
+- Cliente
+- Negocio
+- Profesional
+- Super Admin
 
-## 📋 Requisitos Previos
+## 🚦 Flujos Principales
+1. Registro y autenticación (tradicional y social)
+2. Gestión de negocios y profesionales
+3. Reservas y calendario
+4. Chat y notificaciones
+5. IA Visagismo
+6. Feedback y soporte
 
-- Python 3.8+
-- pip
-- virtualenv (recomendado)
+## ⚙️ Instalación y Configuración
+1. Clona el repositorio y crea un entorno virtual.
+2. Instala dependencias: `pip install -r requirements.txt`
+3. Crea y configura el archivo `.env` con tus variables sensibles.
+4. Ejecuta migraciones: `python manage.py migrate`
+5. Crea un superusuario: `python manage.py createsuperuser`
+6. Ejecuta el servidor: `python manage.py runserver`
 
-## 🔧 Instalación
+## 🔒 Seguridad
+- CSRF, XSS y HSTS habilitados
+- Validación de archivos y límites de tamaño
+- Cookies seguras y sesiones protegidas
+- Variables sensibles fuera del código fuente
 
-### 1. Clonar el repositorio
-```bash
-git clone <url-del-repositorio>
-cd melissa
-```
+## 🧪 Testing
+- Pruebas unitarias básicas en cada app
+- Scripts de debug para reservas y horarios
+- Logging de errores y actividades críticas
 
-### 2. Crear entorno virtual
-```bash
-python -m venv env
-# En Windows:
-env\Scripts\activate
-# En macOS/Linux:
-source env/bin/activate
-```
+## 🤝 Contribuir
+1. Haz fork del proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/NuevaFeature`)
+3. Commit tus cambios (`git commit -m 'Agrega NuevaFeature'`)
+4. Push a la rama (`git push origin feature/NuevaFeature`)
+5. Abre un Pull Request
 
-### 3. Instalar dependencias
-```bash
-pip install -r requirements.txt
-```
+## 📄 Licencia
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-### 4. Configurar variables de entorno
-```bash
-# Copiar el archivo de ejemplo
-cp .env.example .env
-
-# Editar .env con tus configuraciones
-```
-
-### 5. Configurar la base de datos
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-### 6. Crear superusuario
-```bash
-python manage.py createsuperuser
-```
-
-### 7. Ejecutar el servidor
-```bash
-python manage.py runserver
-```
-
-## 🔐 Configuración de Seguridad
-
-### Variables de Entorno Requeridas
-
-Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
-
-```env
-# Django
-SECRET_KEY=tu-secret-key-muy-segura
-DEBUG=False  # En producción
-ALLOWED_HOSTS=tu-dominio.com,www.tu-dominio.com
-
-# Email
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=tu-email@gmail.com
-EMAIL_HOST_PASSWORD=tu-password-de-aplicacion
-DEFAULT_FROM_EMAIL=Melissa <tu-email@gmail.com>
-
-# Google OAuth
-GOOGLE_CLIENT_ID=tu-google-client-id
-GOOGLE_CLIENT_SECRET=tu-google-client-secret
-```
-
-### Configuración de Google OAuth
-
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
-2. Crea un nuevo proyecto o selecciona uno existente
-3. Habilita la API de Google+ 
-4. Crea credenciales OAuth 2.0
-5. Agrega las URLs autorizadas:
-   - `http://localhost:8000/accounts/google/login/callback/` (desarrollo)
-   - `https://tu-dominio.com/accounts/google/login/callback/` (producción)
-
-### Configuración de Email
-
-Para Gmail:
-1. Activa la verificación en dos pasos
-2. Genera una contraseña de aplicación
-3. Usa esa contraseña en `EMAIL_HOST_PASSWORD`
+## ⚠️ Notas Importantes
+- Nunca subas el archivo `.env` al repositorio
+- Siempre usa HTTPS en producción
+- Mantén actualizadas las dependencias
+- Revisa regularmente los logs de seguridad
+- Haz backups regulares de la base de datos
 
 ## 🚀 Despliegue en Producción
 
