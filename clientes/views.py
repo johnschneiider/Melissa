@@ -762,3 +762,6 @@ def eliminar_calificacion(request, calificacion_id):
         'calificacion': calificacion,
     }
     return render(request, 'clientes/eliminar_calificacion.html', context)
+
+def proximamente_app(request):
+    return render(request, 'clientes/proximamente_app.html')

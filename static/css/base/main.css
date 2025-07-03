@@ -253,4 +253,19 @@ footer a:hover {
 @keyframes hero-bg-fade {
   0% { opacity: 0.7; }
   100% { opacity: 1; }
+}
+
+/* Cambia el color del icono hamburguesa de Bootstrap a violeta oscuro */
+.navbar-toggler-icon {
+    background-image: none !important;
+    position: relative;
+}
+.navbar-toggler-icon::before, .navbar-toggler-icon::after, .navbar-toggler-icon span {
+    background-color: #3a256a !important;
+    content: '';
+    display: block;
+    height: 3px;
+    margin: 6px 0;
+    width: 28px;
+    border-radius: 2px;
 } 

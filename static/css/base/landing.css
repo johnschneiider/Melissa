@@ -1,0 +1,110 @@
+body {
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    background: linear-gradient(120deg, #b6caff 0%, #f7c6e0 100%);
+}
+
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 4rem 0 4rem;
+    background: transparent;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #222;
+}
+
+.logo a {
+    color: #222;
+    text-decoration: none;
+}
+
+.main-nav a, .main-nav .menu-btn {
+    margin-left: 1.5rem;
+    text-decoration: none;
+    color: #222;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2rem;
+    transition: background 0.2s;
+}
+
+.main-nav a:hover, .main-nav .menu-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.landing-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 5rem;
+}
+
+.landing-title {
+    font-size: 3.5rem;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    text-align: center;
+    color: #222;
+    margin-bottom: 2.5rem;
+    line-height: 1.1;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background: #fff;
+    border-radius: 2.5rem;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    padding: 0.5rem 1rem;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-bar input[type="text"],
+.search-bar input[type="date"],
+.search-bar input[type="time"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    padding: 0.7rem 1rem;
+    border-radius: 2rem;
+    min-width: 160px;
+}
+
+.search-bar button {
+    background: #222;
+    color: #fff;
+    border: none;
+    border-radius: 2rem;
+    padding: 0.7rem 2rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.search-bar button:hover {
+    background: #444;
+}
+
+.stats {
+    font-size: 1.2rem;
+    color: #222;
+    margin-top: 1rem;
+}
+
+.stats strong {
+    font-size: 1.5rem;
+    color: #222;
+} 

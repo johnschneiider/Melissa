@@ -15,6 +15,7 @@ from .views import (
     crear_calificacion,
     editar_calificacion,
     eliminar_calificacion,
+    proximamente_app,
 )
 
 app_name = 'clientes'
@@ -37,4 +38,5 @@ urlpatterns = [
     path('calificar/<int:negocio_id>/<int:profesional_id>/', crear_calificacion, name='crear_calificacion'),
     path('editar-calificacion/<int:calificacion_id>/', editar_calificacion, name='editar_calificacion'),
     path('eliminar-calificacion/<int:calificacion_id>/', eliminar_calificacion, name='eliminar_calificacion'),
+    path('proximamente-app/', proximamente_app, name='proximamente_app'),
 ]

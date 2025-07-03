@@ -3,9 +3,11 @@ from django.urls import path, include
 from django.shortcuts import render
 from django.conf import settings
 from django.conf.urls.static import static
+from clientes.models import Reserva  # Importar el modelo
 
 def inicio(request):
-    return render(request, 'inicio.html')
+    total_reservas = Reserva.objects.count()
+    return render(request, 'inicio.html', {'total_reservas': total_reservas})
 
 urlpatterns = [
     path('admin/', admin.site.urls),

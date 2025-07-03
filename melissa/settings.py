@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'profesionales',
     'chat',
     'ia_visagismo',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
