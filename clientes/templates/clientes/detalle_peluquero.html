@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ negocio.nombre }} - Detalle{% endblock %}
+
+{% block extra_css %}
+<style>
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    border-color: #0056b3 !important;
+}
+.hover-card:hover small {
+    color: #0056b3 !important;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Información del negocio -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        {% if negocio.logo %}
+                            <img src="{{ negocio.logo.url }}" class="rounded-circle me-4" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-4" style="width: 80px; height: 80px; font-size: 2rem; color: #764ba2;">
+                                <i class="bi bi-shop"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h1 class="h2 mb-1">{{ negocio.nombre }}</h1>
+                            <p class="text-muted mb-0">{{ negocio.direccion }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Servicios disponibles -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-3">Servicios disponibles</h5>
+                        <div class="row g-3">
+                            {% for servicio_negocio in negocio.servicios_negocio.all %}
+                                {% if servicio_negocio.activo %}
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                                            <div>
+                                                <h6 class="mb-1">{{ servicio_negocio.servicio.nombre }}</h6>
+                                                <small class="text-muted">{{ servicio_negocio.duracion }} min</small>
+                                            </div>
+                                            {% if servicio_negocio.precio %}
+                                                <span class="fw-bold text-primary">${{ servicio_negocio.precio }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% empty %}
+                                <div class="col-12">
+                                    <p class="text-muted">No hay servicios disponibles en este momento.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel de reserva -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="bi bi-calendar-plus me-2"></i>Reservar turno
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Selecciona una fecha para ver los horarios disponibles</p>
+                    
+                    <!-- Calendario de disponibilidad -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold mb-3">Próximos días disponibles</h6>
+                        <div class="row g-2">
+                            {% for dia in dias_disponibilidad %}
+                                <div class="col-6">
+                                    {% if dia.festivo %}
+                                        <div class="card bg-light">
+                                            <div class="card-body p-2 text-center">
+                                                <small class="d-block fw-bold">{{ dia.nombre_dia }}</small>
+                                                <small class="d-block text-muted">{{ dia.fecha|date:"d/m" }}</small>
+                                                <small class="text-danger">Cerrado</small>
+                                            </div>
+                                        </div>
+                                    {% elif dia.intervalos %}
+                                        <a href="{% url 'clientes:reservar_negocio' negocio.id %}?fecha={{ dia.fecha|date:'Y-m-d' }}" class="text-decoration-none">
+                                            <div class="card border-primary hover-card" style="cursor: pointer; transition: all 0.2s;">
+                                                <div class="card-body p-2 text-center">
+                                                    <small class="d-block fw-bold">{{ dia.nombre_dia }}</small>
+                                                    <small class="d-block text-muted">{{ dia.fecha|date:"d/m" }}</small>
+                                                    <small class="text-success">{{ dia.intervalos|length }} horarios</small>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% else %}
+                                        <div class="card border-secondary">
+                                            <div class="card-body p-2 text-center">
+                                                <small class="d-block fw-bold">{{ dia.nombre_dia }}</small>
+                                                <small class="d-block text-muted">{{ dia.fecha|date:"d/m" }}</small>
+                                                <small class="text-muted">No disponible</small>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Botón de reserva -->
+                    <a href="{% url 'clientes:reservar_negocio' negocio.id %}" class="btn btn-primary w-100">
+                        <i class="bi bi-calendar-check me-2"></i>Reservar ahora
+                    </a>
+                    
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Reservas disponibles hasta 14 días
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

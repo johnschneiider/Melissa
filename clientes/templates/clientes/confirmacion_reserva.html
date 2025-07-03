@@ -27,7 +27,7 @@
                         <div class="col-md-6">
                             <p><strong>Hora:</strong> {{ reserva.hora_inicio|time:"H:i" }} - {{ reserva.hora_fin|time:"H:i" }}</p>
                             {% if reserva.servicio %}
-                            <p><strong>Servicio:</strong> {{ reserva.servicio.nombre }}</p>
+                            <p><strong>Servicio:</strong> {{ reserva.servicio.servicio.nombre }}</p>
                             {% endif %}
                         </div>
                     </div>

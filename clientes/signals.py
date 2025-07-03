@@ -75,7 +75,7 @@ def actualizar_metricas_profesional_cliente(sender, instance, **kwargs):
     metricac.turnos_completados = reservas_cli.filter(estado='completado').count()
     metricac.turnos_cancelados = reservas_cli.filter(estado='cancelado').count()
     # Servicios más solicitados y profesionales más reservados (solo del día)
-    servicios = [r.servicio.nombre for r in reservas_cli if r.servicio]
+    servicios = [r.servicio.servicio.nombre for r in reservas_cli if r.servicio]
     profesionales = [r.profesional.nombre_completo for r in reservas_cli if r.profesional]
     metricac.servicios_mas_solicitados = ', '.join([s for s, _ in Counter(servicios).most_common(3)])
     metricac.profesionales_mas_reservados = ', '.join([p for p, _ in Counter(profesionales).most_common(3)])

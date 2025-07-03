@@ -344,6 +344,99 @@ def horarios_disponibles(request, negocio_id):
         logger.error(f"Error en horarios_disponibles: {str(e)}")
         return JsonResponse({'error': 'Error interno del servidor'}, status=500)
 
+@require_GET
+def horarios_disponibles_reagendar(request, reserva_id):
+    """Vista para obtener horarios disponibles al reagendar una reserva"""
+    try:
+        reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
+        fecha = request.GET.get('fecha')
+        
+        if not fecha:
+            return JsonResponse({'error': 'Fecha requerida'}, status=400)
+        
+        try:
+            fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
+        
+        # Verificar si es festivo
+        co_holidays = holidays.CountryHoliday('CO')
+        nombre_dia = fecha_obj.strftime('%A')
+        nombre_dia_es = {
+            'Monday': 'lunes',
+            'Tuesday': 'martes',
+            'Wednesday': 'miercoles',
+            'Thursday': 'jueves',
+            'Friday': 'viernes',
+            'Saturday': 'sabado',
+            'Sunday': 'domingo'
+        }.get(nombre_dia, nombre_dia)
+        es_festivo = fecha_obj in co_holidays or nombre_dia_es == 'domingo'
+        
+        if es_festivo:
+            return JsonResponse({'disponibles': [], 'festivo': True})
+        
+        # Obtener información de la reserva
+        negocio = reserva.peluquero
+        profesional = reserva.profesional
+        duracion = reserva.servicio.duracion if reserva.servicio else 30
+        
+        # Buscar horario del profesional para ese día
+        horario_prof = HorarioProfesional.objects.filter(
+            profesional=profesional, 
+            dia_semana=nombre_dia_es, 
+            disponible=True
+        ).first()
+        
+        if not horario_prof:
+            return JsonResponse({'disponibles': [], 'festivo': False})
+        
+        inicio = horario_prof.hora_inicio
+        fin = horario_prof.hora_fin
+        
+        # Obtener reservas existentes para este profesional, negocio y día (excluyendo la reserva actual)
+        reservas = Reserva.objects.filter(
+            peluquero=negocio,
+            profesional=profesional,
+            fecha=fecha_obj,
+            estado__in=['pendiente', 'confirmado']
+        ).exclude(id=reserva.id).values_list('hora_inicio', 'hora_fin')
+        
+        # Generar slots
+        horarios_disponibles = []
+        inicio_minutos = inicio.hour * 60 + inicio.minute
+        fin_minutos = fin.hour * 60 + fin.minute
+        tiempo_actual = inicio_minutos
+        
+        while tiempo_actual + duracion <= fin_minutos:
+            hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
+            hora_fin = time((tiempo_actual + duracion) // 60, (tiempo_actual + duracion) % 60)
+            
+            # Verificar si este slot está ocupado
+            ocupado = False
+            for reserva_inicio, reserva_fin in reservas:
+                if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                    ocupado = True
+                    break
+            
+            if not ocupado:
+                horarios_disponibles.append({
+                    'inicio': hora_inicio.strftime('%H:%M'),
+                    'fin': hora_fin.strftime('%H:%M'),
+                    'duracion': duracion
+                })
+            
+            tiempo_actual += duracion
+        
+        return JsonResponse({
+            'disponibles': horarios_disponibles,
+            'festivo': False
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en horarios_disponibles_reagendar: {str(e)}")
+        return JsonResponse({'error': 'Error interno del servidor'}, status=500)
+
 @login_required
 def mis_reservas(request):
     """Vista para que los clientes vean sus reservas"""
@@ -443,6 +536,7 @@ def reservar_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
     servicios = negocio.servicios_negocio.select_related('servicio').all()
     profesional_id = request.GET.get('profesional')
+    fecha_preseleccionada = request.GET.get('fecha')
     profesional_preseleccionado = None
     if profesional_id:
         try:
@@ -479,6 +573,7 @@ def reservar_negocio(request, negocio_id):
                         'servicios': servicios,
                         'form': form,
                         'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
                     })
                 
                 # Calcular hora_fin usando la duración del servicio
@@ -531,6 +626,7 @@ def reservar_negocio(request, negocio_id):
         'servicios': servicios,
         'form': form,
         'profesional_preseleccionado': profesional_preseleccionado,
+        'fecha_preseleccionada': fecha_preseleccionada,
     })
 
 @login_required

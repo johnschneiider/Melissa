@@ -74,6 +74,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const horaInputWrapper = document.getElementById('hora-input-wrapper');
     const form = document.querySelector('form');
 
+    // Preseleccionar fecha si viene en la URL
+    {% if fecha_preseleccionada %}
+        fechaField.value = '{{ fecha_preseleccionada }}';
+        console.log('Fecha preseleccionada:', '{{ fecha_preseleccionada }}');
+    {% endif %}
+
     function fetchSlots() {
         slotsDiv.innerHTML = '';
         horaInicioField.value = '';
@@ -133,6 +139,16 @@ document.addEventListener('DOMContentLoaded', function() {
     servicioField.addEventListener('change', fetchSlots);
     profesionalField.addEventListener('change', fetchSlots);
     fechaField.addEventListener('change', fetchSlots);
+
+    // Si hay fecha preseleccionada, intentar cargar horarios automáticamente
+    {% if fecha_preseleccionada %}
+        // Esperar un momento para que los campos se carguen
+        setTimeout(() => {
+            if (servicioField.value && profesionalField.value) {
+                fetchSlots();
+            }
+        }, 500);
+    {% endif %}
 
     // Validación al enviar el formulario
     form.addEventListener('submit', function(e) {

@@ -274,7 +274,9 @@
                     </div>
                     <div class="mb-3">
                         <label for="nueva_hora" class="form-label">Nueva Hora</label>
-                        <input type="time" class="form-control" id="nueva_hora" name="nueva_hora" required>
+                        <select class="form-control" id="nueva_hora" name="nueva_hora" required>
+                            <option value="">Selecciona una fecha primero</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -456,7 +458,8 @@ DOM_ELEMENTS.btnCancelar.addEventListener('click', async function() {
             
             DOM_ELEMENTS.reagendarReservaId.value = reservaIdActual;
             DOM_ELEMENTS.nuevaFecha.value = '';
-            DOM_ELEMENTS.nuevaHora.value = '';
+            DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">Selecciona una fecha primero</option>';
+            DOM_ELEMENTS.nuevaHora.disabled = true;
             DOM_ELEMENTS.nuevaFecha.min = hoy;
             
             utils.resetFormErrors();
@@ -544,26 +547,76 @@ DOM_ELEMENTS.btnCancelar.addEventListener('click', async function() {
         utils.resetFormErrors();
     });
     
-    // Validación en tiempo real para fecha de reagendamiento
-    DOM_ELEMENTS.nuevaFecha.addEventListener('change', function() {
-        if (this.value < hoy) {
-            this.setCustomValidity('No puedes seleccionar una fecha pasada');
-            this.classList.add('is-invalid');
-        } else {
-            this.setCustomValidity('');
-            this.classList.remove('is-invalid');
-        }
-    });
-    
-    // Mejorar UX: Deshabilitar horas pasadas para la fecha seleccionada
-    DOM_ELEMENTS.nuevaFecha.addEventListener('change', function() {
-        if (this.value === hoy) {
-            const now = new Date();
-            const currentHour = now.getHours().toString().padStart(2, '0');
-            const currentMinute = now.getMinutes().toString().padStart(2, '0');
-            DOM_ELEMENTS.nuevaHora.min = `${currentHour}:${currentMinute}`;
-        } else {
-            DOM_ELEMENTS.nuevaHora.removeAttribute('min');
+    // Cargar horarios disponibles cuando se selecciona una fecha
+    DOM_ELEMENTS.nuevaFecha.addEventListener('change', async function() {
+        try {
+            const fechaSeleccionada = this.value;
+            
+            // Validar fecha
+            if (fechaSeleccionada < hoy) {
+                this.setCustomValidity('No puedes seleccionar una fecha pasada');
+                this.classList.add('is-invalid');
+                return;
+            } else {
+                this.setCustomValidity('');
+                this.classList.remove('is-invalid');
+            }
+            
+            // Limpiar select de horas
+            DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">Cargando horarios...</option>';
+            DOM_ELEMENTS.nuevaHora.disabled = true;
+            
+            // Obtener horarios disponibles
+            const response = await fetch(
+                `{% url 'clientes:horarios_disponibles_reagendar' 0 %}`.replace('0', reservaIdActual) + 
+                `?fecha=${fechaSeleccionada}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }
+            );
+            
+            const data = await response.json();
+            
+            // Limpiar select
+            DOM_ELEMENTS.nuevaHora.innerHTML = '';
+            
+            if (data.error) {
+                DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">Error al cargar horarios</option>';
+                return;
+            }
+            
+            if (data.festivo) {
+                DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">Día festivo - No hay horarios disponibles</option>';
+                return;
+            }
+            
+            if (data.disponibles && data.disponibles.length > 0) {
+                // Agregar opción por defecto
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Selecciona un horario';
+                DOM_ELEMENTS.nuevaHora.appendChild(defaultOption);
+                
+                // Agregar horarios disponibles
+                data.disponibles.forEach(horario => {
+                    const option = document.createElement('option');
+                    option.value = horario.inicio;
+                    option.textContent = `${horario.inicio} - ${horario.fin}`;
+                    DOM_ELEMENTS.nuevaHora.appendChild(option);
+                });
+                
+                DOM_ELEMENTS.nuevaHora.disabled = false;
+            } else {
+                DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">No hay horarios disponibles para esta fecha</option>';
+            }
+            
+        } catch (error) {
+            console.error('Error cargando horarios:', error);
+            DOM_ELEMENTS.nuevaHora.innerHTML = '<option value="">Error al cargar horarios</option>';
         }
     });
 });
