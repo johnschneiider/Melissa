@@ -283,7 +283,6 @@
             e.preventDefault();
             const message = messageInput.value.trim();
             if (message) {
-                sendBtn.disabled = true;
                 sendMessage(message, function() {
                     messageInput.value = '';
                     toggleSendBtn();

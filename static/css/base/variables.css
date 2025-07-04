@@ -26,6 +26,6 @@
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
   /* Tipografías */
-  --font-serif: 'Playfair Display', 'Merriweather', serif;
-  --font-sans: 'Manrope', 'Inter', 'Lato', sans-serif;
+  --font-serif: 'Roboto', sans-serif;
+  --font-sans: 'Roboto', sans-serif;
 } 

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Ajustes de Usuario{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4 class="fw-bold mb-3">Mis notificaciones</h4>
+                    <p class="text-muted mb-4">Te enviaremos actualizaciones sobre tus citas, noticias y ofertas.</p>
+                    <form>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="notif_sms" checked>
+                            <label class="form-check-label fw-semibold" for="notif_sms">
+                                Notificaciones de citas por SMS
+                            </label>
+                            <div class="form-text">Recibirás mensajes SMS según la configuración del remitente</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="notif_email_marketing" checked>
+                            <label class="form-check-label fw-semibold" for="notif_email_marketing">
+                                Notificaciones de marketing por email
+                            </label>
+                            <div class="form-text">Recibe ofertas y novedades por email</div>
+                        </div>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="notif_sms_marketing" checked>
+                            <label class="form-check-label fw-semibold" for="notif_sms_marketing">
+                                Notificaciones de marketing por SMS
+                            </label>
+                            <div class="form-text">Si enviaste el SMS STOP para cancelar la suscripción, responde START para volver a suscribirte</div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="fw-bold mb-3 text-danger">Eliminar cuenta</h4>
+                    <p class="text-muted mb-3">¿Estás seguro de que quieres salir de Melissa?</p>
+                    <form method="post" action="#">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger fw-bold px-4 py-2">Eliminar mi cuenta</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

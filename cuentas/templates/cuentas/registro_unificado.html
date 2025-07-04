@@ -119,6 +119,14 @@
                             {% endif %}
                         </div>
 
+                        <!-- Checkbox de política de tratamiento de datos -->
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="politica_datos" name="politica_datos" checked required>
+                            <label class="form-check-label" for="politica_datos">
+                                Acepto las <a href="{% url 'cuentas:politica_datos' %}" target="_blank">políticas de tratamiento de datos</a>
+                            </label>
+                        </div>
+
                         <!-- Botón de registro -->
                         <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-pill mb-3">
                             <i class="bi bi-person-plus me-2"></i>Crear cuenta

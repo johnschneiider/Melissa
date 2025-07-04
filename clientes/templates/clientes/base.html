@@ -12,11 +12,17 @@
         :root {
             --primary-color: #6f42c1;
             --secondary-color: #0dcaf0;
+            --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-serif: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: var(--font-sans);
             background-color: #f8f9fa;
+        }
+        
+        h1, h2, h3, h4, h5, h6, .font-serif, .serif {
+            font-family: var(--font-serif) !important;
         }
         
         .navbar-brand {

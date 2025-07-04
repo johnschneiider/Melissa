@@ -778,5 +778,17 @@ def detalle_mi_ticket(request, ticket_id):
     }
     return render(request, 'cuentas/detalle_mi_ticket.html', context)
 
+def ajustes_usuario(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            user = request.user
+            logout(request)
+            user.delete()
+            return redirect('inicio')
+    return render(request, 'cuentas/ajustes.html')
+
+def politica_datos(request):
+    return render(request, 'cuentas/politica_datos.html')
+
 
 

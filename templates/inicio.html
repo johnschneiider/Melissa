@@ -12,7 +12,7 @@
     <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="z-index:0;"></div>
 
     <div class="container position-relative" style="z-index:1;">
-        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto" style="font-family: 'Georgia', serif; color: #181818;">
+        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto" style="font-family: var(--font-serif); color: #181818;">
             Reserva con tus peluquerias<br />
             <span id="frase-rotativa">o descubre tu favorita</span>
         </h1>
@@ -65,7 +65,7 @@
 
 {% if user.is_authenticated and is_cliente %}
 <div class="d-flex justify-content-center mt-4">
-    <a href="{% url 'clientes:lista_negocios' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold">
+    <a href="{% url 'clientes:dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold">
         <i class="bi bi-calendar-plus me-2"></i>Reservar ahora
     </a>
 </div>

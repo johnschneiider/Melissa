@@ -7,8 +7,8 @@ body {
   scroll-behavior: smooth;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif);
+h1, h2, h3, h4, h5, h6, .font-serif, .serif {
+  font-family: var(--font-serif) !important;
   font-weight: 700;
   color: var(--primary);
   letter-spacing: 0.5px;

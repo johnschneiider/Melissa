@@ -25,4 +25,6 @@ urlpatterns = [
     path('ticket/<int:ticket_id>/', views.detalle_ticket, name='detalle_ticket'),
     path('mis-tickets/', views.mis_tickets, name='mis_tickets'),
     path('mi-ticket/<int:ticket_id>/', views.detalle_mi_ticket, name='detalle_mi_ticket'),
+    path('ajustes/', views.ajustes_usuario, name='ajustes'),
+    path('politica-datos/', views.politica_datos, name='politica_datos'),
 ]
