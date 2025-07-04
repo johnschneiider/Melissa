@@ -82,6 +82,9 @@ class LoginPersonalizadoView(View):
                     
                     messages.success(request, f'¡Bienvenido de vuelta, {user.username}!')
                     
+                    # Si es superadmin, siempre redirigir a su panel
+                    if user.is_superuser or getattr(user, 'tipo', None) == 'super_admin':
+                        return self.redirect_by_user_type(user)
                     # Redirigir según el parámetro next o tipo de usuario
                     next_url = request.GET.get('next')
                     if next_url and next_url.startswith('/'):
