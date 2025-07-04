@@ -59,6 +59,9 @@
                                 </span>
                                 <input type="password" name="password" id="id_password" class="form-control py-3" 
                                        placeholder="Ingresa tu contraseña" required>
+                                <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1" style="border-top-left-radius: 0; border-bottom-left-radius: 0;">
+                                    <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -185,4 +188,25 @@
         border: none;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const passwordInput = document.getElementById('id_password');
+        const toggleBtn = document.querySelector('.toggle-password');
+        const toggleIcon = document.getElementById('togglePasswordIcon');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.classList.remove('bi-eye');
+                    toggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.classList.remove('bi-eye-slash');
+                    toggleIcon.classList.add('bi-eye');
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}
