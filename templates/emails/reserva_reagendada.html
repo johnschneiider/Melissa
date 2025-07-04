@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva Reagendada - Melissa</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .reserva-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ffc107;
+        }
+        .btn {
+            display: inline-block;
+            background: #ffc107;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔄 Reserva Reagendada</h1>
+        <p>Tu cita ha sido reagendada exitosamente</p>
+    </div>
+    
+    <div class="content">
+        <h2>¡Hola {{ cliente.first_name|default:cliente.username }}!</h2>
+        
+        <p>Tu reserva en <strong>{{ negocio.nombre }}</strong> ha sido reagendada exitosamente.</p>
+        
+        <div class="reserva-info">
+            <h3>📋 Nuevos detalles de tu reserva:</h3>
+            <p><strong>📅 Nueva fecha:</strong> {{ fecha_formateada }}</p>
+            <p><strong>🕐 Nueva hora:</strong> {{ hora_formateada }}</p>
+            <p><strong>🏢 Negocio:</strong> {{ negocio.nombre }}</p>
+            <p><strong>🆔 Número de reserva:</strong> #{{ reserva.id }}</p>
+        </div>
+        
+        <h3>📱 Próximos pasos:</h3>
+        <ul>
+            <li>Recibirás un recordatorio 1 día antes de tu nueva cita</li>
+            <li>Recibirás otro recordatorio 3 horas antes</li>
+            <li>Marca la nueva fecha en tu calendario</li>
+        </ul>
+        
+        <p><strong>¿Necesitas gestionar tu reserva?</strong></p>
+        <a href="https://melissa.com/mis-reservas/" class="btn">
+            Ver mis reservas
+        </a>
+        
+        <p>¡Te esperamos en tu nueva fecha!</p>
+        <p><strong>El equipo de {{ negocio.nombre }}</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un email automático de Melissa - Tu plataforma de reservas</p>
+    </div>
+</body>
+</html> 

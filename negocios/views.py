@@ -225,49 +225,133 @@ def panel_negocio(request, negocio_id):
 def dashboard_negocio(request, negocio_id):
     # Obtener el negocio específico del usuario
     negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
-
-    # Métricas diarias (últimos 30 días) - datos de ejemplo para mostrar
-    fechas = ['01/06', '02/06', '03/06', '04/06', '05/06', '06/06', '07/06', '08/06', '09/06', '10/06']
-    reservas = [5, 8, 12, 6, 9, 15, 11, 7, 13, 10]
-    ingresos = [150, 240, 360, 180, 270, 450, 330, 210, 390, 300]
-    clientes_nuevos = [2, 3, 5, 1, 4, 6, 3, 2, 5, 4]
-
-    # Reporte mensual actual - datos de ejemplo
-    reporte = type('Reporte', (), {
-        'total_reservas': 45,
-        'ingresos_totales': 1350,
-        'clientes_nuevos': 15,
-        'dia_mas_ocupado': 'Sábado',
-        'hora_pico': '14:00'
-    })()
-
-    # Top peluquero del mes - datos de ejemplo
-    peluquero_top = type('Peluquero', (), {
-        'nombre': 'María García',
-        'avatar': None
-    })()
-    peluquero_top_score = 4.8
-
-    # Ventas por mes (últimos 12 meses) - datos de ejemplo
-    meses = ['01/24', '02/24', '03/24', '04/24', '05/24', '06/24']
-    ventas_mes = [1200, 1350, 1100, 1400, 1600, 1350]
-
-    # Días más ocupados
-    dias_ocupados = 'Sábado'
-    hora_pico = '14:00'
-
+    
+    from datetime import datetime, timedelta, date
+    from django.db.models import Count, Avg, Q
+    from django.utils import timezone
+    from clientes.models import Reserva
+    from clientes.models import Calificacion
+    
+    # Fechas para los últimos 30 días
+    hoy = timezone.now().date()
+    hace_30_dias = hoy - timedelta(days=30)
+    
+    # Datos de reservas de los últimos 30 días
+    reservas_30_dias = Reserva.objects.filter(
+        peluquero=negocio,
+        fecha__gte=hace_30_dias,
+        fecha__lte=hoy
+    ).order_by('fecha')
+    
+    # Generar datos para el gráfico de reservas (últimos 10 días)
+    fechas_grafico = []
+    reservas_grafico = []
+    
+    for i in range(10):
+        fecha_actual = hoy - timedelta(days=9-i)
+        count_reservas = reservas_30_dias.filter(fecha=fecha_actual).count()
+        fechas_grafico.append(fecha_actual.strftime('%d/%m'))
+        reservas_grafico.append(count_reservas)
+    
+    # Reporte del mes actual
+    inicio_mes = hoy.replace(day=1)
+    reservas_mes = Reserva.objects.filter(
+        peluquero=negocio,
+        fecha__gte=inicio_mes,
+        fecha__lte=hoy
+    )
+    
+    # Calcular ingresos totales (asumiendo precio promedio de $30 por servicio)
+    total_reservas_mes = reservas_mes.count()
+    ingresos_totales = total_reservas_mes * 30  # Precio promedio estimado
+    
+    # Clientes nuevos del mes (clientes que hicieron su primera reserva este mes)
+    clientes_nuevos_mes = reservas_mes.values('cliente').distinct().count()
+    
+    # Día más ocupado del mes
+    dia_mas_ocupado = reservas_mes.values('fecha').annotate(
+        count=Count('id')
+    ).order_by('-count').first()
+    
+    dia_mas_ocupado_nombre = 'N/A'
+    if dia_mas_ocupado:
+        fecha_ocupada = dia_mas_ocupado['fecha']
+        dias_semana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+        dia_mas_ocupado_nombre = dias_semana[fecha_ocupada.weekday()]
+    
+    # Hora pico (hora con más reservas)
+    hora_pico_data = reservas_mes.values('hora_inicio').annotate(
+        count=Count('id')
+    ).order_by('-count').first()
+    
+    hora_pico = 'N/A'
+    if hora_pico_data:
+        hora_pico = hora_pico_data['hora_inicio'].strftime('%H:%M')
+    
+    # Mejor profesional del mes (por calificaciones)
+    from profesionales.models import Matriculacion
+    
+    # Obtener profesionales aprobados del negocio
+    matriculaciones_aprobadas = Matriculacion.objects.filter(
+        negocio=negocio,
+        estado='aprobada'
+    ).select_related('profesional')
+    
+    profesionales_negocio = [m.profesional for m in matriculaciones_aprobadas]
+    mejor_profesional = None
+    mejor_puntuacion = 0
+    
+    for profesional in profesionales_negocio:
+        calificaciones = Calificacion.objects.filter(
+            negocio=negocio,
+            profesional=profesional,
+            fecha_calificacion__gte=inicio_mes
+        )
+        if calificaciones.exists():
+            promedio = calificaciones.aggregate(Avg('puntaje'))['puntaje__avg']
+            if promedio and promedio > mejor_puntuacion:
+                mejor_puntuacion = promedio
+                mejor_profesional = profesional
+    
+    # Ventas por mes (últimos 6 meses)
+    meses_grafico = []
+    ventas_mes_grafico = []
+    
+    for i in range(6):
+        fecha_mes = hoy - timedelta(days=30*i)
+        inicio_mes_grafico = fecha_mes.replace(day=1)
+        fin_mes_grafico = (inicio_mes_grafico + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        reservas_mes_grafico = Reserva.objects.filter(
+            peluquero=negocio,
+            fecha__gte=inicio_mes_grafico,
+            fecha__lte=fin_mes_grafico
+        ).count()
+        
+        meses_grafico.append(fecha_mes.strftime('%m/%y'))
+        ventas_mes_grafico.append(reservas_mes_grafico * 30)  # Precio promedio estimado
+    
+    # Crear objeto reporte
+    class Reporte:
+        def __init__(self):
+            self.total_reservas = total_reservas_mes
+            self.ingresos_totales = ingresos_totales
+            self.clientes_nuevos = clientes_nuevos_mes
+            self.dia_mas_ocupado = dia_mas_ocupado_nombre
+            self.hora_pico = hora_pico
+    
+    reporte = Reporte()
+    
     context = {
         'negocio': negocio,
-        'fechas': fechas,
-        'reservas': reservas,
-        'ingresos': ingresos,
-        'clientes_nuevos': clientes_nuevos,
-        'meses': meses,
-        'ventas_mes': ventas_mes,
+        'fechas': fechas_grafico,
+        'reservas': reservas_grafico,
+        'meses': meses_grafico,
+        'ventas_mes': ventas_mes_grafico,
         'reporte': reporte,
-        'peluquero_top': peluquero_top,
-        'peluquero_top_score': peluquero_top_score,
-        'dias_ocupados': dias_ocupados,
+        'peluquero_top': mejor_profesional,
+        'peluquero_top_score': round(mejor_puntuacion, 1) if mejor_puntuacion > 0 else 0,
+        'dias_ocupados': dia_mas_ocupado_nombre,
         'hora_pico': hora_pico,
     }
     return render(request, 'negocios/dashboard_negocio.html', context)

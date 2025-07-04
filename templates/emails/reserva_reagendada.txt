@@ -1,0 +1,26 @@
+Reserva Reagendada - Melissa
+
+¡Hola {{ cliente.first_name|default:cliente.username }}!
+
+Tu reserva en {{ negocio.nombre }} ha sido reagendada exitosamente.
+
+📋 Nuevos detalles de tu reserva:
+📅 Nueva fecha: {{ fecha_formateada }}
+🕐 Nueva hora: {{ hora_formateada }}
+🏢 Negocio: {{ negocio.nombre }}
+🆔 Número de reserva: #{{ reserva.id }}
+
+📱 Próximos pasos:
+- Recibirás un recordatorio 1 día antes de tu nueva cita
+- Recibirás otro recordatorio 3 horas antes
+- Marca la nueva fecha en tu calendario
+
+¿Necesitas gestionar tu reserva?
+https://melissa.com/mis-reservas/
+
+¡Te esperamos en tu nueva fecha!
+El equipo de {{ negocio.nombre }}
+
+---
+Este es un email automático de Melissa - Tu plataforma de reservas
+Si tienes alguna pregunta, contacta directamente a {{ negocio.nombre }} 

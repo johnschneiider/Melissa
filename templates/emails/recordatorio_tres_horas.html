@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recordatorio Urgente de Cita</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .reserva-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+        .btn {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .urgent {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⏰ Recordatorio Urgente</h1>
+        <p>Tu cita está en 3 horas</p>
+    </div>
+    
+    <div class="content">
+        <h2>¡Hola {{ cliente.first_name|default:cliente.username }}!</h2>
+        
+        <div class="urgent">
+            <h3>🚨 ¡IMPORTANTE!</h3>
+            <p>Tu cita en <strong>{{ negocio.nombre }}</strong> está programada para <strong>en 3 horas</strong>.</p>
+        </div>
+        
+        <div class="reserva-info">
+            <h3>📋 Detalles de tu cita:</h3>
+            <p><strong>📅 Fecha:</strong> {{ fecha_formateada }}</p>
+            <p><strong>🕐 Hora:</strong> {{ hora_formateada }}</p>
+            <p><strong>🏢 Negocio:</strong> {{ negocio.nombre }}</p>
+            {% if profesional %}
+            <p><strong>👨‍💼 Profesional:</strong> {{ profesional.nombre_completo }}</p>
+            {% endif %}
+            {% if reserva.servicio %}
+            <p><strong>✂️ Servicio:</strong> {{ reserva.servicio.servicio.nombre }}</p>
+            {% endif %}
+            <p><strong>📍 Dirección:</strong> {{ negocio.direccion }}</p>
+        </div>
+        
+        <h3>⚡ Acciones rápidas:</h3>
+        <ul>
+            <li>Confirma que puedes llegar a tiempo</li>
+            <li>Si necesitas cancelar, contacta inmediatamente al negocio</li>
+            <li>Prepara todo lo que necesites llevar</li>
+        </ul>
+        
+        <p><strong>¿Necesitas cancelar o reagendar?</strong></p>
+        <a href="{{ request.scheme }}://{{ request.get_host }}{% url 'clientes:mis_reservas' %}" class="btn">
+            Gestionar mi reserva
+        </a>
+        
+        <p><strong>Contacto de emergencia:</strong></p>
+        <p>Si necesitas cancelar urgentemente, contacta directamente a {{ negocio.nombre }}.</p>
+        
+        <p>¡Nos vemos pronto!</p>
+        <p><strong>El equipo de {{ negocio.nombre }}</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un recordatorio automático de Melissa - Tu plataforma de reservas</p>
+        <p>Si no deseas recibir estos recordatorios, puedes desactivarlos en tu perfil.</p>
+    </div>
+</body>
+</html> 

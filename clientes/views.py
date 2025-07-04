@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST, require_GET
 from negocios.models import Negocio, ServicioNegocio
 from .models import Reserva, NotificacionCliente, Calificacion
 from .forms import ReservaForm, ReservaNegocioForm, CalificacionForm
+from .utils import enviar_email_reserva_confirmada, enviar_email_reserva_cancelada, enviar_email_reserva_reagendada
 import json
 import holidays
 import logging
@@ -202,6 +203,14 @@ def reservar_turno(request, negocio_id):
                     logger.info(f"Intentando guardar reserva con datos: cliente={reserva.cliente.id}, peluquero={reserva.peluquero.id}, profesional={reserva.profesional.id if reserva.profesional else None}, servicio={reserva.servicio.id if reserva.servicio else None}")
                     
                     reserva.save()
+                    
+                    # Enviar email de confirmación
+                    try:
+                        enviar_email_reserva_confirmada(reserva)
+                    except Exception as e:
+                        logger.error(f"Error enviando email de confirmación: {str(e)}")
+                        # No fallar la reserva si el email falla
+                    
                     messages.success(request, '¡Reserva realizada con éxito!')
                     return redirect('clientes:confirmacion_reserva', reserva_id=reserva.id)
                 except Exception as e:
@@ -648,8 +657,19 @@ def eliminar_notificacion_cliente(request, notificacion_id):
 def cancelar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
     if reserva.estado not in ['cancelado', 'completado']:
+        # Guardar el estado anterior para el email
+        estado_anterior = reserva.estado
+        
         reserva.estado = 'cancelado'
         reserva.save()
+        
+        # Enviar email de cancelación
+        try:
+            enviar_email_reserva_cancelada(reserva)
+        except Exception as e:
+            logger.error(f"Error enviando email de cancelación: {str(e)}")
+            # No fallar la cancelación si el email falla
+        
         msg = 'Reserva cancelada exitosamente.'
         success = True
     else:
@@ -734,6 +754,13 @@ def reagendar_reserva(request, reserva_id):
         reserva.hora_inicio = hora_obj
         reserva.hora_fin = hora_fin
         reserva.save()
+        
+        # Enviar email de reagendamiento
+        try:
+            enviar_email_reserva_reagendada(reserva)
+        except Exception as e:
+            logger.error(f"Error enviando email de reagendamiento: {str(e)}")
+            # No fallar el reagendamiento si el email falla
         
         return JsonResponse({
             'success': True,

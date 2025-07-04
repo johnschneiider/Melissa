@@ -19,6 +19,10 @@ class Reserva(models.Model):
         ('completado', 'Completado'),
     ], default='pendiente')
     notas = models.TextField(blank=True)
+    
+    # Campos para recordatorios
+    recordatorio_dia_enviado = models.BooleanField(default=False, help_text='Recordatorio de 1 día antes enviado')
+    recordatorio_tres_horas_enviado = models.BooleanField(default=False, help_text='Recordatorio de 3 horas antes enviado')
 
     class Meta:
         ordering = ['fecha', 'hora_inicio']
