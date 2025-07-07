@@ -13,20 +13,24 @@
                     </h3>
                     <p class="mb-0 mt-2">Completa la información de tu negocio</p>
                 </div>
-                
                 <div class="card-body p-4 p-lg-5">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Por favor corrige los siguientes errores:</strong>
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
                     {% endif %}
-
                     <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                         {% csrf_token %}
-                        
                         <div class="row g-4">
                             <!-- Nombre del negocio -->
                             <div class="col-12">
@@ -40,7 +44,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-
                             <!-- Descripción -->
                             <div class="col-12">
                                 <label for="{{ form.descripcion.id_for_label }}" class="form-label fw-bold">
@@ -53,20 +56,51 @@
                                     </div>
                                 {% endif %}
                             </div>
-
                             <!-- Dirección -->
-                            <div class="col-12">
-                                <label for="{{ form.direccion.id_for_label }}" class="form-label fw-bold">
+                            <div class="col-12 position-relative">
+                                <label for="autocomplete-direccion" class="form-label fw-bold">
                                     Dirección <span class="text-danger">*</span>
                                 </label>
-                                {{ form.direccion }}
+                                <input type="text" id="autocomplete-direccion" class="form-control" placeholder="Escribe la dirección..." autocomplete="off" />
+                                <div id="sugerencias-direccion" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+                                <input type="hidden" id="id_direccion" name="direccion" class="form-control{% if form.direccion.errors %} is-invalid{% endif %}" />
+                                <div id="debug-direccion-valor" style="font-size:0.95em;color:#a00;margin-top:4px;"></div>
                                 {% if form.direccion.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.direccion.errors.0 }}
                                     </div>
                                 {% endif %}
+                                <input type="hidden" id="id_ciudad" name="ciudad" />
+                                <input type="hidden" id="id_barrio" name="barrio" />
+                                <input type="hidden" id="id_latitud" name="latitud" />
+                                <input type="hidden" id="id_longitud" name="longitud" />
                             </div>
-
+                            <!-- Barrio (rellenado automáticamente) -->
+                            <div class="col-md-6">
+                                <label for="{{ form.barrio.id_for_label }}" class="form-label fw-bold">
+                                    Barrio
+                                </label>
+                                {{ form.barrio }}
+                                {% if form.barrio.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.barrio.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <!-- Ciudad (rellenado automáticamente) -->
+                            <div class="col-md-6">
+                                <label for="{{ form.ciudad.id_for_label }}" class="form-label fw-bold">
+                                    Ciudad <span class="text-danger">*</span>
+                                </label>
+                                {{ form.ciudad }}
+                                {% if form.ciudad.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.ciudad.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {{ form.latitud }}
+                            {{ form.longitud }}
                             <!-- Teléfono -->
                             <div class="col-md-6">
                                 <label for="{{ form.telefono.id_for_label }}" class="form-label fw-bold">
@@ -79,20 +113,6 @@
                                     </div>
                                 {% endif %}
                             </div>
-
-                            <!-- Ciudad -->
-                            <div class="col-md-6">
-                                <label for="{{ form.ciudad.id_for_label }}" class="form-label fw-bold">
-                                    Ciudad <span class="text-danger">*</span>
-                                </label>
-                                {{ form.ciudad }}
-                                {% if form.ciudad.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.ciudad.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
                             <!-- Logo -->
                             <div class="col-12">
                                 <label for="{{ form.logo.id_for_label }}" class="form-label fw-bold">
@@ -109,7 +129,6 @@
                                 <div class="form-text">Formatos permitidos: JPG, PNG, GIF. Máximo 5MB.</div>
                             </div>
                         </div>
-
                         <!-- Botones -->
                         <div class="d-flex justify-content-between mt-5">
                             <a href="{% url 'negocios:mis_negocios' %}" class="btn btn-outline-secondary btn-lg px-4">
@@ -125,44 +144,198 @@
         </div>
     </div>
 </div>
-
 <style>
 .bg-gradient-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-
 .form-control, .form-select {
     border-radius: 0.5rem;
     border: 1px solid #e0e0e0;
     padding: 0.75rem 1rem;
     transition: all 0.3s ease;
 }
-
 .form-control:focus, .form-select:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
 }
-
 .btn {
     border-radius: 0.5rem;
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     transition: all 0.3s ease;
 }
-
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border: none;
 }
-
 .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
 }
-
 .alert {
     border-radius: 0.75rem;
     border: none;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg&libraries=places"></script>
+<script>
+window.onload = function() {
+    const input = document.getElementById('autocomplete-direccion');
+    const sugerenciasDiv = document.getElementById('sugerencias-direccion');
+    const hiddenDireccion = document.getElementById('id_direccion');
+    const ciudadInput = document.getElementById('id_ciudad');
+    const barrioInput = document.getElementById('id_barrio');
+    const latInput = document.getElementById('id_latitud');
+    const lngInput = document.getElementById('id_longitud');
+    const debugDiv = document.getElementById('debug-direccion-valor');
+    let seleccionValida = false;
+    let placeIdSeleccionado = null;
+    let timeout = null;
+    const API_KEY = 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg';
+
+    function logPaso(msg, extra) {
+        console.log('[DEBUG DIRECCION]', msg, extra || '');
+        if (debugDiv) debugDiv.textContent = msg + (extra ? ': ' + extra : '');
+    }
+
+    function limpiarCampos() {
+        hiddenDireccion.value = '';
+        ciudadInput.value = '';
+        barrioInput.value = '';
+        latInput.value = '';
+        lngInput.value = '';
+        seleccionValida = false;
+        placeIdSeleccionado = null;
+    }
+
+    async function buscarSugerencias(query) {
+        if (!query || query.length < 3) {
+            sugerenciasDiv.innerHTML = '';
+            return;
+        }
+        const url = `https://places.googleapis.com/v1/places:autocomplete?key=${API_KEY}`;
+        const body = {
+            input: query,
+            languageCode: 'es',
+            regionCode: 'CO',
+        };
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await resp.json();
+            if (data.suggestions && data.suggestions.length > 0) {
+                sugerenciasDiv.innerHTML = '';
+                data.suggestions.forEach(sug => {
+                    const pred = sug.placePrediction || sug;
+                    let texto = '';
+                    if (pred.structuredFormat && pred.structuredFormat.mainText && pred.structuredFormat.secondaryText) {
+                        texto = pred.structuredFormat.mainText.text + ', ' + pred.structuredFormat.secondaryText.text;
+                    } else if (pred.text && pred.text.text) {
+                        texto = pred.text.text;
+                    } else {
+                        texto = (pred.formattedSuggestion && pred.formattedSuggestion.text) || (pred.displayName && pred.displayName.text) || pred.description || pred.text || pred.placePrediction || pred.place || JSON.stringify(pred);
+                    }
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action';
+                    item.textContent = texto;
+                    item.onclick = () => seleccionarSugerencia(pred, texto);
+                    sugerenciasDiv.appendChild(item);
+                });
+            } else {
+                sugerenciasDiv.innerHTML = '';
+                if (data.error) {
+                    logPaso('Error API', data.error.message || JSON.stringify(data.error));
+                } else {
+                    logPaso('Sin sugerencias', JSON.stringify(data));
+                }
+            }
+        } catch (err) {
+            sugerenciasDiv.innerHTML = '';
+            logPaso('Error buscando sugerencias', err);
+        }
+    }
+
+    async function seleccionarSugerencia(pred, textoMostrado) {
+        sugerenciasDiv.innerHTML = '';
+        let placeId = pred.placeId || (pred.place && pred.place.replace(/^places\//, '')) || null;
+        let texto = textoMostrado || (pred.structuredFormat && pred.structuredFormat.mainText && pred.structuredFormat.secondaryText ? pred.structuredFormat.mainText.text + ', ' + pred.structuredFormat.secondaryText.text : (pred.text && pred.text.text) || pred.description || pred.text || pred.place || '');
+        if (!placeId) {
+            logPaso('No se encontró placeId en la sugerencia', pred);
+            limpiarCampos();
+            return;
+        }
+        input.value = texto;
+        placeIdSeleccionado = placeId;
+        // Obtener detalles del lugar
+        const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?key=${API_KEY}&languageCode=es`;
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            let direccion = data.formattedAddress || (data.displayName && data.displayName.text) || texto;
+            let ciudad = '';
+            let barrio = '';
+            let lat = '';
+            let lng = '';
+            if (data.addressComponents) {
+                data.addressComponents.forEach(function(component) {
+                    if (component.types.includes('locality')) {
+                        ciudad = component.longText;
+                    }
+                    if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
+                        barrio = component.longText;
+                    }
+                });
+            }
+            if (data.location) {
+                lat = data.location.latitude;
+                lng = data.location.longitude;
+            }
+            hiddenDireccion.value = direccion;
+            ciudadInput.value = ciudad;
+            barrioInput.value = barrio;
+            latInput.value = lat;
+            lngInput.value = lng;
+            seleccionValida = true;
+            logPaso('Dirección seleccionada', direccion);
+        } catch (err) {
+            logPaso('Error obteniendo detalles del lugar', err);
+            limpiarCampos();
+        }
+    }
+
+    input.addEventListener('input', function() {
+        limpiarCampos();
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => buscarSugerencias(input.value), 400);
+    });
+
+    // Cerrar sugerencias si se hace click fuera
+    document.addEventListener('click', function(e) {
+        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    });
+
+    // Validar en el submit
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            logPaso('Evento submit', hiddenDireccion.value);
+            if (!seleccionValida || !hiddenDireccion.value || hiddenDireccion.value.trim() === '' || hiddenDireccion.value === 'undefined') {
+                e.preventDefault();
+                alert('Debes seleccionar una dirección válida de la lista de Google Maps.');
+                logPaso('Bloqueo de submit por dirección vacía');
+                return false;
+            }
+        });
+    }
+}
+</script>
 {% endblock %}

@@ -17,6 +17,10 @@ from .views import (
     editar_calificacion,
     eliminar_calificacion,
     proximamente_app,
+    autocompletar_servicios,
+    negocios_cercanos,
+    autocompletar_negocios,
+    buscar_negocios,
 )
 
 app_name = 'clientes'
@@ -24,6 +28,7 @@ app_name = 'clientes'
 urlpatterns = [
     path('dashboard/', dashboard_cliente, name='dashboard'),
     path('', ListaNegociosView.as_view(), name='lista_negocios'),
+    path('buscar/', buscar_negocios, name='buscar_negocios'),
     path('peluquero/<int:pk>/', DetallePeluqueroView.as_view(), name='detalle_peluquero'),
     path('peluquero/<int:peluquero_id>/reservar/', reservar_turno, name='reservar_turno'),
     path('reserva/<int:reserva_id>/confirmacion/', confirmacion_reserva, name='confirmacion_reserva'),
@@ -41,4 +46,7 @@ urlpatterns = [
     path('editar-calificacion/<int:calificacion_id>/', editar_calificacion, name='editar_calificacion'),
     path('eliminar-calificacion/<int:calificacion_id>/', eliminar_calificacion, name='eliminar_calificacion'),
     path('proximamente-app/', proximamente_app, name='proximamente_app'),
+    path('api/autocompletar-servicios/', autocompletar_servicios, name='autocompletar_servicios'),
+    path('api/negocios-cercanos/', negocios_cercanos, name='negocios_cercanos'),
+    path('api/autocompletar-negocios/', autocompletar_negocios, name='autocompletar_negocios'),
 ]

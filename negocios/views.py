@@ -42,38 +42,37 @@ def sanitize_input(text):
 
 @login_required
 def crear_negocio(request):
-    """Vista simplificada para crear negocio"""
-    # Verificar que el usuario sea de tipo negocio
-    if not hasattr(request.user, 'tipo') or request.user.tipo != 'negocio':
-        messages.error(request, 'Solo usuarios de tipo negocio pueden crear negocios.')
-        return redirect('inicio')
-    
+    print('[DEBUG SERVER] POST recibido:', request.method, request.POST)
     if request.method == 'POST':
+        print('[DEBUG SERVER] Valor recibido de dirección:', request.POST.get('direccion'))
+        # Verificar que el usuario sea de tipo negocio
+        if not hasattr(request.user, 'tipo') or request.user.tipo != 'negocio':
+            messages.error(request, 'Solo usuarios de tipo negocio pueden crear negocios.')
+            return redirect('inicio')
+        
         form = NegocioForm(request.POST, request.FILES)
         if form.is_valid():
+            print('[DEBUG SERVER] Formulario válido. Guardando negocio...')
             try:
                 negocio = form.save(commit=False)
                 negocio.propietario = request.user
                 negocio.activo = True
                 negocio.save()
-                
-                # Asignar automáticamente todos los servicios base al nuevo negocio
                 from .models import Servicio, ServicioNegocio
                 for servicio in Servicio.objects.all():
                     ServicioNegocio.objects.get_or_create(negocio=negocio, servicio=servicio)
-                
                 logger.info(f"Negocio '{negocio.nombre}' creado por {request.user.username}")
                 messages.success(request, f'¡Felicidades! Tu negocio "{negocio.nombre}" ha sido creado exitosamente.')
-                
-                # Redirigir al panel del negocio
-                return redirect('negocios:panel_negocio', negocio_id=negocio.id)
-                
+                # Redirigir a la lista de negocios
+                return redirect('negocios:mis_negocios')
             except Exception as e:
                 logger.error(f"Error al crear negocio: {e}")
                 messages.error(request, 'Hubo un error al crear tu negocio. Por favor, intenta nuevamente.')
+        else:
+            print('[DEBUG SERVER] Formulario inválido:', form.errors)
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
     else:
         form = NegocioForm()
-    
     return render(request, 'negocios/crear_negocio.html', {'form': form})
 
 @login_required

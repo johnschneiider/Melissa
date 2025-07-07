@@ -56,15 +56,15 @@
 
                             <!-- Dirección -->
                             <div class="col-12">
-                                <label for="{{ form.direccion.id_for_label }}" class="form-label fw-bold">
+                                <label for="id_direccion" class="form-label fw-bold">
                                     Dirección <span class="text-danger">*</span>
                                 </label>
-                                {{ form.direccion }}
-                                {% if form.direccion.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.direccion.errors.0 }}
-                                    </div>
-                                {% endif %}
+                                <gmp-place-autocomplete id="direccion-autocomplete" style="width:100%;" placeholder="Escribe la dirección..."></gmp-place-autocomplete>
+                                <input type="hidden" id="id_direccion" name="direccion" />
+                                <input type="hidden" id="id_ciudad" name="ciudad" />
+                                <input type="hidden" id="id_barrio" name="barrio" />
+                                <input type="hidden" id="id_latitud" name="latitud" />
+                                <input type="hidden" id="id_longitud" name="longitud" />
                             </div>
 
                             <!-- Teléfono -->
@@ -263,4 +263,61 @@
     border: none;
 }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg&libraries=places&v=weekly" async defer></script>
+<script src="https://unpkg.com/@googlemaps/places-autocomplete-element@latest/dist/index.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autocomplete = document.getElementById('direccion-autocomplete');
+    if (autocomplete) {
+        autocomplete.addEventListener('gmp-placeautocomplete-placeviewed', (event) => {
+            const place = event.detail;
+            let direccion = '';
+            let ciudad = '';
+            let barrio = '';
+            let lat = '';
+            let lng = '';
+            if (place && place.formattedAddress) {
+                direccion = place.formattedAddress;
+            }
+            if (place && place.address && place.address.addressComponents) {
+                place.address.addressComponents.forEach(function(component) {
+                    if (component.types.includes('locality')) {
+                        ciudad = component.longText;
+                    }
+                    if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
+                        barrio = component.longText;
+                    }
+                });
+            }
+            if (place && place.location) {
+                lat = place.location.lat;
+                lng = place.location.lng;
+            }
+            document.getElementById('id_direccion').value = direccion;
+            document.getElementById('id_ciudad').value = ciudad;
+            document.getElementById('id_barrio').value = barrio;
+            document.getElementById('id_latitud').value = lat;
+            document.getElementById('id_longitud').value = lng;
+        });
+    }
+    // Forzar el valor de dirección si el usuario no selecciona una sugerencia
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            var visible = document.getElementById('direccion-autocomplete');
+            var hidden = document.getElementById('id_direccion');
+            if (visible && hidden && !hidden.value) {
+                hidden.value = visible.value;
+            }
+            // Evitar guardar 'undefined' como dirección
+            if (hidden && (hidden.value === 'undefined' || hidden.value.trim() === '')) {
+                hidden.value = '';
+            }
+        });
+    }
+});
+</script>
 {% endblock %} 

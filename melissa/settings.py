@@ -16,7 +16,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-super-secreta-para-desarrollo')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '92.113.39.100',  # VPS para Google Maps API
+]
 
 AUTH_USER_MODEL = 'cuentas.UsuarioPersonalizado'
 
@@ -277,3 +281,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'vital.mix324@gmail.com'
 EMAIL_HOST_PASSWORD = 'dxib ogex uvpe kush'
 DEFAULT_FROM_EMAIL = 'Melissa <vital.mix324@gmail.com>'
+
+# Google Maps API Key (Places, Maps JavaScript, Geocoding)
+# API_KEY = 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg'

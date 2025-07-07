@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-danger text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="bi bi-trash-fill me-2"></i> Eliminar Negocio
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <h4 class="fw-bold mb-3 text-center">¿Estás seguro que deseas eliminar el negocio <span class="text-danger">"{{ negocio.nombre }}"</span>?</h4>
+                    <p class="text-center text-muted mb-4">Esta acción no se puede deshacer. Todos los datos asociados a este negocio serán eliminados permanentemente.</p>
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <a href="{% url 'negocios:mis_negocios' %}" class="btn btn-outline-secondary px-4 py-2 me-2">
+                            <i class="bi bi-arrow-left me-2"></i> Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4 py-2">
+                            <i class="bi bi-trash-fill me-2"></i> Eliminar definitivamente
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

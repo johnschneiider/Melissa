@@ -22,33 +22,28 @@
 <section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px;">
     <div class="container">
         <!-- Desktop/Tablet: barra extendida -->
-        <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2" style="max-width: 700px; min-height: 60px;">
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2" style="min-width: 160px;">
+        <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;">
+            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
                 <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Ubicación</label>
-                <select class="form-select border-0 bg-transparent ps-1 py-0" style="box-shadow: none; font-size: 1rem; min-width: 120px;">
-                    <option selected>¿Que ciudad?</option>
-                    <option>Buenos Aires</option>
-                    <option>Córdoba</option>
-                    <option>Rosario</option>
-                    <option>Mendoza</option>
-                </select>
+                <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Qué ciudad o barrio?" autocomplete="off" />
+                <div id="sugerencias-ubicacion" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+                <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
+                <input type="hidden" id="ubicacion-barrio" name="barrio" />
+                <input type="hidden" id="ubicacion-lat" name="lat" />
+                <input type="hidden" id="ubicacion-lon" name="lon" />
             </div>
             <div class="vr mx-2" style="height: 32px;"></div>
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2" style="min-width: 160px;">
-                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Servicio</label>
-                <select class="form-select border-0 bg-transparent ps-1 py-0" style="box-shadow: none; font-size: 1rem; min-width: 120px;">
-                    <option selected>¿Qué servicio?</option>
-                    <option>Corte de cabello</option>
-                    <option>Coloración</option>
-                    <option>Tratamientos</option>
-                    <option>Peinados</option>
-                </select>
-            </div>
-            <div class="vr mx-2" style="height: 32px;"></div>
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2" style="min-width: 180px;">
-                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Nombre de negocio</label>
-                <input type="text" class="form-control border-0 bg-transparent ps-1 py-0" placeholder="Ej: Glamour Studio" style="box-shadow: none; font-size: 1rem; min-width: 120px;" />
-            </div>
+                <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
+        <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Servicio</label>
+        <input type="text" id="servicio-autocomplete" class="form-control" placeholder="¿Qué servicio buscas?" autocomplete="off" />
+        <div id="sugerencias-servicio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+    </div>
+    <div class="vr mx-2" style="height: 32px;"></div>
+    <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
+        <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Negocio</label>
+        <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
+        <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+    </div>
             <button class="btn btn-pink ms-3 d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button">
                 <i class="bi bi-search"></i>
             </button>
@@ -94,29 +89,24 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
       </div>
       <div class="modal-body pt-2">
-        <div class="mb-3">
+        <div class="mb-3 position-relative">
           <label class="form-label fw-bold text-muted mb-1 small">Ubicación</label>
-          <select class="form-select border-0 bg-light rounded-3" style="font-size: 1.05rem;">
-            <option selected>¿Qué ciudad?</option>
-            <option>Buenos Aires</option>
-            <option>Córdoba</option>
-            <option>Rosario</option>
-            <option>Mendoza</option>
-          </select>
+          <input type="text" id="ubicacion-autocomplete-mobile" class="form-control" placeholder="¿Qué ciudad o barrio?" autocomplete="off" />
+          <div id="sugerencias-ubicacion-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+          <input type="hidden" id="ubicacion-ciudad-mobile" name="ciudad" />
+          <input type="hidden" id="ubicacion-barrio-mobile" name="barrio" />
+          <input type="hidden" id="ubicacion-lat-mobile" name="lat" />
+          <input type="hidden" id="ubicacion-lon-mobile" name="lon" />
         </div>
-        <div class="mb-3">
+        <div class="mb-3 position-relative">
           <label class="form-label fw-bold text-muted mb-1 small">Servicio</label>
-          <select class="form-select border-0 bg-light rounded-3" style="font-size: 1.05rem;">
-            <option selected>Todos los servicios</option>
-            <option>Corte de cabello</option>
-            <option>Coloración</option>
-            <option>Tratamientos</option>
-            <option>Peinados</option>
-          </select>
+          <input type="text" id="servicio-autocomplete-mobile" class="form-control" placeholder="¿Qué servicio buscas?" autocomplete="off" />
+          <div id="sugerencias-servicio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
         </div>
-        <div class="mb-3">
-          <label class="form-label fw-bold text-muted mb-1 small">Nombre de negocio</label>
-          <input type="text" class="form-control border-0 bg-light rounded-3" placeholder="Ej: Glamour Studio" style="font-size: 1.05rem;" />
+        <div class="mb-3 position-relative">
+          <label class="form-label fw-bold text-muted mb-1 small">Negocio</label>
+          <input type="text" id="negocio-autocomplete-mobile" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
+          <div id="sugerencias-negocio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
         </div>
         <div class="d-flex justify-content-end mt-4">
           <button class="btn btn-pink d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 48px; height: 48px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.5rem;" type="button">
@@ -464,63 +454,530 @@
 </style>
 
 {% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg&libraries=places&v=weekly" async defer></script>
+<script src="https://unpkg.com/@googlemaps/places-autocomplete-element@latest/dist/index.min.js"></script>
 <script>
-// Frases a rotar
-const frases = [
-    "sin hacer filas",
-    "sin largas esperas",
-    "o descubre tu favorita",
-    "con profesionales verificados",
-    "en tu zona favorita",
-    "con atención premium"
-];
-
-function animarFrasesRotativas() {
-    const span = document.getElementById('frase-rotativa');
-    if (!span) return;
-    let fraseIndex = 0;
-    function escribirFrase(frase, callback) {
-        span.textContent = '';
-        let i = 0;
-        const total = frase.length;
-        const delay = 1000 / total; // 1s total
-        function escribir() {
-            if (i < total) {
-                span.textContent += frase[i];
-                i++;
-                setTimeout(escribir, delay);
-            } else if (callback) {
-                setTimeout(callback, 4000); // Espera 4s antes de borrar
-            }
-        }
-        escribir();
+const API_KEY = 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg';
+function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, latId, lonId) {
+    const input = document.getElementById(inputId);
+    const sugerenciasDiv = document.getElementById(sugerenciasId);
+    const ciudadInput = document.getElementById(ciudadId);
+    const barrioInput = document.getElementById(barrioId);
+    const latInput = document.getElementById(latId);
+    const lonInput = document.getElementById(lonId);
+    let seleccionValida = false;
+    let timeout = null;
+    let placeIdSeleccionado = null;
+    function limpiarCampos() {
+        ciudadInput.value = '';
+        barrioInput.value = '';
+        latInput.value = '';
+        lonInput.value = '';
+        seleccionValida = false;
+        placeIdSeleccionado = null;
     }
-    function borrarFrase(callback) {
-        let frase = span.textContent;
-        let i = frase.length;
-        const delay = 500 / frase.length; // 0.5s total
-        function borrar() {
-            if (i > 0) {
-                span.textContent = frase.slice(0, i - 1);
-                i--;
-                setTimeout(borrar, delay);
-            } else if (callback) {
-                callback();
-            }
+    async function buscarSugerencias(query) {
+        if (!query || query.length < 3) {
+            sugerenciasDiv.innerHTML = '';
+            return;
         }
-        borrar();
+        const url = `https://places.googleapis.com/v1/places:autocomplete?key=${API_KEY}`;
+        const body = {
+            input: query,
+            languageCode: 'es',
+            regionCode: 'CO',
+        };
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            const data = await resp.json();
+            if (data.suggestions && data.suggestions.length > 0) {
+                sugerenciasDiv.innerHTML = '';
+                data.suggestions.forEach(sug => {
+                    const pred = sug.placePrediction || sug;
+                    let main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : '';
+                    let city = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
+                    let depto = '';
+                    if (city && city.includes(',')) {
+                        const parts = city.split(',');
+                        city = parts[0].trim();
+                        depto = parts.slice(1).join(',').trim();
+                    }
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action px-3 py-3 text-start border-0';
+                    item.style.cssText = 'transition: all 0.2s ease; border-bottom: 1px solid #f8f9fa;';
+                    item.innerHTML = `
+                        <div class='fw-bold text-dark mb-1' style='font-size: 0.95rem;'>${main}</div>
+                        <div class='small text-muted mb-1' style='font-size: 0.85rem;'>${city}</div>
+                        <div class='small text-muted' style='font-size: 0.8rem;'>${depto}</div>
+                    `;
+                    item.onmouseenter = function() {
+                        this.style.backgroundColor = '#f8f9fa';
+                        this.style.transform = 'translateX(2px)';
+                    };
+                    item.onmouseleave = function() {
+                        this.style.backgroundColor = 'white';
+                        this.style.transform = 'translateX(0)';
+                    };
+                    item.onclick = () => seleccionarSugerencia(pred, `${main}, ${city}${depto ? ', ' + depto : ''}`);
+                    sugerenciasDiv.appendChild(item);
+                });
+            } else {
+                sugerenciasDiv.innerHTML = '';
+            }
+        } catch (err) {
+            sugerenciasDiv.innerHTML = '';
+        }
     }
-    function ciclo() {
-        escribirFrase(frases[fraseIndex], () => {
-            borrarFrase(() => {
-                fraseIndex = (fraseIndex + 1) % frases.length;
-                ciclo();
+    async function seleccionarSugerencia(pred, textoMostrado) {
+        sugerenciasDiv.innerHTML = '';
+        let placeId = pred.placeId || (pred.place && pred.place.replace(/^places\//, '')) || null;
+        let texto = textoMostrado;
+        if (!placeId) {
+            limpiarCampos();
+            return;
+        }
+        input.value = texto;
+        placeIdSeleccionado = placeId;
+        // Obtener detalles del lugar
+        const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?key=${API_KEY}&languageCode=es`;
+        try {
+            const resp = await fetch(url);
+            const data = await resp.json();
+            let ciudad = '';
+            let barrio = '';
+            let lat = '';
+            let lon = '';
+            if (data.addressComponents) {
+                data.addressComponents.forEach(function(component) {
+                    if (component.types.includes('locality')) {
+                        ciudad = component.longText;
+                    }
+                    if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
+                        barrio = component.longText;
+                    }
+                });
+            }
+            if (data.location) {
+                lat = data.location.latitude;
+                lon = data.location.longitude;
+            }
+            ciudadInput.value = ciudad;
+            barrioInput.value = barrio;
+            latInput.value = lat;
+            lonInput.value = lon;
+            seleccionValida = true;
+        } catch (err) {
+            limpiarCampos();
+        }
+    }
+    input.addEventListener('input', function() {
+        limpiarCampos();
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => buscarSugerencias(input.value), 400);
+    });
+    document.addEventListener('click', function(e) {
+        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    });
+}
+// Inicializar para desktop y mobile
+setupUbicacionAutocomplete('ubicacion-autocomplete', 'sugerencias-ubicacion', 'ubicacion-ciudad', 'ubicacion-barrio', 'ubicacion-lat', 'ubicacion-lon');
+setupUbicacionAutocomplete('ubicacion-autocomplete-mobile', 'sugerencias-ubicacion-mobile', 'ubicacion-ciudad-mobile', 'ubicacion-barrio-mobile', 'ubicacion-lat-mobile', 'ubicacion-lon-mobile');
+// Autocompletado de servicios (desktop)
+const servicioInput = document.getElementById('servicio-autocomplete');
+const serviciosList = document.getElementById('servicios-list');
+function fetchServiciosDesktop(query = '', lat = null, lon = null) {
+    let url = `/clientes/api/autocompletar-servicios/?q=${encodeURIComponent(query)}`;
+    if (lat && lon) {
+        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+    } else {
+        const latField = document.getElementById('ubicacion-lat');
+        const lonField = document.getElementById('ubicacion-lon');
+        if (latField && lonField && latField.value && lonField.value) {
+            url += `&lat=${encodeURIComponent(latField.value)}&lon=${encodeURIComponent(lonField.value)}`;
+        }
+    }
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            serviciosList.innerHTML = '';
+            (data.servicios || []).forEach(servicio => {
+                const option = document.createElement('option');
+                option.value = servicio;
+                serviciosList.appendChild(option);
             });
         });
-    }
-    ciclo();
 }
-document.addEventListener('DOMContentLoaded', animarFrasesRotativas);
+if (servicioInput && serviciosList) {
+    servicioInput.addEventListener('input', function() {
+        fetchServiciosDesktop(servicioInput.value);
+    });
+    servicioInput.addEventListener('focus', function() {
+        const latField = document.getElementById('ubicacion-lat');
+        const lonField = document.getElementById('ubicacion-lon');
+        if ((!latField || !latField.value) && (!lonField || !lonField.value)) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    fetch(`/clientes/api/negocios-cercanos/?lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            serviciosList.innerHTML = '';
+                            let serviciosSet = new Set();
+                            (data.negocios || []).forEach(negocio => {
+                                (negocio.servicios || []).forEach(servicio => serviciosSet.add(servicio));
+                            });
+                            Array.from(serviciosSet).forEach(servicio => {
+                                const option = document.createElement('option');
+                                option.value = servicio;
+                                serviciosList.appendChild(option);
+                            });
+                        });
+                }, function() {
+                    serviciosList.innerHTML = '';
+                    const option = document.createElement('option');
+                    option.value = 'Activa la ubicación para ver servicios cercanos';
+                    serviciosList.appendChild(option);
+                });
+            } else {
+                serviciosList.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = 'Navegador sin soporte de ubicación';
+                serviciosList.appendChild(option);
+            }
+        } else {
+            fetchServiciosDesktop('');
+        }
+    });
+}
+// Autocompletado de servicios (mobile)
+const servicioInputMobile = document.getElementById('servicio-autocomplete-mobile');
+const serviciosListMobile = document.getElementById('servicios-list-mobile');
+function fetchServiciosMobile(query = '') {
+    const lat = document.getElementById('ubicacion-lat-mobile').value;
+    const lon = document.getElementById('ubicacion-lon-mobile').value;
+    let url = `/clientes/api/autocompletar-servicios/?q=${encodeURIComponent(query)}`;
+    if (lat && lon) {
+        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+    }
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            serviciosListMobile.innerHTML = '';
+            (data.servicios || []).forEach(servicio => {
+                const option = document.createElement('option');
+                option.value = servicio;
+                serviciosListMobile.appendChild(option);
+            });
+        });
+}
+if (servicioInputMobile && serviciosListMobile) {
+    servicioInputMobile.addEventListener('input', function() {
+        fetchServiciosMobile(servicioInputMobile.value);
+    });
+    servicioInputMobile.addEventListener('focus', function() {
+        fetchServiciosMobile('');
+    });
+}
+// Mostrar negocios cercanos en dropdown visual al hacer focus en servicio
+const negociosDropdown = document.getElementById('negocios-cercanos-dropdown');
+const negocioInput = document.getElementById('negocio-autocomplete');
+servicioInput.addEventListener('focus', function() {
+    const latField = document.getElementById('ubicacion-lat');
+    const lonField = document.getElementById('ubicacion-lon');
+    if ((!latField || !latField.value) && (!lonField || !lonField.value)) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                fetch(`/clientes/api/negocios-cercanos/?lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        negociosDropdown.innerHTML = '';
+                        if ((data.negocios || []).length > 0) {
+                            negociosDropdown.classList.add('show');
+                            (data.negocios || []).forEach(negocio => {
+                                const item = document.createElement('button');
+                                item.type = 'button';
+                                item.className = 'dropdown-item d-flex justify-content-between align-items-center';
+                                item.innerHTML = `<span>${negocio.nombre}</span><span class='badge bg-primary ms-2'>${Math.round(negocio.distancia)} m</span>`;
+                                item.onclick = function() {
+                                    negocioInput.value = negocio.nombre;
+                                    negociosDropdown.classList.remove('show');
+                                };
+                                negociosDropdown.appendChild(item);
+                            });
+                        } else {
+                            negociosDropdown.classList.remove('show');
+                        }
+                    });
+            });
+        }
+    } else {
+        negociosDropdown.classList.remove('show');
+    }
+});
+// Ocultar dropdown si se hace click fuera
+document.addEventListener('click', function(e) {
+    if (!servicioInput.contains(e.target) && !negociosDropdown.contains(e.target)) {
+        negociosDropdown.classList.remove('show');
+    }
+});
+// Autocompletado de negocios
+const negociosList = document.getElementById('negocios-list');
+function fetchNegocios(query = '') {
+    const lat = document.getElementById('ubicacion-lat').value;
+    const lon = document.getElementById('ubicacion-lon').value;
+    const servicio = document.getElementById('servicio-autocomplete').value;
+    let url = `/clientes/api/autocompletar-negocios/?q=${encodeURIComponent(query)}`;
+    if (lat && lon) {
+        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+    }
+    if (servicio) {
+        url += `&servicio=${encodeURIComponent(servicio)}`;
+    }
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            negociosList.innerHTML = '';
+            (data.negocios || []).forEach(negocio => {
+                const option = document.createElement('option');
+                option.value = negocio.nombre;
+                negociosList.appendChild(option);
+            });
+        });
+}
+if (negocioInput && negociosList) {
+    negocioInput.addEventListener('input', function() {
+        fetchNegocios(negocioInput.value);
+    });
+    negocioInput.addEventListener('focus', function() {
+        fetchNegocios('');
+    });
+}
+// Autocompletado de negocios (mobile)
+const negocioInputMobile = document.getElementById('negocio-autocomplete-mobile');
+const negociosListMobile = document.getElementById('negocios-list-mobile');
+function fetchNegociosMobile(query = '') {
+    const lat = document.getElementById('ubicacion-lat-mobile').value;
+    const lon = document.getElementById('ubicacion-lon-mobile').value;
+    const servicio = document.getElementById('servicio-autocomplete-mobile').value;
+    let url = `/clientes/api/autocompletar-negocios/?q=${encodeURIComponent(query)}`;
+    if (lat && lon) {
+        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
+    }
+    if (servicio) {
+        url += `&servicio=${encodeURIComponent(servicio)}`;
+    }
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            negociosListMobile.innerHTML = '';
+            (data.negocios || []).forEach(negocio => {
+                const option = document.createElement('option');
+                option.value = negocio.nombre;
+                negociosListMobile.appendChild(option);
+            });
+        });
+}
+if (negocioInputMobile && negociosListMobile) {
+    negocioInputMobile.addEventListener('input', function() {
+        fetchNegociosMobile(negocioInputMobile.value);
+    });
+    negocioInputMobile.addEventListener('focus', function() {
+        fetchNegociosMobile('');
+    });
+}
+// Autocompletado para servicios
+function setupServicioAutocomplete(inputId, sugerenciasId) {
+    const input = document.getElementById(inputId);
+    const sugerenciasDiv = document.getElementById(sugerenciasId);
+    let timeout = null;
+    
+    async function buscarServicios(query) {
+        if (!query || query.length < 2) {
+            sugerenciasDiv.innerHTML = '';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/clientes/api/autocompletar-servicios/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.sugerencias && data.sugerencias.length > 0) {
+                sugerenciasDiv.innerHTML = '';
+                data.sugerencias.forEach(servicio => {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action px-3 py-3 text-start border-0';
+                    item.style.cssText = 'transition: all 0.2s ease; border-bottom: 1px solid #f8f9fa;';
+                    item.innerHTML = `<div class='fw-bold text-dark' style='font-size: 0.95rem;'>${servicio.nombre}</div>`;
+                    item.onmouseenter = function() {
+                        this.style.backgroundColor = '#f8f9fa';
+                        this.style.transform = 'translateX(2px)';
+                    };
+                    item.onmouseleave = function() {
+                        this.style.backgroundColor = 'white';
+                        this.style.transform = 'translateX(0)';
+                    };
+                    item.onclick = () => {
+                        input.value = servicio.nombre;
+                        sugerenciasDiv.innerHTML = '';
+                    };
+                    sugerenciasDiv.appendChild(item);
+                });
+            } else {
+                sugerenciasDiv.innerHTML = '';
+            }
+        } catch (err) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    }
+    
+    input.addEventListener('input', function() {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => buscarServicios(input.value), 300);
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    });
+}
+
+// Autocompletado para negocios
+function setupNegocioAutocomplete(inputId, sugerenciasId) {
+    const input = document.getElementById(inputId);
+    const sugerenciasDiv = document.getElementById(sugerenciasId);
+    let timeout = null;
+    
+    async function buscarNegocios(query) {
+        if (!query || query.length < 2) {
+            sugerenciasDiv.innerHTML = '';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/clientes/api/autocompletar-negocios/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            if (data.sugerencias && data.sugerencias.length > 0) {
+                sugerenciasDiv.innerHTML = '';
+                data.sugerencias.forEach(negocio => {
+                    const item = document.createElement('button');
+                    item.type = 'button';
+                    item.className = 'list-group-item list-group-item-action px-3 py-3 text-start border-0';
+                    item.style.cssText = 'transition: all 0.2s ease; border-bottom: 1px solid #f8f9fa;';
+                    item.innerHTML = `
+                        <div class='fw-bold text-dark mb-1' style='font-size: 0.95rem;'>${negocio.nombre}</div>
+                        <div class='small text-muted' style='font-size: 0.85rem;'>${negocio.direccion}</div>
+                    `;
+                    item.onmouseenter = function() {
+                        this.style.backgroundColor = '#f8f9fa';
+                        this.style.transform = 'translateX(2px)';
+                    };
+                    item.onmouseleave = function() {
+                        this.style.backgroundColor = 'white';
+                        this.style.transform = 'translateX(0)';
+                    };
+                    item.onclick = () => {
+                        input.value = negocio.nombre;
+                        sugerenciasDiv.innerHTML = '';
+                    };
+                    sugerenciasDiv.appendChild(item);
+                });
+            } else {
+                sugerenciasDiv.innerHTML = '';
+            }
+        } catch (err) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    }
+    
+    input.addEventListener('input', function() {
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(() => buscarNegocios(input.value), 300);
+    });
+    
+    document.addEventListener('click', function(e) {
+        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+            sugerenciasDiv.innerHTML = '';
+        }
+    });
+}
+
+// Inicializar autocompletados
+setupServicioAutocomplete('servicio-autocomplete', 'sugerencias-servicio');
+setupServicioAutocomplete('servicio-autocomplete-mobile', 'sugerencias-servicio-mobile');
+setupNegocioAutocomplete('negocio-autocomplete', 'sugerencias-negocio');
+setupNegocioAutocomplete('negocio-autocomplete-mobile', 'sugerencias-negocio-mobile');
+
+// Búsqueda combinada y flexible
+function buscarNegocios() {
+    const ubicacionInput = document.getElementById('ubicacion-autocomplete');
+    const lat = document.getElementById('ubicacion-lat').value;
+    const lon = document.getElementById('ubicacion-lon').value;
+    const servicio = document.getElementById('servicio-autocomplete').value;
+    const negocio = document.getElementById('negocio-autocomplete').value;
+    let url = '/clientes/buscar/?';
+    if (ubicacionInput.value && lat && lon && !servicio && !negocio) {
+        // Solo ubicación: buscar negocios a 500m
+        url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radio=500`;
+    } else {
+        if (ubicacionInput.value && lat && lon) {
+            url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&`;
+        } else if (ubicacionInput.value && (!lat || !lon)) {
+            // Si no hay lat/lon, enviar ubicacion textual
+            url += `ubicacion=${encodeURIComponent(ubicacionInput.value)}&`;
+        }
+        if (servicio) {
+            url += `servicio=${encodeURIComponent(servicio)}&`;
+        }
+        if (negocio) {
+            url += `negocio=${encodeURIComponent(negocio)}&`;
+        }
+    }
+    window.location.href = url;
+}
+// Asignar búsqueda al botón
+const btnBuscar = document.querySelector('.search-bar-elevated-custom .btn-pink');
+if (btnBuscar) {
+    btnBuscar.addEventListener('click', buscarNegocios);
+}
+
+function buscarNegociosMobile() {
+    const ubicacionInput = document.getElementById('ubicacion-autocomplete-mobile');
+    const lat = document.getElementById('ubicacion-lat-mobile').value;
+    const lon = document.getElementById('ubicacion-lon-mobile').value;
+    const servicio = document.getElementById('servicio-autocomplete-mobile').value;
+    const negocio = document.getElementById('negocio-autocomplete-mobile').value;
+    let url = '/clientes/buscar/?';
+    if (ubicacionInput.value && lat && lon && !servicio && !negocio) {
+        url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radio=500`;
+    } else {
+        if (ubicacionInput.value && lat && lon) {
+            url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&`;
+        } else if (ubicacionInput.value && (!lat || !lon)) {
+            url += `ubicacion=${encodeURIComponent(ubicacionInput.value)}&`;
+        }
+        if (servicio) {
+            url += `servicio=${encodeURIComponent(servicio)}&`;
+        }
+        if (negocio) {
+            url += `negocio=${encodeURIComponent(negocio)}&`;
+        }
+    }
+    window.location.href = url;
+}
+// Asignar búsqueda al botón mobile
+const btnBuscarMobile = document.querySelector('#busquedaModal .btn-pink');
+if (btnBuscarMobile) {
+    btnBuscarMobile.addEventListener('click', buscarNegociosMobile);
+}
 </script>
 {% endblock %}
 {% endblock %} 

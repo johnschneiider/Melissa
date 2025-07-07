@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_POST, require_GET
-from negocios.models import Negocio, ServicioNegocio
+from negocios.models import Negocio, ServicioNegocio, Servicio
 from .models import Reserva, NotificacionCliente, Calificacion
 from .forms import ReservaForm, ReservaNegocioForm, CalificacionForm
 from .utils import enviar_email_reserva_confirmada, enviar_email_reserva_cancelada, enviar_email_reserva_reagendada
@@ -20,6 +20,7 @@ import re
 from django.db.models import Q
 from profesionales.models import Notificacion, Profesional, Matriculacion, HorarioProfesional
 from django.db import models
+from math import radians, cos, sin, asin, sqrt
 
 logger = logging.getLogger(__name__)
 
@@ -46,18 +47,24 @@ class ListaNegociosView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         try:
-            # Obtener todos los profesionales aceptados para cada negocio
-            negocios_con_profesionales = []
-            for negocio in context['negocios']:
+            negocios = context['negocios']
+            negocios_mapa = []
+            for negocio in negocios:
                 profesionales_aceptados = [m.profesional for m in Matriculacion.objects.filter(negocio=negocio, estado='aprobada')]
-                negocios_con_profesionales.append({
-                    'negocio': negocio,
-                    'profesionales': profesionales_aceptados
+                negocios_mapa.append({
+                    'id': negocio.id,
+                    'nombre': negocio.nombre,
+                    'direccion': negocio.direccion,
+                    'latitud': negocio.latitud,
+                    'longitud': negocio.longitud,
+                    'url': f"/clientes/detalle_peluquero/{negocio.id}/",  # Ajusta si tienes un nombre de url
+                    'logo_url': negocio.logo.url if negocio.logo else '',
+                    'profesionales': profesionales_aceptados,
                 })
-            context['negocios_con_profesionales'] = negocios_con_profesionales
+            context['negocios_mapa'] = negocios_mapa
         except Exception as e:
             logger.error(f"Error procesando contexto de negocios: {str(e)}")
-            context['negocios_con_profesionales'] = []
+            context['negocios_mapa'] = []
         return context
 
 class DetallePeluqueroView(DetailView):
@@ -888,3 +895,226 @@ def eliminar_calificacion(request, calificacion_id):
 
 def proximamente_app(request):
     return render(request, 'clientes/proximamente_app.html')
+
+def autocompletar_servicios(request):
+    """Endpoint para autocompletar servicios según los negocios activos y el texto ingresado, filtrando por ubicación si se provee lat/lon."""
+    q = request.GET.get('q', '').strip()
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+    radio_metros = 500
+    negocios_qs = Negocio.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False)
+    if lat and lon:
+        try:
+            lat = float(lat)
+            lon = float(lon)
+            def haversine(lat1, lon1, lat2, lon2):
+                # Radio de la tierra en km
+                R = 6371.0
+                dlat = radians(lat2 - lat1)
+                dlon = radians(lon2 - lon1)
+                a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+                c = 2 * asin(sqrt(a))
+                return R * c * 1000  # metros
+            negocios_qs = [n for n in negocios_qs if haversine(lat, lon, n.latitud, n.longitud) <= radio_metros]
+        except Exception:
+            negocios_qs = []
+    servicios_qs = Servicio.objects.filter(servicionegocio__negocio__in=negocios_qs).distinct()
+    if q:
+        servicios_qs = servicios_qs.filter(nombre__icontains=q)
+    servicios = list(servicios_qs.values_list('nombre', flat=True))
+    return JsonResponse({'servicios': servicios})
+
+@require_GET
+def negocios_cercanos(request):
+    from math import radians, cos, sin, asin, sqrt
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
+    if not lat or not lon:
+        return JsonResponse({'negocios': []})
+    try:
+        lat = float(lat)
+        lon = float(lon)
+    except Exception:
+        return JsonResponse({'negocios': []})
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371.0
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+        c = 2 * asin(sqrt(a))
+        return R * c * 1000  # metros
+    negocios = []
+    for n in Negocio.objects.filter(activo=True, latitud__isnull=False, longitud__isnull=False):
+        distancia = haversine(lat, lon, n.latitud, n.longitud)
+        negocios.append({
+            'id': n.id,
+            'nombre': n.nombre,
+            'direccion': n.direccion,
+            'latitud': n.latitud,
+            'longitud': n.longitud,
+            'distancia': distancia,
+            'servicios': list(n.servicios_negocio.values_list('servicio__nombre', flat=True)),
+        })
+    negocios = sorted(negocios, key=lambda x: x['distancia'])[:5]
+    return JsonResponse({'negocios': negocios})
+
+@require_GET
+def autocompletar_negocios(request):
+    try:
+        query = request.GET.get('q', '').strip()
+        if len(query) < 2:
+            return JsonResponse({'sugerencias': []})
+        
+        # Buscar negocios por nombre
+        negocios = Negocio.objects.filter(
+            Q(nombre__icontains=query) | 
+            Q(direccion__icontains=query),
+            activo=True
+        )[:10]
+        
+        def haversine(lat1, lon1, lat2, lon2):
+            # Radio de la tierra en km
+            R = 6371
+            lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+            c = 2 * asin(sqrt(a))
+            return R * c
+        
+        sugerencias = []
+        for negocio in negocios:
+            sugerencias.append({
+                'id': negocio.id,
+                'nombre': negocio.nombre,
+                'direccion': negocio.direccion,
+                'ciudad': negocio.ciudad,
+                'barrio': negocio.barrio
+            })
+        
+        return JsonResponse({'sugerencias': sugerencias})
+    except Exception as e:
+        logger.error(f"Error en autocompletar negocios: {str(e)}")
+        return JsonResponse({'sugerencias': []})
+
+def buscar_negocios(request):
+    """
+    Búsqueda combinada de negocios:
+    - Por ubicación (lat/lon con radio de 500m si solo ubicación)
+    - Por servicio
+    - Por nombre de negocio
+    - Cualquier combinación de los anteriores
+    """
+    try:
+        # Parámetros de búsqueda
+        lat = request.GET.get('lat')
+        lon = request.GET.get('lon')
+        radio = request.GET.get('radio', '500')  # Radio por defecto 500m
+        servicio = request.GET.get('servicio', '').strip()
+        negocio_nombre = request.GET.get('negocio', '').strip()
+        
+        # Query base
+        queryset = Negocio.objects.filter(activo=True)
+        
+        # Si solo hay ubicación, buscar por radio
+        if lat and lon and not servicio and not negocio_nombre:
+            try:
+                lat = float(lat)
+                lon = float(lon)
+                radio_km = float(radio) / 1000  # Convertir metros a km
+                
+                def haversine(lat1, lon1, lat2, lon2):
+                    R = 6371  # Radio de la tierra en km
+                    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+                    dlat = lat2 - lat1
+                    dlon = lon2 - lon1
+                    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                    c = 2 * asin(sqrt(a))
+                    return R * c
+                
+                # Filtrar por distancia
+                negocios_cercanos = []
+                for neg in queryset:
+                    if neg.latitud and neg.longitud:
+                        distancia = haversine(lat, lon, neg.latitud, neg.longitud)
+                        if distancia <= radio_km:
+                            neg.distancia = distancia
+                            negocios_cercanos.append(neg)
+                
+                # Ordenar por distancia
+                negocios_cercanos.sort(key=lambda x: x.distancia)
+                queryset = negocios_cercanos
+                
+            except (ValueError, TypeError) as e:
+                logger.error(f"Error procesando coordenadas: {str(e)}")
+                queryset = Negocio.objects.none()
+        
+        # Filtrar por servicio si se especifica
+        if servicio:
+            queryset = queryset.filter(
+                servicios__servicio__nombre__icontains=servicio
+            ).distinct()
+        
+        # Filtrar por nombre de negocio si se especifica
+        if negocio_nombre:
+            queryset = queryset.filter(
+                Q(nombre__icontains=negocio_nombre) |
+                Q(direccion__icontains=negocio_nombre)
+            )
+        
+        # Filtrar por ubicación (ciudad/barrio) si se especifica sin lat/lon
+        if not lat and not lon:
+            ubicacion = request.GET.get('ubicacion', '').strip()
+            if ubicacion:
+                queryset = queryset.filter(
+                    Q(ciudad__icontains=ubicacion) |
+                    Q(barrio__icontains=ubicacion) |
+                    Q(direccion__icontains=ubicacion)
+                )
+        
+        # Limitar resultados
+        queryset = queryset[:50]
+        
+        # Preparar contexto
+        context = {
+            'negocios': queryset,
+            'total_resultados': len(queryset),
+            'parametros_busqueda': {
+                'lat': lat,
+                'lon': lon,
+                'radio': radio,
+                'servicio': servicio,
+                'negocio': negocio_nombre,
+                'ubicacion': request.GET.get('ubicacion', '')
+            }
+        }
+        
+        # Preparar datos para el mapa si hay resultados
+        if queryset:
+            negocios_mapa = []
+            for negocio in queryset:
+                profesionales_aceptados = [m.profesional for m in Matriculacion.objects.filter(negocio=negocio, estado='aprobada')]
+                negocio_mapa = {
+                    'id': negocio.id,
+                    'nombre': negocio.nombre,
+                    'direccion': negocio.direccion,
+                    'latitud': negocio.latitud,
+                    'longitud': negocio.longitud,
+                    'url': f"/clientes/detalle_peluquero/{negocio.id}/",
+                    'logo_url': negocio.logo.url if negocio.logo else '',
+                    'profesionales': profesionales_aceptados,
+                }
+                if hasattr(negocio, 'distancia'):
+                    negocio_mapa['distancia'] = round(negocio.distancia * 1000)  # Convertir a metros
+                negocios_mapa.append(negocio_mapa)
+            context['negocios_mapa'] = negocios_mapa
+        
+        return render(request, 'clientes/lista_negocios.html', context)
+        
+    except Exception as e:
+        logger.error(f"Error en búsqueda de negocios: {str(e)}")
+        return render(request, 'clientes/lista_negocios.html', {
+            'negocios': [],
+            'total_resultados': 0,
+            'error': 'Error en la búsqueda'
+        })

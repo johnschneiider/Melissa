@@ -53,6 +53,23 @@ class NegocioForm(forms.ModelForm):
         })
     )
     
+    barrio = forms.CharField(
+        max_length=100,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ej: Palermo'
+        })
+    )
+    latitud = forms.FloatField(
+        required=False,
+        widget=forms.HiddenInput()
+    )
+    longitud = forms.FloatField(
+        required=False,
+        widget=forms.HiddenInput()
+    )
+    
     descripcion = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -78,7 +95,7 @@ class NegocioForm(forms.ModelForm):
     
     class Meta:
         model = Negocio
-        fields = ['nombre', 'direccion', 'logo', 'portada', 'servicios']
+        fields = ['nombre', 'direccion', 'logo', 'portada', 'servicios', 'ciudad', 'barrio', 'latitud', 'longitud']
         widgets = {
             'nombre': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -116,6 +133,15 @@ class NegocioForm(forms.ModelForm):
             if len(nombre) > 100:
                 raise ValidationError("El nombre del negocio no puede exceder 100 caracteres.")
         return nombre
+
+    def clean_direccion(self):
+        direccion = self.cleaned_data.get('direccion')
+        if direccion:
+            if direccion.strip().lower() == 'undefined' or direccion.strip() == '':
+                raise ValidationError("Debes ingresar una dirección válida.")
+        else:
+            raise ValidationError("Debes ingresar una dirección válida.")
+        return direccion
 
 class ImagenNegocioForm(forms.ModelForm):
     imagen = forms.ImageField(
