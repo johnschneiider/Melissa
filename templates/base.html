@@ -109,6 +109,9 @@
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% endif %}
+            {% if is_negocio and user.negocios.first %}
+              <li><a class="dropdown-item" href="{% url 'negocios:galeria_negocio' user.negocios.first.id %}"><i class="bi bi-images"></i> Galería de imágenes</a></li>
+            {% endif %}
             <li><a class="dropdown-item" href="{% url 'cuentas:ajustes' %}"><i class="bi bi-gear"></i> Ajustes</a></li>
             <li><a class="dropdown-item" href="{% url 'cuentas:politica_datos' %}"><i class="bi bi-shield-lock"></i> Política de Tratamiento de Datos</a></li>
             <li><hr class="dropdown-divider"></li>

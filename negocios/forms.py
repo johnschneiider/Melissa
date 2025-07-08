@@ -46,7 +46,7 @@ class NegocioForm(forms.ModelForm):
     
     ciudad = forms.CharField(
         max_length=100,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ej: Buenos Aires'
@@ -55,7 +55,7 @@ class NegocioForm(forms.ModelForm):
     
     barrio = forms.CharField(
         max_length=100,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'Ej: Palermo'
@@ -142,6 +142,18 @@ class NegocioForm(forms.ModelForm):
         else:
             raise ValidationError("Debes ingresar una dirección válida.")
         return direccion
+
+    def clean_ciudad(self):
+        ciudad = self.cleaned_data.get('ciudad')
+        if not ciudad or ciudad.strip() == '':
+            raise ValidationError('Debes seleccionar una dirección válida que incluya la ciudad.')
+        return ciudad
+
+    def clean_barrio(self):
+        barrio = self.cleaned_data.get('barrio')
+        if not barrio or barrio.strip() == '':
+            raise ValidationError('Debes seleccionar una dirección válida que incluya el barrio.')
+        return barrio
 
 class ImagenNegocioForm(forms.ModelForm):
     imagen = forms.ImageField(

@@ -334,6 +334,18 @@ window.onload = function() {
                 logPaso('Bloqueo de submit por dirección vacía');
                 return false;
             }
+            if (!ciudadInput.value || ciudadInput.value.trim() === '') {
+                e.preventDefault();
+                alert('Debes seleccionar una dirección que incluya la ciudad.');
+                logPaso('Bloqueo de submit por ciudad vacía');
+                return false;
+            }
+            if (!barrioInput.value || barrioInput.value.trim() === '') {
+                e.preventDefault();
+                alert('Debes seleccionar una dirección que incluya el barrio.');
+                logPaso('Bloqueo de submit por barrio vacío');
+                return false;
+            }
         });
     }
 }

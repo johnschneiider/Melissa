@@ -159,12 +159,19 @@ class DetallePeluqueroView(DetailView):
             
             context['dias_disponibilidad'] = dias_disponibilidad
             context['hoy'] = hoy
-            
         except Exception as e:
             logger.error(f"Error procesando disponibilidad: {str(e)}")
             context['dias_disponibilidad'] = []
             context['hoy'] = timezone.now().date()
-        
+        # Calcular promedio y total de calificaciones
+        calificaciones = negocio.calificaciones.all()
+        total_opiniones = calificaciones.count()
+        if total_opiniones > 0:
+            promedio = sum([c.puntaje for c in calificaciones]) / total_opiniones
+        else:
+            promedio = None
+        context['promedio_calificacion'] = promedio
+        context['total_opiniones'] = total_opiniones
         return context
 
 @login_required
@@ -790,31 +797,39 @@ def reagendar_reserva(request, reserva_id):
 def crear_calificacion(request, negocio_id, profesional_id):
     """Vista para crear una calificación"""
     negocio = get_object_or_404(Negocio, id=negocio_id)
-    profesional = get_object_or_404(Profesional, id=profesional_id)
-    
-    # Verificar que el usuario tenga reservas completadas con este profesional en este negocio
-    reservas_completadas = Reserva.objects.filter(
-        cliente=request.user,
-        peluquero=negocio,
-        profesional=profesional,
-        estado='completado'
-    )
-    
-    if not reservas_completadas.exists():
-        messages.error(request, 'Solo puedes calificar a profesionales con los que hayas completado una reserva.')
-        return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
-    
-    # Verificar que no haya calificado ya
-    calificacion_existente = Calificacion.objects.filter(
-        cliente=request.user,
-        negocio=negocio,
-        profesional=profesional
-    ).first()
-    
-    if calificacion_existente:
-        messages.info(request, 'Ya has calificado a este profesional en este negocio.')
-        return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
-    
+    profesional = None
+    if int(profesional_id) != 0:
+        profesional = get_object_or_404(Profesional, id=profesional_id)
+    # Si es comentario solo al negocio, no exigir reserva previa con profesional
+    if profesional:
+        reservas_completadas = Reserva.objects.filter(
+            cliente=request.user,
+            peluquero=negocio,
+            profesional=profesional,
+            estado='completado'
+        )
+        if not reservas_completadas.exists():
+            messages.error(request, 'Solo puedes calificar a profesionales con los que hayas completado una reserva.')
+            return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+        # Verificar que no haya calificado ya a ese profesional en ese negocio
+        calificacion_existente = Calificacion.objects.filter(
+            cliente=request.user,
+            negocio=negocio,
+            profesional=profesional
+        ).first()
+        if calificacion_existente:
+            messages.info(request, 'Ya has calificado a este profesional en este negocio.')
+            return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+    else:
+        # Solo negocio: verificar que no haya calificado ya solo al negocio
+        calificacion_existente = Calificacion.objects.filter(
+            cliente=request.user,
+            negocio=negocio,
+            profesional__isnull=True
+        ).first()
+        if calificacion_existente:
+            messages.info(request, 'Ya has dejado un comentario para este negocio.')
+            return redirect('clientes:detalle_peluquero', pk=negocio_id)
     if request.method == 'POST':
         form = CalificacionForm(request.POST)
         if form.is_valid():
@@ -823,31 +838,27 @@ def crear_calificacion(request, negocio_id, profesional_id):
             calificacion.negocio = negocio
             calificacion.profesional = profesional
             calificacion.save()
-            
-            # Notificar al profesional sobre la nueva calificación
-            Notificacion.objects.create(
-                destinatario=profesional.usuario,
-                tipo='calificacion',
-                titulo=f'Nueva calificación de {request.user.username}',
-                mensaje=f'Has recibido una calificación de {calificacion.puntaje}/5 estrellas en {negocio.nombre}',
-                url_relacionada=f'/negocios/detalle-negocio/{negocio.id}/',
-            )
-            
-            # Notificar al dueño del negocio
-            if negocio.usuario != profesional.usuario:
+            # Notificaciones solo si hay profesional
+            if profesional:
                 Notificacion.objects.create(
-                    destinatario=negocio.usuario,
+                    destinatario=profesional.usuario,
                     tipo='calificacion',
-                    titulo=f'Nueva calificación en {negocio.nombre}',
-                    mensaje=f'{request.user.username} calificó a {profesional.nombre_completo} con {calificacion.puntaje}/5 estrellas',
+                    titulo=f'Nueva calificación de {request.user.username}',
+                    mensaje=f'Has recibido una calificación de {calificacion.puntaje}/5 estrellas en {negocio.nombre}',
                     url_relacionada=f'/negocios/detalle-negocio/{negocio.id}/',
                 )
-            
-            messages.success(request, '¡Gracias por tu calificación!')
-            return redirect('negocios:detalle_negocio', negocio_id=negocio_id)
+                if negocio.usuario != profesional.usuario:
+                    Notificacion.objects.create(
+                        destinatario=negocio.usuario,
+                        tipo='calificacion',
+                        titulo=f'Nueva calificación en {negocio.nombre}',
+                        mensaje=f'{request.user.username} calificó a {profesional.nombre_completo} con {calificacion.puntaje}/5 estrellas',
+                        url_relacionada=f'/negocios/detalle-negocio/{negocio.id}/',
+                    )
+            messages.success(request, '¡Gracias por tu comentario!')
+            return redirect('clientes:detalle_peluquero', pk=negocio_id)
     else:
         form = CalificacionForm()
-    
     context = {
         'form': form,
         'negocio': negocio,

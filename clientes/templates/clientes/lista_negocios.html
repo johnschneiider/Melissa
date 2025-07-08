@@ -2,70 +2,113 @@
 {% load static %}
 
 {% block content %}
+<style>
+.negocio-card {
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 24px rgba(80,80,120,0.08);
+    transition: box-shadow 0.2s, transform 0.2s;
+    border: none;
+    overflow: hidden;
+    background: #fff;
+}
+.negocio-card:hover {
+    box-shadow: 0 8px 32px rgba(80,80,120,0.18);
+    transform: translateY(-4px) scale(1.02);
+}
+.negocio-card .card-img-top {
+    border-radius: 1.5rem 1.5rem 0 0;
+    object-fit: cover;
+    height: 210px;
+}
+.negocio-card .card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #222;
+}
+.negocio-card .card-text {
+    font-size: 1.05rem;
+    color: #555;
+}
+.negocio-card .badge {
+    font-size: 0.95rem;
+    padding: 0.5em 1em;
+    border-radius: 1em;
+}
+.negocio-card .btn-primary {
+    font-size: 1.1rem;
+    padding: 0.75em 1.5em;
+    border-radius: 1em;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.negocio-card .btn-primary:hover {
+    box-shadow: 0 8px 24px rgba(102,126,234,0.18);
+    transform: translateY(-2px) scale(1.04);
+}
+.negocio-card .servicios-list {
+    font-size: 0.98rem;
+    color: #888;
+    margin-bottom: 0.5em;
+}
+@media (max-width: 767px) {
+    .negocio-card .card-img-top { height: 170px; }
+}
+</style>
+
 <div class="row mb-4">
     <div class="col-12">
         <h2 class="mb-3">Peluquerías disponibles</h2>
-        <p class="lead">Selecciona un negocio para ver sus profesionales</p>
+        <p class="lead">Selecciona un negocio para ver sus servicios y reservar</p>
     </div>
 </div>
 
-<!-- Mapa de negocios -->
-<div class="row mb-4">
+<!-- Mapa de negocios (opcional, puedes ocultar en mobile si prefieres) -->
+<div class="row mb-4 d-none d-md-block">
     <div class="col-12">
         <div id="map" style="width: 100%; height: 400px; border-radius: 1rem;"></div>
     </div>
 </div>
 
-<div class="row">
+<!-- Cambios en el grid de negocios -->
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 align-items-start" style="min-height:0;">
     {% for negocio in negocios %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card negocio-card h-100">
+    <div class="col d-flex align-items-stretch">
+        <div class="card negocio-card h-100 w-100">
             {% if negocio.logo %}
-            <img src="{{ negocio.logo.url }}" class="card-img-top" alt="{{ negocio.nombre }}" style="height: 180px; object-fit: cover;">
+            <img src="{{ negocio.logo.url }}" class="card-img-top" alt="{{ negocio.nombre }}">
             {% else %}
-            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 180px;">
+            <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 210px;">
                 <i class="bi bi-shop" style="font-size: 3rem;"></i>
             </div>
             {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ negocio.nombre }}</h5>
-                <p class="card-text text-muted">
-                    <i class="bi bi-geo-alt"></i> {{ negocio.direccion|truncatechars:50 }}
-                </p>
-                <p class="card-text">
-                    <span class="badge bg-primary">
-                        {{ negocio.profesionales|length }} profesional{{ negocio.profesionales|length|pluralize }}
-                    </span>
-                </p>
-                
-                <!-- Lista de profesionales -->
-                <div class="mt-3">
-                    <h6>Profesionales:</h6>
-                    <ul class="list-group list-group-flush">
-                        {% for profesional in negocio.profesionales %}
-                        <li class="list-group-item">
-                            <a href="{% url 'clientes:detalle_profesional' profesional.id %}" class="text-decoration-none">
-                                {{ profesional.nombre_completo }}
-                            </a>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item">No hay profesionales registrados</li>
-                        {% endfor %}
-                    </ul>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title mb-2">{{ negocio.nombre }}</h5>
+                <div class="mb-2">
+                    <i class="bi bi-geo-alt text-primary"></i>
+                    <span class="fw-semibold">{{ negocio.direccion|truncatechars:60 }}</span>
                 </div>
-            </div>
-            <div class="card-footer bg-white">
-                {% if negocio.profesionales.exists %}
-                    {% with first_profesional=negocio.profesionales.first %}
-                        <a href="{% url 'clientes:detalle_profesional' first_profesional.id %}" class="btn btn-primary w-100">
-                            Ver profesionales
-                        </a>
-                    {% endwith %}
-                {% else %}
-                    <button class="btn btn-secondary w-100" disabled>
-                        Sin profesionales disponibles
-                    </button>
+                {% if negocio.ciudad or negocio.barrio %}
+                <div class="mb-2 text-muted" style="font-size:0.98rem;">
+                    {% if negocio.barrio %}<span>{{ negocio.barrio }}</span>{% endif %}
+                    {% if negocio.barrio and negocio.ciudad %} · {% endif %}
+                    {% if negocio.ciudad %}<span>{{ negocio.ciudad }}</span>{% endif %}
+                </div>
                 {% endif %}
+                {% if negocio.servicios_negocio.all %}
+                <div class="servicios-list mb-2">
+                    <i class="bi bi-scissors"></i>
+                    {% for s in negocio.servicios_negocio.all|slice:':3' %}
+                        {{ s.servicio.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                    {% if negocio.servicios_negocio.count > 3 %}...{% endif %}
+                </div>
+                {% endif %}
+                <div class="mt-auto pt-2">
+                    <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="btn btn-primary w-100">
+                        Ver negocio y reservar
+                    </a>
+                </div>
             </div>
         </div>
     </div>

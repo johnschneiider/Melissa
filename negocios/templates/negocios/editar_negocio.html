@@ -190,34 +190,6 @@
                             </button>
                         </div>
                     </form>
-
-                    <hr class="my-4">
-                    <h4 class="fw-bold mb-3">Galería de Imágenes</h4>
-                    <form method="post" enctype="multipart/form-data" class="mb-4">
-                        {% csrf_token %}
-                        {{ imagen_form.as_p }}
-                        <button type="submit" name="agregar_imagen" class="btn btn-success">
-                            <i class="bi bi-plus-circle me-1"></i>Agregar Imagen
-                        </button>
-                    </form>
-                    <div class="row g-3">
-                        {% for img in imagenes %}
-                        <div class="col-6 col-md-3">
-                            <div class="card h-100 shadow-sm">
-                                <img src="{{ img.imagen.url }}" class="card-img-top" style="object-fit:cover; height:140px;">
-                                <div class="card-body p-2">
-                                    <div class="fw-bold small">{{ img.titulo }}</div>
-                                    {% if img.descripcion %}<div class="text-muted small">{{ img.descripcion }}</div>{% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                        {% if imagenes|length > 0 %}
-                        <div class="col-12 mt-3">
-                            <a href="{% url 'negocios:galeria_negocio' negocio.id %}" class="btn btn-outline-primary">Ver todas las imágenes</a>
-                        </div>
-                        {% endif %}
-                    </div>
                 </div>
             </div>
         </div>
@@ -309,12 +281,24 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('submit', function(e) {
             var visible = document.getElementById('direccion-autocomplete');
             var hidden = document.getElementById('id_direccion');
+            var ciudad = document.getElementById('id_ciudad');
+            var barrio = document.getElementById('id_barrio');
             if (visible && hidden && !hidden.value) {
                 hidden.value = visible.value;
             }
             // Evitar guardar 'undefined' como dirección
             if (hidden && (hidden.value === 'undefined' || hidden.value.trim() === '')) {
                 hidden.value = '';
+            }
+            if (!ciudad.value || ciudad.value.trim() === '') {
+                e.preventDefault();
+                alert('Debes seleccionar una dirección que incluya la ciudad.');
+                return false;
+            }
+            if (!barrio.value || barrio.value.trim() === '') {
+                e.preventDefault();
+                alert('Debes seleccionar una dirección que incluya el barrio.');
+                return false;
             }
         });
     }

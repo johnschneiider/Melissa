@@ -214,6 +214,7 @@ def panel_negocio(request, negocio_id):
             'dias': dias,
             'horario_guardado': horario_guardado,
             'servicios_activos': servicios_activos,
+            'imagenes_galeria': negocio.imagenes.all().order_by('-created_at')[:6],  # Mostrar las 6 más recientes
         })
     except Exception as e:
         logger.error(f"Error en panel_negocio: {str(e)}")
@@ -403,6 +404,10 @@ def detalle_negocio(request, negocio_id):
         especialidad = profesional.especialidad if hasattr(profesional, 'especialidad') else ''
         descripcion = profesional.descripcion if hasattr(profesional, 'descripcion') else ''
         servicios_prof = profesional.servicios.all() if hasattr(profesional, 'servicios') else []
+        # Calcular promedio y número de calificaciones
+        calificaciones_prof = Calificacion.objects.filter(negocio=negocio, profesional=profesional)
+        num_calificaciones = calificaciones_prof.count()
+        promedio = round(calificaciones_prof.aggregate(models.Avg('puntaje'))['puntaje__avg'] or 0, 1) if num_calificaciones > 0 else 0
         peluquero_info = {
             'id': profesional.id,
             'nombre': profesional.nombre_completo,
@@ -410,12 +415,22 @@ def detalle_negocio(request, negocio_id):
             'especialidad': especialidad,
             'descripcion': descripcion,
             'servicios': servicios_prof,
-            'promedio': 5,  # Puedes calcular el promedio real si tienes calificaciones
-            'num_calificaciones': 0,  # Puedes calcular el número real si tienes calificaciones
+            'promedio': promedio,
+            'num_calificaciones': num_calificaciones,
         }
         peluqueros_info.append(peluquero_info)
     # Comentarios
     comentarios = Calificacion.objects.filter(negocio=negocio).exclude(comentario='').order_by('-fecha_calificacion')
+    # Días laborables para el calendario visual
+    dias_laborables = set()
+    for dia, h in (negocio.horario_atencion or {}).items():
+        if h and h.get('inicio') and h.get('fin'):
+            dias_laborables.add(dia)
+    # Mes y año actual para el calendario
+    from datetime import date
+    hoy = date.today()
+    mes_actual = hoy.month
+    anio_actual = hoy.year
     return render(request, 'negocios/detalle_negocio.html', {
         'negocio': negocio,
         'peluqueros_info': peluqueros_info,
@@ -430,6 +445,9 @@ def detalle_negocio(request, negocio_id):
         'servicios': servicios,
         'profesionales': profesionales,
         'comentarios': comentarios,
+        'dias_laborables': list(dias_laborables),
+        'mes_actual': mes_actual,
+        'anio_actual': anio_actual,
     })
 
 @login_required
@@ -583,9 +601,24 @@ def desvincular_profesional(request, matricula_id):
 def galeria_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, id=negocio_id, propietario=request.user)
     imagenes = negocio.imagenes.all().order_by('-created_at')
+    
+    if request.method == 'POST':
+        form = ImagenNegocioForm(request.POST, request.FILES)
+        if form.is_valid():
+            imagen = form.save(commit=False)
+            imagen.negocio = negocio
+            imagen.save()
+            messages.success(request, 'Imagen agregada a la galería correctamente.')
+            return redirect('negocios:galeria_negocio', negocio_id=negocio.id)
+        else:
+            messages.error(request, 'Error al agregar la imagen. Por favor, verifica los datos.')
+    else:
+        form = ImagenNegocioForm()
+    
     return render(request, 'negocios/galeria_negocio.html', {
         'negocio': negocio,
         'imagenes': imagenes,
+        'form': form,
     })
 
 @login_required

@@ -7,7 +7,6 @@ app_name = 'negocios'
 urlpatterns = [
     path('mis/', views.mis_negocios, name='mis_negocios'),
     path('crear/', views.crear_negocio, name='crear_negocio'),
-    path('<int:negocio_id>/', views.detalle_negocio, name='detalle_negocio'),
     path('<int:negocio_id>/editar/', views.editar_negocio, name='editar_negocio'),
     path('<int:negocio_id>/eliminar/', views.eliminar_negocio, name='eliminar_negocio'),
     path('<int:negocio_id>/configurar/', views.configurar_negocio, name='configurar_negocio'),

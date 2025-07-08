@@ -39,11 +39,17 @@
                         </div>
                         <div class="mb-3">
                             {{ form.profesional.label_tag }}
-                            {{ form.profesional }}
+                            <select name="profesional" id="id_profesional" class="form-select">
+                                <option value="">---------</option>
+                                {% for prof in form.fields.profesional.queryset %}
+                                    <option value="{{ prof.id }}" {% if form.initial.profesional == prof.id %}selected{% endif %}>{{ prof.nombre_completo }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
-                            {{ form.fecha.label_tag }}
-                            {{ form.fecha }}
+                            <label for="calendario-reserva" class="form-label">Fecha</label>
+                            <div id="calendario-reserva"></div>
+                            <input type="hidden" name="fecha" id="id_fecha" value="{{ form.initial.fecha|default:'' }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Horarios disponibles</label>
@@ -159,5 +165,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Reemplazar input de fecha por calendario visual
+(function() {
+    const fechaInput = document.getElementById('id_fecha');
+    const calendarioDiv = document.getElementById('calendario-reserva');
+    const hoy = new Date();
+    let mes = hoy.getMonth();
+    let anio = hoy.getFullYear();
+    function getDiasEnMes(mes, anio) {
+        return new Date(anio, mes + 1, 0).getDate();
+    }
+    function renderCalendario() {
+        const diasMes = getDiasEnMes(mes, anio);
+        const primerDia = new Date(anio, mes, 1);
+        let html = '<table class="table table-bordered text-center align-middle"><thead><tr>';
+        const diasSemana = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+        for (let d of diasSemana) html += `<th class="small">${d}</th>`;
+        html += '</tr></thead><tbody><tr>';
+        let diaSemana = (primerDia.getDay() + 6) % 7; // Lunes=0
+        let celdas = 0;
+        for (let i = 0; i < diaSemana; i++) {
+            html += '<td></td>';
+            celdas++;
+        }
+        for (let dia = 1; dia <= diasMes; dia++) {
+            const fecha = new Date(anio, mes, dia);
+            const fechaStr = fecha.toISOString().slice(0,10);
+            html += `<td><button type="button" class="btn btn-sm btn-light w-100 py-2 px-0 calendario-dia" data-fecha="${fechaStr}">${dia}</button></td>`;
+            celdas++;
+            if (celdas % 7 === 0) html += '</tr><tr>';
+        }
+        html += '</tr></tbody></table>';
+        html += `<div class="d-flex justify-content-between align-items-center mt-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-prev">&lt; Mes anterior</button>
+            <span class="fw-bold">${diasSemana[primerDia.getDay()]} ${primerDia.toLocaleString('default', { month: 'long' })} ${anio}</span>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-next">Mes siguiente &gt;</button>
+        </div>`;
+        calendarioDiv.innerHTML = html;
+        document.querySelectorAll('.calendario-dia').forEach(btn => {
+            btn.addEventListener('click', function() {
+                fechaInput.value = this.dataset.fecha;
+                document.querySelectorAll('.calendario-dia').forEach(b => b.classList.remove('btn-primary'));
+                this.classList.add('btn-primary');
+                fechaInput.dispatchEvent(new Event('change'));
+            });
+        });
+        document.getElementById('cal-prev').onclick = function() {
+            mes--;
+            if (mes < 0) { mes = 11; anio--; }
+            renderCalendario();
+        };
+        document.getElementById('cal-next').onclick = function() {
+            mes++;
+            if (mes > 11) { mes = 0; anio++; }
+            renderCalendario();
+        };
+    }
+    renderCalendario();
+})();
 </script>
 {% endblock %} 
