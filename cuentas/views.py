@@ -21,9 +21,16 @@ import calendar
 from datetime import datetime, timedelta
 from django.db import models
 from clientes.models import MetricaCliente
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render
+from django.http import JsonResponse
+import subprocess
+from .utils import log_user_activity, log_security_event, log_error, get_rate_limit_config
+from django_ratelimit.decorators import ratelimit
 
 logger = logging.getLogger(__name__)
 
+@ratelimit(key='ip', rate='3/h', method='POST', block=True)
 def registro_unificado(request):
     """Vista unificada para registro con selección obligatoria de tipo de cuenta"""
     if request.method == 'POST':
@@ -34,7 +41,12 @@ def registro_unificado(request):
                 user.save()
                 
                 # Log del registro exitoso
-                logger.info(f"Nuevo usuario registrado: {user.username} ({user.email}) - Tipo: {user.tipo}")
+                log_user_activity(
+                    user=user,
+                    action="registro_exitoso",
+                    details=f"Tipo: {user.tipo}, Email: {user.email}",
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
                 
                 # Iniciar sesión automáticamente con backend específico
                 login(request, user, backend='django.contrib.auth.backends.ModelBackend')
@@ -51,14 +63,19 @@ def registro_unificado(request):
                     return redirect('profesionales:completar_perfil')
                 
             except Exception as e:
-                logger.error(f"Error al registrar usuario: {e}")
+                log_error(
+                    error_type="registro_fallido",
+                    error_message=str(e),
+                    user=None,
+                    context={"form_data": request.POST}
+                )
                 messages.error(request, 'Hubo un error al crear tu cuenta. Por favor, intenta nuevamente.')
     else:
         form = RegistroUnificadoForm()
     
     return render(request, 'cuentas/registro_unificado.html', {'form': form})
 
-@method_decorator(csrf_protect, name='dispatch')
+# @method_decorator(csrf_protect, name='dispatch')
 class LoginPersonalizadoView(View):
     """Vista personalizada para login con redirección inteligente según tipo de usuario"""
     
@@ -69,6 +86,7 @@ class LoginPersonalizadoView(View):
         form = AuthenticationForm()
         return render(request, 'account/login.html', {'form': form})
     
+    # @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
     def post(self, request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
@@ -78,7 +96,12 @@ class LoginPersonalizadoView(View):
                     login(request, user)
                     
                     # Log del login exitoso
-                    logger.info(f"Login exitoso: {user.username} ({user.email}) - Tipo: {user.tipo}")
+                    log_user_activity(
+                        user=user,
+                        action="login_exitoso",
+                        details=f"Tipo: {user.tipo}",
+                        ip_address=request.META.get('REMOTE_ADDR')
+                    )
                     
                     messages.success(request, f'¡Bienvenido de vuelta, {user.username}!')
                     
@@ -95,12 +118,22 @@ class LoginPersonalizadoView(View):
                     messages.error(request, 'Usuario o contraseña incorrectos. Por favor, verifica tus credenciales.')
                     
             except Exception as e:
-                logger.error(f"Error en login: {e}")
+                log_error(
+                    error_type="login_error",
+                    error_message=str(e),
+                    user=None,
+                    context={"username": request.POST.get('username', '')}
+                )
                 messages.error(request, 'Hubo un error al iniciar sesión. Por favor, intenta nuevamente.')
         else:
             # Log de intento de login fallido
             username = request.POST.get('username', '')
-            logger.warning(f"Intento de login fallido para usuario: {username}")
+            log_security_event(
+                user=None,
+                event_type="login_fallido",
+                details=f"Usuario: {username}",
+                ip_address=request.META.get('REMOTE_ADDR')
+            )
             messages.error(request, 'Usuario o contraseña incorrectos. Por favor, verifica tus credenciales.')
         
         return render(request, 'account/login.html', {'form': form})
@@ -123,15 +156,27 @@ def logout_personalizado(request):
     """Vista personalizada para logout con mejor manejo"""
     try:
         username = request.user.username
-        logout(request)
+        user_type = getattr(request.user, 'tipo', '')
         
-        # Log del logout
-        logger.info(f"Logout exitoso: {username}")
+        # Log del logout antes de cerrar sesión
+        log_user_activity(
+            user=request.user,
+            action="logout_exitoso",
+            details=f"Tipo: {user_type}",
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
+        
+        logout(request)
         
         messages.success(request, 'Has cerrado sesión exitosamente. ¡Esperamos verte pronto!')
         
     except Exception as e:
-        logger.error(f"Error en logout: {e}")
+        log_error(
+            error_type="logout_error",
+            error_message=str(e),
+            user=request.user if request.user.is_authenticated else None,
+            context={"username": getattr(request.user, 'username', 'Unknown')}
+        )
         messages.error(request, 'Hubo un error al cerrar sesión.')
     
     return redirect('inicio')
@@ -789,6 +834,187 @@ def ajustes_usuario(request):
 
 def politica_datos(request):
     return render(request, 'cuentas/politica_datos.html')
+
+@staff_member_required
+def ejecutar_tests(request):
+    resultado = None
+    if request.method == 'POST':
+        # Ejecutar los tests usando manage.py test
+        try:
+            completed = subprocess.run(['python', 'manage.py', 'test', '--verbosity', '2'], capture_output=True, text=True, timeout=120)
+            resultado = completed.stdout + '\n' + completed.stderr
+        except Exception as e:
+            resultado = str(e)
+    return render(request, 'cuentas/ejecutar_tests.html', {'resultado': resultado})
+
+@staff_member_required
+def poblar_demo(request):
+    resultado = None
+    if request.method == 'POST':
+        try:
+            completed = subprocess.run(['python', 'manage.py', 'poblar_demo'], capture_output=True, text=True, timeout=60)
+            resultado = completed.stdout + '\n' + completed.stderr
+        except Exception as e:
+            resultado = str(e)
+    return render(request, 'cuentas/poblar_demo.html', {'resultado': resultado})
+
+@staff_member_required
+def borrar_demo(request):
+    resultado = None
+    if request.method == 'POST':
+        try:
+            completed = subprocess.run(['python', 'manage.py', 'borrar_demo'], capture_output=True, text=True, timeout=60)
+            resultado = completed.stdout + '\n' + completed.stderr
+        except Exception as e:
+            resultado = str(e)
+    return render(request, 'cuentas/borrar_demo.html', {'resultado': resultado})
+
+@staff_member_required
+def reiniciar_servidor(request):
+    import os, sys
+    resultado = None
+    if request.method == 'POST':
+        try:
+            # Solo para desarrollo: tocar manage.py para forzar autoreload
+            manage_py = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'manage.py')
+            with open(manage_py, 'a') as f:
+                f.write('\n# touch for reload\n')
+            resultado = 'Servidor de desarrollo: se forzó recarga (Django autoreload)'
+        except Exception as e:
+            resultado = str(e)
+    return render(request, 'cuentas/reiniciar_servidor.html', {'resultado': resultado})
+
+@staff_member_required
+def ver_logs_servidor(request):
+    """Vista para ver logs del sistema"""
+    try:
+        import os
+        from pathlib import Path
+        
+        # Obtener directorio de logs
+        logs_dir = Path(__file__).resolve().parent.parent / 'logs'
+        
+        # Tipos de logs disponibles
+        log_files = {
+            'general': 'melissa_general.log',
+            'errors': 'melissa_errors.log', 
+            'security': 'melissa_security.log',
+            'activity': 'melissa_activity.log',
+            'business': 'melissa_business.log',
+            'recordatorios': 'melissa_recordatorios.log'
+        }
+        
+        # Obtener tipo de log solicitado
+        log_type = request.GET.get('type', 'general')
+        log_filename = log_files.get(log_type, 'melissa_general.log')
+        log_path = logs_dir / log_filename
+        
+        # Leer las últimas 100 líneas del log
+        lines = []
+        if log_path.exists():
+            try:
+                with open(log_path, 'r', encoding='utf-8') as f:
+                    lines = f.readlines()[-100:]  # Últimas 100 líneas
+            except Exception as e:
+                log_error(
+                    error_type="error_leer_log",
+                    error_message=str(e),
+                    user=request.user,
+                    context={"log_file": log_filename}
+                )
+                lines = [f"Error leyendo archivo de log: {str(e)}"]
+        else:
+            lines = [f"Archivo de log no encontrado: {log_filename}"]
+        
+        # Obtener estadísticas de logs
+        log_stats = {}
+        for log_name, filename in log_files.items():
+            file_path = logs_dir / filename
+            if file_path.exists():
+                try:
+                    size = file_path.stat().st_size
+                    log_stats[log_name] = {
+                        'size_mb': round(size / (1024 * 1024), 2),
+                        'exists': True
+                    }
+                except:
+                    log_stats[log_name] = {'size_mb': 0, 'exists': False}
+            else:
+                log_stats[log_name] = {'size_mb': 0, 'exists': False}
+        
+        context = {
+            'log_content': ''.join(lines),
+            'log_type': log_type,
+            'log_files': log_files,
+            'log_stats': log_stats,
+            'logs_dir': str(logs_dir)
+        }
+        
+        return render(request, 'cuentas/ver_logs.html', context)
+        
+    except Exception as e:
+        log_error(
+            error_type="error_vista_logs",
+            error_message=str(e),
+            user=request.user
+        )
+        messages.error(request, 'Error al cargar los logs del servidor.')
+        return redirect('dashboard_super_admin')
+
+@ratelimit(key='ip', rate=lambda: get_rate_limit_config('test_rate', '10/m'), method=['GET', 'POST'])
+def test_rate_limit(request):
+    """Vista de prueba para verificar rate limiting"""
+    if request.method == 'POST':
+        return JsonResponse({
+            'message': 'Rate limit test exitoso',
+            'timestamp': datetime.now().isoformat(),
+            'ip': request.META.get('REMOTE_ADDR')
+        })
+    
+    return JsonResponse({
+        'message': 'GET request exitoso',
+        'timestamp': datetime.now().isoformat(),
+        'ip': request.META.get('REMOTE_ADDR')
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def gestionar_rate_limiting(request):
+    """Vista para gestionar configuraciones de rate limiting"""
+    from .models import RateLimitConfig
+    
+    if request.method == 'POST':
+        # Procesar cambios en las configuraciones
+        for config in RateLimitConfig.objects.all():
+            nuevo_limite = request.POST.get(f'limite_{config.id}')
+            nuevo_activo = request.POST.get(f'activo_{config.id}') == 'on'
+            
+            if nuevo_limite and nuevo_limite != config.limite:
+                config.limite = nuevo_limite
+                config.save()
+                messages.success(request, f'Límite actualizado para {config.nombre}')
+            
+            if config.activo != nuevo_activo:
+                config.activo = nuevo_activo
+                config.save()
+                status = 'activada' if nuevo_activo else 'desactivada'
+                messages.success(request, f'{config.nombre} {status}')
+        
+        # Limpiar caché después de cambios
+        from django.core.cache import cache
+        cache.clear()
+        messages.success(request, 'Configuraciones de rate limiting actualizadas correctamente.')
+        return redirect('cuentas:gestionar_rate_limiting')
+    
+    configuraciones = RateLimitConfig.objects.all().order_by('nombre')
+    
+    context = {
+        'configuraciones': configuraciones,
+        'total_activas': configuraciones.filter(activo=True).count(),
+        'total_inactivas': configuraciones.filter(activo=False).count(),
+    }
+    
+    return render(request, 'cuentas/gestionar_rate_limiting.html', context)
 
 
 

@@ -17,9 +17,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'clave-super-secreta-para-desarrollo')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '92.113.39.100',  # VPS para Google Maps API
+    '*',  # VPS para Google Maps API
 ]
 
 AUTH_USER_MODEL = 'cuentas.UsuarioPersonalizado'
@@ -87,6 +85,8 @@ MIDDLEWARE = [
     'allauth.account.middleware.AccountMiddleware',
     'cuentas.middleware.AuthenticationMiddleware',
     'cuentas.middleware.UserTypeMiddleware',
+    'cuentas.middleware.RateLimitMiddleware',
+    'cuentas.middleware.ActivityLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'melissa.urls'
@@ -284,3 +284,160 @@ DEFAULT_FROM_EMAIL = 'Melissa <vital.mix324@gmail.com>'
 
 # Google Maps API Key (Places, Maps JavaScript, Geocoding)
 # API_KEY = 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg'
+
+# Configuración de Logging
+import os
+from pathlib import Path
+
+# Crear directorio de logs si no existe
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+# Configuración de caché para rate limiting
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutos
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Configuración de Rate Limiting
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_KEY_PREFIX = 'rl'
+
+# Configuraciones específicas de rate limiting
+RATELIMIT_SETTINGS = {
+    'LOGIN_RATE': '5/m',  # 5 intentos por minuto
+    'REGISTER_RATE': '3/h',  # 3 registros por hora
+    'RESERVATION_RATE': '10/h',  # 10 reservas por hora
+    'API_RATE': '100/h',  # 100 requests por hora para APIs
+    'GENERAL_RATE': '1000/h',  # 1000 requests por hora general
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '[{asctime}] {levelname} {name} {funcName}:{lineno} - {message}',
+            'style': '{',
+        },
+    },
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'detailed',
+        },
+        'file_general': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'melissa_general.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+        'file_errors': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'melissa_errors.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+        'file_security': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'melissa_security.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+        'file_activity': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'melissa_activity.log',
+            'maxBytes': 1024 * 1024 * 10,  # 10MB
+            'backupCount': 5,
+            'formatter': 'detailed',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'include_html': True,
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file_general'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['file_errors', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['file_security', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Loggers personalizados para Melissa
+        'melissa.security': {
+            'handlers': ['file_security', 'mail_admins'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'melissa.activity': {
+            'handlers': ['file_activity', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'melissa.errors': {
+            'handlers': ['file_errors', 'mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'melissa.business': {
+            'handlers': ['file_activity', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'melissa.recordatorios': {
+            'handlers': ['file_activity', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file_general'],
+        'level': 'INFO',
+    },
+}

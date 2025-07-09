@@ -2,6 +2,9 @@
 {% load dict_utils %}
 {% block content %}
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
 <div class="container-fluid px-4 py-5">
     <div class="row mb-5">
         <div class="col-lg-8 mx-auto">
@@ -277,30 +280,32 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
-                    <!-- Asignar todos los días -->
+                    <!-- Horario general para todos los días -->
                     <div class="mb-4 border rounded-3 p-3 bg-light">
                         <h6 class="text-dark mb-3">Horario general para todos los días</h6>
-                        <div class="row g-2">
+                        <div class="row g-2 align-items-center">
                             <div class="col-md-5">
                                 <label class="form-label small text-muted">Hora de inicio</label>
-                                <input type="time" id="horaInicioGlobal" class="form-control">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="range" id="sliderInicioGlobal" min="0" max="95" step="1" value="36" class="form-range" style="width:70%">
+                                    <span id="horaInicioGlobalDisplay" class="fw-bold fs-5">09:00</span>
+                                </div>
+                                <input type="hidden" id="horaInicioGlobal" name="horaInicioGlobal" value="09:00">
                             </div>
                             <div class="col-md-5">
                                 <label class="form-label small text-muted">Hora de cierre</label>
-                                <input type="time" id="horaFinGlobal" class="form-control">
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="range" id="sliderFinGlobal" min="0" max="95" step="1" value="72" class="form-range" style="width:70%">
+                                    <span id="horaFinGlobalDisplay" class="fw-bold fs-5">18:00</span>
+                                </div>
+                                <input type="hidden" id="horaFinGlobal" name="horaFinGlobal" value="18:00">
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-primary w-100" onclick="aplicarHorarioGeneral()">
-                                    Aplicar
+                                <button type="button" class="btn btn-outline-primary w-100" onclick="aplicarHorarioTodosLosDias()">
+                                    Usar este horario para todos los días
                                 </button>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <button type="button" class="btn btn-outline-primary rounded-pill" onclick="activarTodosLosDias()">
-                            <i class="bi bi-check2-all me-1"></i> Activar todos los días
-                        </button>
                     </div>
 
                     <!-- Horario por día -->
@@ -317,19 +322,25 @@
                                         {% endwith %}
                                     </div>
                                 </div>
-                                <div class="row g-2">
+                                <div class="row g-2 align-items-center">
                                     <div class="col-6">
                                         <label class="form-label small text-muted">Apertura</label>
                                         {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
-                                        <input type="time" class="form-control" name="inicio_{{ dia }}" id="inicio_{{ dia }}"
-                                            value="{{ horario_guardado.inicio }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="range" min="0" max="95" step="1" value="36" class="form-range" id="slider_inicio_{{ dia }}" style="width:70%">
+                                            <span id="display_inicio_{{ dia }}" class="fw-bold fs-5">09:00</span>
+                                        </div>
+                                        <input type="hidden" name="inicio_{{ dia }}" id="inicio_{{ dia }}" value="09:00">
                                         {% endwith %}
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label small text-muted">Cierre</label>
                                         {% with inicio=dia|stringformat:"s_inicio" fin=dia|stringformat:"s_fin" %}
-                                        <input type="time" class="form-control" name="fin_{{ dia }}" id="fin_{{ dia }}"
-                                            value="{{ horario_guardado.fin }}">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="range" min="0" max="95" step="1" value="72" class="form-range" id="slider_fin_{{ dia }}" style="width:70%">
+                                            <span id="display_fin_{{ dia }}" class="fw-bold fs-5">18:00</span>
+                                        </div>
+                                        <input type="hidden" name="fin_{{ dia }}" id="fin_{{ dia }}" value="18:00">
                                         {% endwith %}
                                     </div>
                                 </div>
@@ -454,64 +465,132 @@
 </style>
 
 <script>
-function activarTodosLosDias() {
-    const diasSemana = {{ dias|safe }};
-    diasSemana.forEach(dia => {
-        const check = document.querySelector(`input[name="dias_activos"][value="${dia}"]`);
+// Utilidad para convertir el valor del slider (0-95) a hora en formato HH:MM
+function sliderToTime(val) {
+    const totalMinutes = val * 15;
+    const hours = Math.floor(totalMinutes / 60).toString().padStart(2, '0');
+    const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Horario general
+    const sliderInicioGlobal = document.getElementById('sliderInicioGlobal');
+    const sliderFinGlobal = document.getElementById('sliderFinGlobal');
+    const displayInicioGlobal = document.getElementById('horaInicioGlobalDisplay');
+    const displayFinGlobal = document.getElementById('horaFinGlobalDisplay');
+    const inputInicioGlobal = document.getElementById('horaInicioGlobal');
+    const inputFinGlobal = document.getElementById('horaFinGlobal');
+
+    sliderInicioGlobal.addEventListener('input', function() {
+        const hora = sliderToTime(this.value);
+        displayInicioGlobal.textContent = hora;
+        inputInicioGlobal.value = hora;
+    });
+    sliderFinGlobal.addEventListener('input', function() {
+        const hora = sliderToTime(this.value);
+        displayFinGlobal.textContent = hora;
+        inputFinGlobal.value = hora;
+    });
+
+    // Horario por día
+    var dias = {{ dias|safe }};
+    dias.forEach(function(dia) {
+        const sliderInicio = document.getElementById(`slider_inicio_${dia}`);
+        const sliderFin = document.getElementById(`slider_fin_${dia}`);
+        const displayInicio = document.getElementById(`display_inicio_${dia}`);
+        const displayFin = document.getElementById(`display_fin_${dia}`);
+        const inputInicio = document.getElementById(`inicio_${dia}`);
+        const inputFin = document.getElementById(`fin_${dia}`);
+        if (sliderInicio && displayInicio && inputInicio) {
+            sliderInicio.addEventListener('input', function() {
+                const hora = sliderToTime(this.value);
+                displayInicio.textContent = hora;
+                inputInicio.value = hora;
+            });
+        }
+        if (sliderFin && displayFin && inputFin) {
+            sliderFin.addEventListener('input', function() {
+                const hora = sliderToTime(this.value);
+                displayFin.textContent = hora;
+                inputFin.value = hora;
+            });
+        }
+    });
+});
+
+function aplicarHorarioTodosLosDias() {
+    const inicio = document.getElementById('sliderInicioGlobal').value;
+    const fin = document.getElementById('sliderFinGlobal').value;
+    var dias = {{ dias|safe }};
+    dias.forEach(function(dia) {
+        // Activar el switch del día
+        const check = document.querySelector(`input[name='dias_activos'][value='${dia}']`);
         if (check) {
             check.checked = true;
         }
-    });
-    
-    // Mostrar notificación
-    const toast = new bootstrap.Toast(document.createElement('div'));
-    toast._element.classList.add('toast', 'align-items-center', 'text-white', 'bg-primary', 'border-0');
-    toast._element.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                Todos los días han sido activados
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
-    document.body.appendChild(toast._element);
-    toast.show();
-    setTimeout(() => {
-        toast._element.remove();
-    }, 3000);
-}
-
-function aplicarHorarioGeneral() {
-    const inicio = document.getElementById('horaInicioGlobal').value;
-    const fin = document.getElementById('horaFinGlobal').value;
-    const diasSemana = {{ dias|safe }};
-
-    diasSemana.forEach(dia => {
+        // Poner el slider y el input hidden de inicio
+        const sliderInicio = document.getElementById(`slider_inicio_${dia}`);
         const inputInicio = document.getElementById(`inicio_${dia}`);
+        const displayInicio = document.getElementById(`display_inicio_${dia}`);
+        if (sliderInicio && inputInicio && displayInicio) {
+            sliderInicio.value = inicio;
+            const hora = sliderToTime(inicio);
+            inputInicio.value = hora;
+            displayInicio.textContent = hora;
+        }
+        // Poner el slider y el input hidden de fin
+        const sliderFin = document.getElementById(`slider_fin_${dia}`);
         const inputFin = document.getElementById(`fin_${dia}`);
-        if (inputInicio && inputFin) {
-            inputInicio.value = inicio;
-            inputFin.value = fin;
+        const displayFin = document.getElementById(`display_fin_${dia}`);
+        if (sliderFin && inputFin && displayFin) {
+            sliderFin.value = fin;
+            const hora = sliderToTime(fin);
+            inputFin.value = hora;
+            displayFin.textContent = hora;
         }
     });
-    
     // Mostrar notificación
-    const toast = new bootstrap.Toast(document.createElement('div'));
-    toast._element.classList.add('toast', 'align-items-center', 'text-white', 'bg-primary', 'border-0');
-    toast._element.innerHTML = `
+    const toast = document.createElement('div');
+    toast.className = 'toast align-items-center text-white bg-primary border-0 position-fixed top-0 end-0 m-3';
+    toast.style.zIndex = 9999;
+    toast.innerHTML = `
         <div class="d-flex">
-            <div class="toast-body">
-                Horario aplicado a todos los días
-            </div>
+            <div class="toast-body">Horario aplicado a todos los días</div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
     `;
-    document.body.appendChild(toast._element);
-    toast.show();
-    setTimeout(() => {
-        toast._element.remove();
-    }, 3000);
+    document.body.appendChild(toast);
+    new bootstrap.Toast(toast).show();
+    setTimeout(() => { toast.remove(); }, 3000);
 }
 </script>
+
+<style>
+/* Personalización para que flatpickr combine con el diseño */
+.flatpickr-input {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    color: #111827;
+    box-shadow: none;
+    transition: border-color 0.2s;
+}
+.flatpickr-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+.flatpickr-calendar {
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(59,130,246,0.08);
+    font-family: inherit;
+}
+.flatpickr-time {
+    border-radius: 0.5rem;
+    background: #f3f4f6;
+}
+</style>
 
 {% endblock %}

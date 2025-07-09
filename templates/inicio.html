@@ -12,7 +12,7 @@
     <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="z-index:0;"></div>
 
     <div class="container position-relative" style="z-index:1;">
-        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto" style="font-family: var(--font-serif); color: #181818;">
+        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto animated-hero-title" style="font-family: var(--font-serif); color: #181818; margin-top: 3.5rem;">
             Reserva con tus peluquerias<br />
             <span id="frase-rotativa">o descubre tu favorita</span>
         </h1>
@@ -25,34 +25,34 @@
         <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;">
             <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
                 <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Ubicación</label>
-                <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Qué ciudad o barrio?" autocomplete="off" />
+                <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
                 <div id="sugerencias-ubicacion" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
                 <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
                 <input type="hidden" id="ubicacion-barrio" name="barrio" />
                 <input type="hidden" id="ubicacion-lat" name="lat" />
                 <input type="hidden" id="ubicacion-lon" name="lon" />
             </div>
-            <div class="vr mx-2" style="height: 32px;"></div>
-                <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-        <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Servicio</label>
-        <input type="text" id="servicio-autocomplete" class="form-control" placeholder="¿Qué servicio buscas?" autocomplete="off" />
-        <div id="sugerencias-servicio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-    </div>
-    <div class="vr mx-2" style="height: 32px;"></div>
-    <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-        <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Negocio</label>
-        <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
-        <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-    </div>
+            <div class="search-separator"></div>
+            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
+                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Servicio</label>
+                <input type="text" id="servicio-autocomplete" class="form-control" placeholder="¿Qué servicio?" autocomplete="off" />
+                <div id="sugerencias-servicio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+            </div>
+            <div class="search-separator"></div>
+            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
+                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Negocio</label>
+                <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
+                <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+            </div>
             <button class="btn btn-pink ms-3 d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button">
                 <i class="bi bi-search"></i>
             </button>
         </div>
         <!-- Mobile: barra compacta que abre modal -->
         <div class="d-block d-md-none">
-            <div class="search-bar-mobile bg-white rounded-pill shadow mx-auto d-flex align-items-center px-3 py-3 justify-content-center w-100" style="max-width: 100%; min-height: 54px; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#busquedaModal">
+            <div class="search-bar-mobile bg-white rounded-pill shadow mx-auto d-flex align-items-center px-3 py-3 justify-content-center w-100" style="max-width: 100%; min-height: 54px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" data-bs-toggle="modal" data-bs-target="#busquedaModal">
                 <i class="bi bi-search fs-4 text-muted me-2"></i>
-                <span class="text-muted flex-grow-1 text-center" style="font-size: 1.1rem;">¿Qué reserva buscar hoy?</span>
+                <span class="text-muted flex-grow-1 text-center" style="font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">¿Qué reserva buscar hoy?</span>
             </div>
         </div>
     </div>
@@ -173,12 +173,12 @@
 </section>
 
 <!-- CTA Section -->
-<section class="cta-section py-5 bg-primary text-white">
+<section class="cta-section py-5" style="background:var(--color-teal-accent);">
     <div class="container text-center">
-        <h2 class="display-6 fw-bold mb-4">
+        <h2 class="display-6 fw-bold mb-4" style="color:#fff;">
             ¿Listo para transformar tu peluquería?
         </h2>
-        <p class="lead mb-5 opacity-90">
+        <p class="lead mb-5 opacity-90" style="color:#fff;">
             Únete a cientos de peluquerías que ya confían en Melissa
         </p>
         {% if not user.is_authenticated %}
@@ -355,50 +355,47 @@
     }
 }
 
+/* Barra de búsqueda avanzada mejorada */
 .search-bar-elevated-custom {
-    box-shadow: 0 6px 32px rgba(80, 60, 120, 0.10);
-    margin-top: 0;
-    margin-bottom: 0;
-    position: relative;
-    border: 2px solid #f3eafd;
-    transition: box-shadow 0.2s;
+    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10);
+    border: none !important;
+    min-height: 44px !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
 }
-.search-bar-elevated-custom select:focus, .search-bar-elevated-custom input:focus {
-    outline: none;
-    box-shadow: none;
-    background: transparent;
+.search-bar-elevated-custom .form-label {
+    margin-bottom: 0.2rem !important;
+    font-size: 0.93rem;
 }
-.search-bar-elevated-custom .form-control, .search-bar-elevated-custom .form-select {
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    padding-left: 0;
-    padding-right: 0;
+.search-bar-elevated-custom .form-control {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0.35rem 0.5rem !important;
+    font-size: 1rem;
+    min-height: 32px !important;
+    height: 32px !important;
 }
-.search-bar-elevated-custom label.form-label {
-    font-weight: 600;
-    color: #7a7a7a;
-    font-size: 0.95rem;
-    margin-bottom: 0.2rem;
+.search-bar-elevated-custom .form-control:focus {
+    box-shadow: none !important;
+    border: none !important;
 }
-@media (max-width: 900px) {
-    .search-bar-elevated-custom {
-        max-width: 98vw;
-        flex-direction: column;
-        border-radius: 1.5rem;
-        padding: 0.5rem 0.5rem;
-    }
-    .search-bar-elevated-custom > div {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    .search-bar-elevated-custom button {
-        width: 100%;
-        margin-top: 0.5rem;
-    }
-    .search-bar-elevated-custom .vr {
-        display: none !important;
-    }
+.search-bar-elevated-custom .vr {
+    border-left: 1.5px solid #e0e0e0 !important;
+    height: 40px !important;
+    margin: 0 0.5rem !important;
+    align-self: stretch !important;
+}
+.search-bar-elevated-custom .d-flex.flex-column {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+}
+.search-bar-elevated-custom input::placeholder {
+    color: #b0b0b0;
+    font-size: 0.98rem;
+}
+.search-bar-elevated-custom {
+    border-bottom: none !important;
 }
 .search-bar-mobile {
     box-shadow: 0 4px 16px rgba(80, 60, 120, 0.10);
@@ -450,6 +447,47 @@
         margin-right: 0.5rem !important;
         margin-left: 0.2rem !important;
     }
+}
+</style>
+<style>
+/* Forzar estilos de la barra de búsqueda avanzada con máxima especificidad */
+.search-bar-elevated-custom input.form-control,
+.search-bar-elevated-custom input.form-control:focus,
+.search-bar-elevated-custom .form-control,
+.search-bar-elevated-custom .form-control:focus {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0.2rem 0.5rem !important;
+    font-size: 1rem !important;
+    min-height: 26px !important;
+    height: 26px !important;
+    border-radius: 0.7rem !important;
+    outline: none !important;
+    color: #222 !important;
+}
+.search-bar-elevated-custom .form-label {
+    margin-bottom: 0.1rem !important;
+    font-size: 0.93rem !important;
+}
+.search-bar-elevated-custom .vr {
+    border-left: 1.5px solid #e0e0e0 !important;
+    height: 100% !important;
+    margin: 0 0.5rem !important;
+    align-self: stretch !important;
+}
+.search-bar-elevated-custom input::placeholder {
+    color: #b0b0b0 !important;
+    font-size: 0.98rem !important;
+    opacity: 1 !important;
+}
+.search-bar-elevated-custom {
+    border: none !important;
+    border-bottom: none !important;
+    min-height: 38px !important;
+    padding-top: 0.1rem !important;
+    padding-bottom: 0.1rem !important;
+    box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10) !important;
 }
 </style>
 

@@ -21,6 +21,8 @@ from django.db.models import Q
 from profesionales.models import Notificacion, Profesional, Matriculacion, HorarioProfesional
 from django.db import models
 from math import radians, cos, sin, asin, sqrt
+from cuentas.utils import log_user_activity, log_reservation_activity, log_error
+from django_ratelimit.decorators import ratelimit
 
 logger = logging.getLogger(__name__)
 
@@ -176,9 +178,10 @@ class DetallePeluqueroView(DetailView):
 
 @login_required
 @csrf_protect
-def reservar_turno(request, negocio_id):
+@ratelimit(key='ip', rate='10/m', method=['POST'])
+def reservar_turno(request, peluquero_id):
     try:
-        negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
+        negocio = get_object_or_404(Negocio, id=peluquero_id, activo=True)
         
         if request.method == 'POST':
             form = ReservaForm(request.POST, negocio=negocio)
@@ -218,21 +221,48 @@ def reservar_turno(request, negocio_id):
                     
                     reserva.save()
                     
+                    # Log de actividad de reserva exitosa
+                    log_reservation_activity(
+                        user=request.user,
+                        reservation=reserva,
+                        action="reserva_creada",
+                        details=f"Negocio: {negocio.nombre}, Servicio: {servicio.nombre}, Fecha: {fecha}, Hora: {hora_inicio}"
+                    )
+                    
                     # Enviar email de confirmación
                     try:
                         enviar_email_reserva_confirmada(reserva)
                     except Exception as e:
-                        logger.error(f"Error enviando email de confirmación: {str(e)}")
+                        log_error(
+                            error_type="email_confirmacion_fallido",
+                            error_message=str(e),
+                            user=request.user,
+                            context={"reserva_id": reserva.id}
+                        )
                         # No fallar la reserva si el email falla
                     
                     messages.success(request, '¡Reserva realizada con éxito!')
                     return redirect('clientes:confirmacion_reserva', reserva_id=reserva.id)
                 except Exception as e:
-                    logger.error(f"Error guardando reserva: {str(e)}")
-                    logger.error(f"Datos de la reserva: cliente={request.user}, peluquero={negocio}, profesional={getattr(reserva, 'profesional', None)}, servicio={getattr(reserva, 'servicio', None)}")
+                    log_error(
+                        error_type="reserva_fallida",
+                        error_message=str(e),
+                        user=request.user,
+                        context={
+                            "negocio_id": negocio.id,
+                            "servicio": servicio.nombre if servicio else None,
+                            "fecha": fecha,
+                            "hora_inicio": hora_inicio
+                        }
+                    )
                     messages.error(request, 'Error al guardar la reserva. Por favor, intenta nuevamente.')
             else:
-                logger.warning(f"Formulario inválido: {form.errors}")
+                log_user_activity(
+                    user=request.user,
+                    action="formulario_reserva_invalido",
+                    details=f"Errores: {form.errors}",
+                    ip_address=request.META.get('REMOTE_ADDR')
+                )
         else:
             form = ReservaForm(negocio=negocio)
         
@@ -241,7 +271,12 @@ def reservar_turno(request, negocio_id):
             'form': form
         })
     except Exception as e:
-        logger.error(f"Error en reservar_turno: {str(e)}")
+        log_error(
+            error_type="error_cargar_reserva",
+            error_message=str(e),
+            user=request.user if request.user.is_authenticated else None,
+            context={"peluquero_id": peluquero_id}
+        )
         messages.error(request, 'Error al cargar la página de reserva.')
         return redirect('clientes:lista_negocios')
 
@@ -508,7 +543,12 @@ def dashboard_cliente(request):
         negocios = negocios.filter(
             models.Q(nombre__icontains=query) |
             models.Q(direccion__icontains=query) |
-            models.Q(profesionales__nombre_completo__icontains=query)
+            models.Q(
+                id__in=Matriculacion.objects.filter(
+                    estado='aprobada',
+                    profesional__nombre_completo__icontains=query
+                ).values('negocio_id')
+            )
         ).distinct()
     
     negocios_info = []
@@ -659,6 +699,7 @@ def notificaciones_cliente(request):
 
 @require_POST
 @login_required
+@ratelimit(key='ip', rate='5/m', method=['POST'])
 def eliminar_notificacion_cliente(request, notificacion_id):
     try:
         noti = NotificacionCliente.objects.get(id=notificacion_id, cliente=request.user)
@@ -668,6 +709,7 @@ def eliminar_notificacion_cliente(request, notificacion_id):
         return JsonResponse({'ok': False, 'error': 'No encontrada'}, status=404)
 
 @login_required
+@ratelimit(key='ip', rate='5/m', method=['POST'])
 def cancelar_reserva(request, reserva_id):
     reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
     if reserva.estado not in ['cancelado', 'completado']:
@@ -677,16 +719,35 @@ def cancelar_reserva(request, reserva_id):
         reserva.estado = 'cancelado'
         reserva.save()
         
+        # Log de actividad de cancelación
+        log_reservation_activity(
+            user=request.user,
+            reservation=reserva,
+            action="reserva_cancelada",
+            details=f"Estado anterior: {estado_anterior}, Negocio: {reserva.peluquero.nombre}"
+        )
+        
         # Enviar email de cancelación
         try:
             enviar_email_reserva_cancelada(reserva)
         except Exception as e:
-            logger.error(f"Error enviando email de cancelación: {str(e)}")
+            log_error(
+                error_type="email_cancelacion_fallido",
+                error_message=str(e),
+                user=request.user,
+                context={"reserva_id": reserva.id}
+            )
             # No fallar la cancelación si el email falla
         
         msg = 'Reserva cancelada exitosamente.'
         success = True
     else:
+        log_user_activity(
+            user=request.user,
+            action="intento_cancelar_reserva_invalida",
+            details=f"Reserva ID: {reserva_id}, Estado actual: {reserva.estado}",
+            ip_address=request.META.get('REMOTE_ADDR')
+        )
         msg = 'No se puede cancelar una reserva ya cancelada o completada.'
         success = False
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -698,6 +759,7 @@ def cancelar_reserva(request, reserva_id):
     return redirect('clientes:mis_reservas')
 
 @login_required
+@ratelimit(key='ip', rate='5/m', method=['POST'])
 def reagendar_reserva(request, reserva_id):
     if request.method != 'POST':
         return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
@@ -769,11 +831,24 @@ def reagendar_reserva(request, reserva_id):
         reserva.hora_fin = hora_fin
         reserva.save()
         
+        # Log de actividad de reagendamiento
+        log_reservation_activity(
+            user=request.user,
+            reservation=reserva,
+            action="reserva_reagendada",
+            details=f"Nueva fecha: {fecha_obj}, Nueva hora: {hora_obj}, Negocio: {reserva.peluquero.nombre}"
+        )
+        
         # Enviar email de reagendamiento
         try:
             enviar_email_reserva_reagendada(reserva)
         except Exception as e:
-            logger.error(f"Error enviando email de reagendamiento: {str(e)}")
+            log_error(
+                error_type="email_reagendamiento_fallido",
+                error_message=str(e),
+                user=request.user,
+                context={"reserva_id": reserva.id}
+            )
             # No fallar el reagendamiento si el email falla
         
         return JsonResponse({
@@ -782,12 +857,23 @@ def reagendar_reserva(request, reserva_id):
         })
         
     except json.JSONDecodeError:
+        log_error(
+            error_type="json_invalido_reagendar",
+            error_message="JSON inválido en request body",
+            user=request.user,
+            context={"reserva_id": reserva_id}
+        )
         return JsonResponse({
             'success': False,
             'message': 'Datos JSON inválidos'
         })
     except Exception as e:
-        logger.error(f"Error reagendando reserva: {str(e)}")
+        log_error(
+            error_type="error_reagendar_reserva",
+            error_message=str(e),
+            user=request.user,
+            context={"reserva_id": reserva_id}
+        )
         return JsonResponse({
             'success': False,
             'message': 'Error interno del servidor'

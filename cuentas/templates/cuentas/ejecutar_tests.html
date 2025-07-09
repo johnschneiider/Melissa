@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Ejecutar Tests Automáticos{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4">Ejecutar Tests Automáticos</h2>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-lg mb-4"><i class="bi bi-play-circle"></i> Ejecutar todos los tests</button>
+  </form>
+  {% if resultado %}
+    <div class="card mt-4">
+      <div class="card-header bg-dark text-white">Resultado</div>
+      <div class="card-body" style="white-space:pre-wrap; font-family:monospace; font-size:1rem; background:#f8f9fa;">
+        {{ resultado }}
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %} 

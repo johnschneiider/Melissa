@@ -159,16 +159,22 @@ def panel_negocio(request, negocio_id):
         # Servicios activos del negocio
         servicios_activos = negocio.servicios_negocio.filter(activo=True).select_related('servicio')
 
-        if request.method == 'POST' and 'logo' in request.FILES:
-            try:
-                negocio.logo = request.FILES['logo']
-                negocio.save()
-                logger.info(f"Logo actualizado para negocio '{negocio.nombre}' por {request.user.username}")
-                messages.success(request, "Logo actualizado correctamente.")
-                return redirect('negocios:panel_negocio', negocio_id=negocio.id)
-            except Exception as e:
-                logger.error(f"Error actualizando logo: {str(e)}")
-                messages.error(request, "Error al actualizar el logo.")
+        # Guardar horario de atención si es POST y no es cambio de logo
+        if request.method == 'POST' and 'logo' not in request.FILES:
+            dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+            nuevo_horario = {}
+            dias_activos = request.POST.getlist('dias_activos')
+            for dia in dias:
+                if dia in dias_activos:
+                    inicio = request.POST.get(f'inicio_{dia}', '')
+                    fin = request.POST.get(f'fin_{dia}', '')
+                    if inicio and fin:
+                        nuevo_horario[dia] = {"inicio": inicio, "fin": fin}
+                # Si el día no está activo, no lo incluimos (aparecerá como cerrado)
+            negocio.horario_atencion = nuevo_horario
+            negocio.save()
+            messages.success(request, "Horario de atención actualizado correctamente.")
+            return redirect('negocios:panel_negocio', negocio_id=negocio.id)
 
         # Profesionales aceptados (matriculación aprobada)
         profesionales_aceptados = []

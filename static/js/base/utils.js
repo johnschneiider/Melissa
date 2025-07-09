@@ -105,6 +105,25 @@ function throttle(func, limit) {
     };
 }
 
+// Animación flotante sutil para portada
+function floatingEffect(selector, amplitude = 8, duration = 3200) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  let start = null;
+  function animate(ts) {
+    if (!start) start = ts;
+    const progress = (ts - start) % duration;
+    const angle = (progress / duration) * 2 * Math.PI;
+    el.style.transform = `translateY(${Math.sin(angle) * amplitude}px)`;
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+}
+document.addEventListener('DOMContentLoaded', function() {
+  floatingEffect('.animated-hero-title', 8, 3200);
+  floatingEffect('.search-bar-elevated-custom', 5, 2600);
+});
+
 // Exportar funciones para uso global
 window.utils = {
     getCSRFToken,

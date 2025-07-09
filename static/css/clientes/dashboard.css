@@ -1,68 +1,83 @@
-/* Dashboard de Clientes */
-.dashboard-stats {
-  background: var(--gradient-primary);
-  color: white;
-  border-radius: 12px;
-  padding: 2rem;
+/* Mejoras visuales y responsive para dashboard de clientes */
+.dashboard-hero {
+  background: var(--color-soft-lavender-gray);
+  border-radius: 1.2rem;
   margin-bottom: 2rem;
+  padding: 1.5rem 0.5rem 1.5rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(46,46,58,0.07);
 }
-
-.stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
+.dashboard-stats .stat-box {
+  box-shadow: 0 2px 8px rgba(46,46,58,0.08);
+  border-radius: 1.1rem;
+  min-width: 90px;
+  margin-right: 0.5rem;
 }
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+.dashboard-stats .stat-box:last-child {
+  margin-right: 0;
 }
-
-.stat-number {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--primary);
+.card.hover-shadow:hover {
+  box-shadow: 0 4px 24px rgba(46,46,58,0.13);
+  transform: translateY(-2px) scale(1.01);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
-
-.stat-label {
-  color: var(--gray);
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.card .btn-link {
+  color: var(--color-teal-accent);
+  font-size: 1.1rem;
 }
-
-/* Negocios destacados */
-.negocio-card {
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: var(--transition);
-  background: white;
+.card .btn-link:hover {
+  color: var(--color-coral-blush);
 }
-
-.negocio-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+.bg-coral-blush {
+  background: var(--color-coral-blush) !important;
+  color: var(--color-deep-charcoal) !important;
 }
-
-.negocio-image {
-  height: 200px;
-  object-fit: cover;
-  width: 100%;
+.bg-aqua-mint {
+  background: var(--color-aqua-mint) !important;
+  color: var(--color-deep-charcoal) !important;
 }
-
-.negocio-info {
-  padding: 1.5rem;
+.bg-teal-accent {
+  background: var(--color-teal-accent) !important;
+  color: #fff !important;
 }
-
-.negocio-rating {
-  color: var(--accent);
-  font-weight: 600;
+@media (max-width: 768px) {
+  .dashboard-hero {
+    flex-direction: column;
+    padding: 1.2rem 0.5rem 1.2rem 0.5rem;
+    text-align: left;
+  }
+  .dashboard-stats {
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
+  .dashboard-stats .stat-box {
+    min-width: 80px;
+    font-size: 1.1rem;
+    padding: 0.7rem 0.5rem;
+  }
+  .card, .card-body {
+    padding: 1.2rem 0.7rem !important;
+    border-radius: 1.1rem !important;
+  }
+  .card .btn, .card .btn-link {
+    font-size: 1.1rem;
+    padding: 0.9em 1.2em;
+    min-width: 44px;
+    min-height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .d-flex.flex-wrap.gap-2 > div {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
 }
-
-.negocio-distance {
-  color: var(--gray);
-  font-size: 0.9rem;
+.toast {
+  background: var(--color-aqua-mint);
+  color: var(--color-deep-charcoal);
+  border-radius: 1.1rem;
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  box-shadow: 0 2px 12px rgba(46,46,58,0.07);
 } 

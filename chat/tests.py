@@ -31,7 +31,8 @@ class MensajesNoLeidosAPITest(TestCase):
         url = reverse('chat:api_mensajes_no_leidos')
         response = self.client.get(url)
         data = response.json()
-        self.assertEqual(data['no_leidos'], 0)
+        # user2 tiene 2 mensajes no leídos de user1
+        self.assertEqual(data['no_leidos'], 2)
 
     def test_api_mensajes_no_leidos_marca_leido(self):
         # Marcar uno como leído

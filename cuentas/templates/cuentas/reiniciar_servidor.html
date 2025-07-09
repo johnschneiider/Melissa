@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Reiniciar Servidor de Desarrollo{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4 text-primary">Reiniciar Servidor de Desarrollo</h2>
+  <form method="post" onsubmit="return confirm('¿Estás seguro? Esto reiniciará el servidor de desarrollo (autoreload).');">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-lg mb-4"><i class="bi bi-arrow-repeat"></i> Reiniciar servidor</button>
+  </form>
+  {% if resultado %}
+    <div class="card mt-4">
+      <div class="card-header bg-dark text-white">Resultado</div>
+      <div class="card-body" style="white-space:pre-wrap; font-family:monospace; font-size:1rem; background:#f8f9fa;">
+        {{ resultado }}
+      </div>
+    </div>
+  {% endif %}
+  <div class="alert alert-warning mt-4"><b>Advertencia:</b> Solo funciona en modo desarrollo y con el servidor de Django (manage.py runserver).</div>
+</div>
+{% endblock %} 

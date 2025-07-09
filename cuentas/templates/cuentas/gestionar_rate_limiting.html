@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestionar Rate Limiting - Melissa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rate-limit-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    
+    .rate-limit-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .rate-limit-stats {
+        display: flex;
+        justify-content: space-around;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    
+    .config-form {
+        padding: 30px;
+    }
+    
+    .config-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .config-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .config-name {
+        font-weight: bold;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .config-status {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .config-description {
+        color: #6c757d;
+        margin-bottom: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .config-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .form-group {
+        flex: 1;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: #667eea;
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .help-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="rate-limit-card">
+        <div class="rate-limit-header">
+            <h1><i class="fas fa-shield-alt"></i> Gestionar Rate Limiting</h1>
+            <p>Configura los límites de protección contra spam y ataques</p>
+        </div>
+        
+        <div class="rate-limit-stats">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_activas }}</div>
+                <div class="stat-label">Configuraciones Activas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_inactivas }}</div>
+                <div class="stat-label">Configuraciones Inactivas</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ configuraciones.count }}</div>
+                <div class="stat-label">Total Configuraciones</div>
+            </div>
+        </div>
+        
+        <form method="POST" class="config-form">
+            {% csrf_token %}
+            
+            {% for config in configuraciones %}
+            <div class="config-item">
+                <div class="config-header">
+                    <div class="config-name">{{ config.nombre }}</div>
+                    <span class="config-status {% if config.activo %}status-active{% else %}status-inactive{% endif %}">
+                        {% if config.activo %}ACTIVO{% else %}INACTIVO{% endif %}
+                    </span>
+                </div>
+                
+                <div class="config-description">
+                    {{ config.descripcion }}
+                </div>
+                
+                <div class="config-controls">
+                    <div class="form-group">
+                        <label for="limite_{{ config.id }}">Límite:</label>
+                        <input type="text" 
+                               id="limite_{{ config.id }}" 
+                               name="limite_{{ config.id }}" 
+                               value="{{ config.limite }}" 
+                               class="form-control"
+                               placeholder="ej: 5/m, 10/h, 100/d">
+                        <div class="help-text">
+                            Formato: número/período (m=minuto, h=hora, d=día)
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="flex: 0 0 auto;">
+                        <label>Estado:</label>
+                        <label class="switch">
+                            <input type="checkbox" 
+                                   name="activo_{{ config.id }}" 
+                                   {% if config.activo %}checked{% endif %}>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validar formato de límites
+    const limiteInputs = document.querySelectorAll('input[name^="limite_"]');
+    
+    limiteInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            const value = this.value.trim();
+            const regex = /^\d+\/[mhd]$/;
+            
+            if (value && !regex.test(value)) {
+                this.style.borderColor = '#dc3545';
+                this.style.boxShadow = '0 0 0 3px rgba(220, 53, 69, 0.1)';
+            } else {
+                this.style.borderColor = '#28a745';
+                this.style.boxShadow = '0 0 0 3px rgba(40, 167, 69, 0.1)';
+            }
+        });
+    });
+    
+    // Confirmar antes de enviar
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const hasChanges = Array.from(limiteInputs).some(input => {
+            const originalValue = input.getAttribute('data-original') || input.value;
+            return input.value !== originalValue;
+        });
+        
+        if (hasChanges) {
+            if (!confirm('¿Estás seguro de que quieres guardar los cambios en las configuraciones de rate limiting?')) {
+                e.preventDefault();
+            }
+        }
+    });
+    
+    // Guardar valores originales
+    limiteInputs.forEach(input => {
+        input.setAttribute('data-original', input.value);
+    });
+});
+</script>
+{% endblock %} 

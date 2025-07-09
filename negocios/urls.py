@@ -24,4 +24,5 @@ urlpatterns = [
     path('<int:negocio_id>/api/reservas/', views.api_reservas_negocio, name='api_reservas_negocio'),
     path('<int:negocio_id>/servicios/', views.gestionar_servicios, name='gestionar_servicios'),
     path('notificaciones/', views.notificaciones_negocio, name='notificaciones'),
+    path('<int:negocio_id>/', views.detalle_negocio, name='detalle_negocio'),
 ]

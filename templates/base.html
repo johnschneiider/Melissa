@@ -58,13 +58,31 @@
 </head>
 
 <body>
+  <!-- Loader global -->
+  <div id="global-loader" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2000;background:rgba(255,255,255,0.7);align-items:center;justify-content:center;">
+    <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status" aria-label="Cargando..."></div>
+  </div>
+  <!-- Toasts globales -->
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 2100">
+    <div id="global-toast" class="toast align-items-center text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true" style="min-width:260px;">
+      <div class="d-flex">
+        <div class="toast-body" id="global-toast-body">Mensaje</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+      </div>
+    </div>
+  </div>
   <!-- Header -->
-  <header class="header" id="header">
-    <!-- Header PC: logo + iconos -->
-    <div class="d-none d-md-flex align-items-center w-100 justify-content-between">
-      <a href="{% url 'inicio' %}" class="logo" aria-label="Melissa - Inicio">
-        <span class="logo-letter">M</span>
-      </a>
+  <header class="header" id="header" role="banner">
+    <!-- Desktop header -->
+    <div class="container d-none d-md-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <a href="{% url 'inicio' %}" class="brand logo-text">Melissa</a>
+        <div id="city-selector" style="display:flex;align-items:center;gap:0.4rem;background:#fff;padding:0.35em 1em;border-radius:1.5em;box-shadow:0 2px 8px rgba(46,46,58,0.04);margin-left:1.2rem;">
+          <svg width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 21s7-7.16 7-12A7 7 0 1 0 4 9c0 4.84 7 12 7 12Z" stroke="var(--color-teal-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="9" r="2.5" fill="var(--color-teal-accent)"/></svg>
+          <span id="user-city" style="font-weight:600;color:var(--color-deep-charcoal);font-family:var(--font-ui);">Detectando...</span>
+          <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:0.2em;"><path d="M4 6l4 4 4-4" stroke="var(--color-teal-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
       <div class="d-flex align-items-center gap-3">
         <a href="{% if user.is_authenticated %}{% url 'cuentas:enviar_feedback' %}{% else %}{% url 'account_login' %}?next={% url 'cuentas:enviar_feedback' %}{% endif %}" class="btn btn-outline-primary fw-bold d-flex align-items-center" style="gap:0.5em;">
           <i class="bi bi-lightbulb"></i> Dinos cómo mejoramos
@@ -89,6 +107,12 @@
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
             {% if user.is_superuser or user.tipo == 'super_admin' %}
               <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:ejecutar_tests' %}"><i class="bi bi-bug-fill"></i> Ejecutar Tests Automáticos</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:poblar_demo' %}"><i class="bi bi-database-fill-add"></i> Poblar Base Demo</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:borrar_demo' %}"><i class="bi bi-trash-fill"></i> Borrar Base Demo</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:reiniciar_servidor' %}"><i class="bi bi-arrow-repeat"></i> Reiniciar Servidor</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:ver_logs_servidor' %}"><i class="bi bi-terminal"></i> Ver Logs Servidor</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:gestionar_rate_limiting' %}"><i class="bi bi-shield-lock"></i> Gestionar Rate Limiting</a></li>
               <li><hr class="dropdown-divider"></li>
             {% endif %}
             <li><a class="dropdown-item" href="{% url 'chat:lista_conversaciones' %}"><i class="bi bi-chat-dots"></i> Chat</a></li>
@@ -128,98 +152,73 @@
         {% endif %}
       </div>
     </div>
-    <!-- Header móvil: logo + hamburguesa -->
-    <div class="d-flex d-md-none align-items-center w-100 justify-content-between">
-      <a href="{% url 'inicio' %}" class="logo" aria-label="Melissa - Inicio">
-        <span class="logo-letter">M</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainMenu" aria-controls="mainMenu" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-    </div>
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="mainMenu" aria-labelledby="mainMenuLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="mainMenuLabel">Menú</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-      </div>
-      <div class="offcanvas-body">
-        <ul class="navbar-nav">
-          <li class="nav-item">
-            <a class="nav-link position-relative" href="{% url 'chat:lista_conversaciones' %}" title="Chat">
-              <i class="bi bi-chat-dots"></i> Chat
-              <span id="chatCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link position-relative" href="{% if is_cliente %}{% url 'clientes:notificaciones' %}{% elif is_negocio %}{% url 'negocios:notificaciones' %}{% elif is_profesional %}{% url 'profesionales:notificaciones' %}{% endif %}" title="Notificaciones">
-              <i class="bi bi-bell"></i> Notificaciones
-              <span id="notificacionesCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'inicio' %}"><i class="bi bi-house-door"></i> Inicio</a>
-          </li>
-          {% if is_cliente %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'clientes:dashboard' %}"><i class="bi bi-search"></i> Buscar Negocios</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'clientes:mis_reservas' %}"><i class="bi bi-calendar-check"></i> Mis Reservas</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
-            </li>
-          {% elif is_negocio %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
-            </li>
-          {% elif is_profesional %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'profesionales:notificaciones' %}"><i class="bi bi-bell"></i> Notificaciones</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a>
-            </li>
-          {% endif %}
-          {% if user.is_authenticated %}
+    <!-- Mobile header: logo left, avatar right -->
+    <div class="d-flex d-md-none align-items-center w-100 justify-content-between px-3" style="min-height:56px;">
+      <a href="{% url 'inicio' %}" class="brand logo-text" style="font-size:1.5rem;">Melissa</a>
+      {% if user.is_authenticated %}
+        <div class="dropdown">
+          <a href="#" class="nav-link p-0" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle" style="font-size:2rem;"></i>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile" style="min-width:220px;">
             {% if user.is_superuser or user.tipo == 'super_admin' %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:dashboard_super_admin' %}">Dashboard Admin</a></li>
-            {% else %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:enviar_feedback' %}">Enviar Feedback</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:ejecutar_tests' %}"><i class="bi bi-bug-fill"></i> Ejecutar Tests Automáticos</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:poblar_demo' %}"><i class="bi bi-database-fill-add"></i> Poblar Base Demo</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:borrar_demo' %}"><i class="bi bi-trash-fill"></i> Borrar Base Demo</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:reiniciar_servidor' %}"><i class="bi bi-arrow-repeat"></i> Reiniciar Servidor</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:ver_logs_servidor' %}"><i class="bi bi-terminal"></i> Ver Logs Servidor</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:gestionar_rate_limiting' %}"><i class="bi bi-shield-lock"></i> Gestionar Rate Limiting</a></li>
+              <li><hr class="dropdown-divider"></li>
             {% endif %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:ajustes' %}"><i class="bi bi-gear"></i> Ajustes</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'cuentas:politica_datos' %}"><i class="bi bi-shield-lock"></i> Política de Tratamiento de Datos</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'cuentas:registro_unificado' %}"><i class="bi bi-person-plus"></i> Registrarse</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'account_login' %}"><i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión</a>
-            </li>
-          {% endif %}
-        </ul>
-      </div>
+            <li><a class="dropdown-item" href="{% url 'chat:lista_conversaciones' %}"><i class="bi bi-chat-dots"></i> Chat</a></li>
+            {% if is_cliente %}
+              <li><a class="dropdown-item" href="{% url 'clientes:mis_reservas' %}"><i class="bi bi-calendar-check"></i> Mis Reservas</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% elif is_negocio %}
+              <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a></li>
+              <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% elif is_profesional %}
+              <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% else %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
+              <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            {% if is_negocio and user.negocios.first %}
+              <li><a class="dropdown-item" href="{% url 'negocios:galeria_negocio' user.negocios.first.id %}"><i class="bi bi-images"></i> Galería de imágenes</a></li>
+            {% endif %}
+            <li><a class="dropdown-item" href="{% url 'cuentas:ajustes' %}"><i class="bi bi-gear"></i> Ajustes</a></li>
+            <li><a class="dropdown-item" href="{% url 'cuentas:politica_datos' %}"><i class="bi bi-shield-lock"></i> Política de Tratamiento de Datos</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <div>
+          <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-primary fw-bold me-2">
+            <i class="bi bi-person-plus"></i>
+          </a>
+          <a href="{% url 'account_login' %}" class="btn btn-outline-secondary fw-bold">
+            <i class="bi bi-box-arrow-in-right"></i>
+          </a>
+        </div>
+      {% endif %}
     </div>
   </header>
 
   <!-- Mensajes de alerta -->
   {% if messages %}
-    <div class="container mt-3">
+    <div class="container mt-3" role="status" aria-live="polite">
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
           <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %} me-2"></i>
           {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
         </div>
       {% endfor %}
     </div>
@@ -231,16 +230,16 @@
   </main>
 
   <!-- Footer -->
-  <footer class="mt-auto">
+  <footer class="mt-auto pt-4 pb-2 bg-light border-top" role="contentinfo">
     <div class="container">
       <div class="row">
-        <div class="col-md-4">
-          <h5 class="mb-3">Melissa</h5>
+        <div class="col-md-4 mb-3">
+          <h5 class="mb-3" style="font-family:var(--font-serif-title);color:var(--color-teal-accent);">Melissa</h5>
           <p class="text-muted">La plataforma líder para la gestión de citas en peluquerías. Simplifica tu negocio con nuestra tecnología intuitiva.</p>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           <h6 class="mb-3">Enlaces Útiles</h6>
-          <ul class="footer-links">
+          <ul class="footer-links list-unstyled">
             <li><a href="{% url 'inicio' %}">Inicio</a></li>
             <li><a href="{% url 'clientes:dashboard' %}">Buscar Negocios</a></li>
             {% if user.is_authenticated %}
@@ -250,24 +249,13 @@
             {% endif %}
           </ul>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-4 mb-3">
           <h6 class="mb-3">Contacto</h6>
-          <ul class="footer-links">
-            <li><a href="mailto:soporte@melissa.com">soporte@melissa.com</a></li>
-            <li><a href="tel:+573001234567">+57 300 123 4567</a></li>
-          </ul>
+          <p class="text-muted mb-1"><i class="bi bi-envelope me-2"></i>soporte@melissa.com</p>
+          <p class="text-muted"><i class="bi bi-whatsapp me-2"></i>+54 9 11 1234-5678</p>
         </div>
       </div>
-      <hr class="my-4">
-      <div class="row align-items-center">
-        <div class="col-md-6">
-          <p class="mb-0 text-muted">&copy; 2024 Melissa. Todos los derechos reservados.</p>
-        </div>
-        <div class="col-md-6 text-md-end">
-          <a href="#" class="text-muted me-3">Términos de Servicio</a>
-          <a href="#" class="text-muted">Política de Privacidad</a>
-        </div>
-      </div>
+      <div class="text-center text-muted small mt-3">&copy; {{ now|date:'Y' }} Melissa. Todos los derechos reservados.</div>
     </div>
   </footer>
 
@@ -393,8 +381,69 @@
     }
   </script>
 
+  <script>
+function setUserCity(city) {
+  const citySpan = document.getElementById('user-city');
+  if (citySpan) citySpan.textContent = city;
+}
+function detectCity() {
+  if (!navigator.geolocation) {
+    setUserCity('Ubicación no disponible');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(function(position) {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const apiKey = 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg';
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=es`;
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        let city = 'Ciudad no detectada';
+        if (data.results && data.results.length > 0) {
+          const components = data.results[0].address_components;
+          for (let comp of components) {
+            if (comp.types.includes('locality')) {
+              city = comp.long_name;
+              break;
+            }
+          }
+          // Fallback: buscar administrative_area_level_1 o 2
+          if (city === 'Ciudad no detectada') {
+            for (let comp of components) {
+              if (comp.types.includes('administrative_area_level_1') || comp.types.includes('administrative_area_level_2')) {
+                city = comp.long_name;
+                break;
+              }
+            }
+          }
+        }
+        setUserCity(city);
+      })
+      .catch(() => setUserCity('Error de ubicación'));
+  }, function() {
+    setUserCity('Permiso denegado');
+  });
+}
+document.addEventListener('DOMContentLoaded', detectCity);
+</script>
+
   {% block extra_js %}
   <script src="{% static 'js/base/notificaciones.js' %}"></script>
   {% endblock %}
+  <script>
+    // Loader global
+    function showLoader() { document.getElementById('global-loader').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('global-loader').style.display = 'none'; }
+    // Toast global
+    function showToast(msg, type='primary') {
+      const toast = document.getElementById('global-toast');
+      const body = document.getElementById('global-toast-body');
+      toast.className = 'toast align-items-center text-bg-' + type + ' border-0';
+      body.textContent = msg;
+      const bsToast = new bootstrap.Toast(toast);
+      bsToast.show();
+    }
+  </script>
 </body>
 </html>

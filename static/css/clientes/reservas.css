@@ -13,23 +13,6 @@
     font-size: 0.8rem;
 }
 
-.pendiente {
-    background-color: #ffc107;
-    color: #000;
-}
-
-.confirmado {
-    background-color: #28a745;
-}
-
-.cancelado {
-    background-color: #dc3545;
-}
-
-.completado {
-    background-color: #17a2b8;
-}
-
 /* Modal de reserva */
 .modal-content {
     border-radius: 12px;
@@ -57,14 +40,6 @@
 .toast {
     transition: opacity 0.3s ease;
     margin-bottom: 10px;
-}
-
-.bg-success {
-    background-color: #28a745 !important;
-}
-
-.bg-error {
-    background-color: #dc3545 !important;
 }
 
 .spinner-border {

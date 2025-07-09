@@ -1,6 +1,19 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-5">
+  <div class="alert alert-info mb-4" style="max-width:700px;margin:auto;">
+    <h5 class="fw-bold mb-2"><i class="bi bi-info-circle-fill me-1"></i> Demo rápida: ¿Qué datos se crean?</h5>
+    <ul class="mb-2">
+      <li><b>10 cuentas tipo negocio</b> (usuario: <code>negocio1</code> a <code>negocio10</code>, contraseña: <code>Malware01</code>), cada una con un negocio ficticio.</li>
+      <li><b>100 cuentas tipo profesional</b> (usuario: <code>profesional1</code> a <code>profesional100</code>, contraseña: <code>Malware01</code>).</li>
+      <li>Cada profesional se matricula y es aprobado en un negocio (rotando entre los 10).</li>
+      <li><b>10 clientes ficticios</b> (usuario: <code>cliente1</code> a <code>cliente10</code>, contraseña: <code>Malware01</code>).</li>
+      <li>Servicios "Corte", "Color" y "Peinado" asociados a todos los negocios.</li>
+      <li>Reservas demo entre clientes, negocios y profesionales.</li>
+      <li>Superadmin: <code>superadmin</code> / <code>Malware01</code></li>
+    </ul>
+    <div class="small text-muted">Puedes usar estas cuentas para pruebas, demos o desarrollo rápido. <b>¡No uses datos reales en producción!</b></div>
+  </div>
   <h2>Dashboard Super Administrador</h2>
   <div class="row mt-4">
     <div class="col-md-4">
@@ -82,6 +95,66 @@
       {% endfor %}
     </tbody>
   </table>
+
+  <!-- Herramientas Administrativas -->
+  <div class="row mt-5">
+    <div class="col-12">
+      <h3><i class="bi bi-tools"></i> Herramientas Administrativas</h3>
+      <div class="row">
+        <div class="col-md-3 mb-3">
+          <div class="card border-primary">
+            <div class="card-body text-center">
+              <i class="bi bi-file-earmark-text fa-2x text-primary mb-2"></i>
+              <h6 class="card-title">Logs del Sistema</h6>
+              <p class="card-text small">Monitorear actividad y errores</p>
+              <a href="{% url 'cuentas:ver_logs_servidor' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-eye"></i> Ver Logs
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-success">
+            <div class="card-body text-center">
+              <i class="bi bi-play-circle fa-2x text-success mb-2"></i>
+              <h6 class="card-title">Ejecutar Tests</h6>
+              <p class="card-text small">Correr tests automatizados</p>
+              <a href="{% url 'cuentas:ejecutar_tests' %}" class="btn btn-success btn-sm">
+                <i class="bi bi-play"></i> Ejecutar
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-warning">
+            <div class="card-body text-center">
+              <i class="bi bi-database-add fa-2x text-warning mb-2"></i>
+              <h6 class="card-title">Datos Demo</h6>
+              <p class="card-text small">Poblar con datos de prueba</p>
+              <a href="{% url 'cuentas:poblar_demo' %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-plus"></i> Poblar
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+          <div class="card border-danger">
+            <div class="card-body text-center">
+              <i class="bi bi-arrow-clockwise fa-2x text-danger mb-2"></i>
+              <h6 class="card-title">Reiniciar Servidor</h6>
+              <p class="card-text small">Reiniciar aplicación</p>
+              <a href="{% url 'cuentas:reiniciar_servidor' %}" class="btn btn-danger btn-sm">
+                <i class="bi bi-arrow-clockwise"></i> Reiniciar
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Aquí puedes agregar más funcionalidades visuales -->
 </div>

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Detalle del Negocio{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-sm p-4 mb-4">
+    <h1 class="fw-bold mb-3" style="font-family:var(--font-serif-title);color:var(--color-teal-accent);">{{ negocio.nombre }}</h1>
+    <p class="mb-2"><i class="bi bi-geo-alt"></i> {{ negocio.direccion }}</p>
+    <p class="mb-2"><strong>Ciudad:</strong> {{ negocio.ciudad }}</p>
+    <p class="mb-2"><strong>Barrio:</strong> {{ negocio.barrio }}</p>
+    <p class="mb-2"><strong>Horario de atención:</strong> {{ negocio.horario_atencion|default:'No configurado' }}</p>
+    <p class="mb-2"><strong>Activo:</strong> {% if negocio.activo %}Sí{% else %}No{% endif %}</p>
+    <hr>
+    <p class="text-muted">(Aquí irá la información detallada del negocio, servicios, profesionales, galería, etc.)</p>
+  </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Logs del Servidor (últimos 100){% endblock %}
+{% block content %}
+<div class="container py-5">
+  <h2 class="mb-4 text-secondary">Logs del Servidor (últimos 100)</h2>
+  <div class="card">
+    <div class="card-header bg-dark text-white">logs/server.log</div>
+    <div class="card-body" style="white-space:pre-wrap; font-family:monospace; font-size:1rem; background:#f8f9fa; max-height:500px; overflow:auto;">
+      {% for line in logs %}{{ line }}{% endfor %}
+    </div>
+  </div>
+  <div class="alert alert-info mt-4">Este log se actualiza cada vez que recargas la página. Si no ves actividad, asegúrate de que el servidor esté escribiendo en <code>logs/server.log</code>.</div>
+</div>
+{% endblock %} 

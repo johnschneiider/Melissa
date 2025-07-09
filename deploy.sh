@@ -36,8 +36,5 @@ docker compose exec web python manage.py migrate
 echo "🗂️ Recolectando archivos estáticos..."
 docker compose exec web python manage.py collectstatic --noinput
 
-# 8. Crea superusuario (interactivo)
-echo "👤 Si deseas, crea un superusuario:"
-docker compose exec web python manage.py createsuperuser
 
 echo "✅ Despliegue completo. Accede a http://TU_IP y prueba la app."

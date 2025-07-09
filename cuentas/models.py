@@ -148,3 +148,38 @@ class NotificacionAdmin(models.Model):
         self.leida = True
         self.fecha_lectura = timezone.now()
         self.save() 
+
+class RateLimitConfig(models.Model):
+    """Configuración de rate limiting para el sistema"""
+    nombre = models.CharField(max_length=100, unique=True, help_text="Nombre descriptivo de la configuración")
+    clave = models.CharField(max_length=50, unique=True, help_text="Clave única para identificar la configuración")
+    limite = models.CharField(max_length=20, help_text="Límite en formato 'número/período' (ej: 5/m, 10/h, 100/d)")
+    descripcion = models.TextField(help_text="Descripción de qué protege esta configuración")
+    activo = models.BooleanField(default=True, help_text="Si esta configuración está activa")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Configuración de Rate Limiting"
+        verbose_name_plural = "Configuraciones de Rate Limiting"
+        ordering = ['nombre']
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.limite})"
+    
+    @classmethod
+    def get_config(cls, clave, default=None):
+        """Obtener configuración por clave"""
+        try:
+            config = cls.objects.get(clave=clave, activo=True)
+            return config.limite
+        except cls.DoesNotExist:
+            return default
+    
+    @classmethod
+    def get_all_configs(cls):
+        """Obtener todas las configuraciones activas como diccionario"""
+        configs = {}
+        for config in cls.objects.filter(activo=True):
+            configs[config.clave] = config.limite
+        return configs 

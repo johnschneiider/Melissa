@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import api_notificaciones, redireccion_dashboard, dashboard_super_admin, analiticas_negocios, analiticas_profesionales, analiticas_clientes, analiticas_general
+from .views import api_notificaciones, redireccion_dashboard, dashboard_super_admin, analiticas_negocios, analiticas_profesionales, analiticas_clientes, analiticas_general, ejecutar_tests, poblar_demo, borrar_demo, reiniciar_servidor, ver_logs_servidor, test_rate_limit, gestionar_rate_limiting
 
 app_name = 'cuentas'
 
@@ -27,4 +27,11 @@ urlpatterns = [
     path('mi-ticket/<int:ticket_id>/', views.detalle_mi_ticket, name='detalle_mi_ticket'),
     path('ajustes/', views.ajustes_usuario, name='ajustes'),
     path('politica-datos/', views.politica_datos, name='politica_datos'),
+    path('ejecutar-tests/', ejecutar_tests, name='ejecutar_tests'),
+    path('poblar-demo/', poblar_demo, name='poblar_demo'),
+    path('borrar-demo/', borrar_demo, name='borrar_demo'),
+    path('reiniciar-servidor/', reiniciar_servidor, name='reiniciar_servidor'),
+    path('ver-logs-servidor/', ver_logs_servidor, name='ver_logs_servidor'),
+    path('test-rate-limit/', test_rate_limit, name='test_rate_limit'),
+    path('gestionar-rate-limiting/', gestionar_rate_limiting, name='gestionar_rate_limiting'),
 ]

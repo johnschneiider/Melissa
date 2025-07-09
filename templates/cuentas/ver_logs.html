@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Logs del Sistema - Melissa{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-container {
+        background: #1a1a1a;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #e0e0e0;
+        max-height: 600px;
+        overflow-y: auto;
+        border: 1px solid #333;
+    }
+    
+    .log-nav {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .log-nav button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+    
+    .log-nav button.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+    
+    .log-nav button:hover {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+    }
+    
+    .log-nav button.active:hover {
+        background: #0056b3;
+    }
+    
+    .log-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+    }
+    
+    .stat-card h4 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 16px;
+    }
+    
+    .stat-card .size {
+        font-size: 18px;
+        font-weight: bold;
+        color: #007bff;
+    }
+    
+    .stat-card .status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .log-content {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .log-line {
+        margin: 2px 0;
+        padding: 2px 0;
+    }
+    
+    .log-line.error {
+        color: #ff6b6b;
+    }
+    
+    .log-line.warning {
+        color: #ffd93d;
+    }
+    
+    .log-line.info {
+        color: #6bcf7f;
+    }
+    
+    .refresh-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .refresh-btn:hover {
+        background: #218838;
+    }
+    
+    .no-logs {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-file-alt"></i> Logs del Sistema</h2>
+                <button class="refresh-btn" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Actualizar
+                </button>
+            </div>
+            
+            <!-- Estadísticas de logs -->
+            <div class="log-stats">
+                {% for log_name, stats in log_stats.items %}
+                <div class="stat-card">
+                    <h4>{{ log_name|title }}</h4>
+                    <div class="size">{{ stats.size_mb }} MB</div>
+                    <div class="status">
+                        {% if stats.exists %}
+                            <span style="color: #28a745;">✓ Disponible</span>
+                        {% else %}
+                            <span style="color: #dc3545;">✗ No disponible</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Navegación de logs -->
+            <div class="log-nav">
+                {% for log_type, filename in log_files.items %}
+                <button 
+                    class="{% if log_type == current_log_type %}active{% endif %}"
+                    onclick="window.location.href='?type={{ log_type }}'"
+                >
+                    {{ log_type|title }}
+                </button>
+                {% endfor %}
+            </div>
+            
+            <!-- Contenido del log -->
+            <div class="logs-container">
+                {% if log_content %}
+                    <div class="log-content">
+                        {% for line in log_content.splitlines %}
+                            <div class="log-line 
+                                {% if 'ERROR' in line %}error
+                                {% elif 'WARNING' in line %}warning
+                                {% elif 'INFO' in line %}info
+                                {% endif %}
+                            ">
+                                {{ line }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-logs">
+                        <i class="fas fa-file-alt fa-3x mb-3"></i>
+                        <p>No hay contenido en este log o el archivo no existe.</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Información adicional -->
+            <div class="mt-4">
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> Información sobre los Logs</h5>
+                    <ul class="mb-0">
+                        <li><strong>General:</strong> Actividad general del sistema</li>
+                        <li><strong>Errors:</strong> Errores críticos y excepciones</li>
+                        <li><strong>Security:</strong> Eventos de seguridad y autenticación</li>
+                        <li><strong>Activity:</strong> Actividad de usuarios y reservas</li>
+                        <li><strong>Business:</strong> Actividad relacionada con negocios</li>
+                        <li><strong>Recordatorios:</strong> Logs de envío de recordatorios</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle"></i> Nota</h6>
+                    <p class="mb-0">
+                        Los logs se muestran en tiempo real y se actualizan automáticamente. 
+                        Se muestran las últimas 100 líneas de cada archivo de log.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-refresh cada 30 segundos
+setInterval(function() {
+    // Solo actualizar si el usuario está en la página
+    if (!document.hidden) {
+        location.reload();
+    }
+}, 30000);
+
+// Resaltar líneas de error al hacer clic
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('log-line')) {
+        e.target.style.backgroundColor = e.target.style.backgroundColor === 'rgba(255, 107, 107, 0.1)' 
+            ? 'transparent' 
+            : 'rgba(255, 107, 107, 0.1)';
+    }
+});
+</script>
+{% endblock %} 
