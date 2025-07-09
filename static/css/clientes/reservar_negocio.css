@@ -1,0 +1,18 @@
+@import url('base.css');
+
+.negocio-logo-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+
+.negocio-logo-placeholder {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+    color: var(--color-purple-accent);
+}
+
+#hora-input-wrapper.d-none {
+    display: none !important;
+} 

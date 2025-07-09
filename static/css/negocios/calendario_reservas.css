@@ -1,0 +1,13 @@
+@import url('base.css');
+
+/* Estilos para calendario_reservas.html */
+.container {
+    max-width: 900px;
+}
+#calendar {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(46,46,58,0.07);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+} 

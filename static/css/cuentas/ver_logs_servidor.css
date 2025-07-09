@@ -1,0 +1,10 @@
+@import url('base.css');
+
+.ver-logs-servidor-resultado {
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 1rem;
+    background: #f8f9fa;
+    max-height: 500px;
+    overflow: auto;
+} 

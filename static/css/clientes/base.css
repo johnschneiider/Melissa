@@ -1,0 +1,103 @@
+/* Variables y fuentes */
+:root {
+    --primary-color: #6f42c1;
+    --secondary-color: #0dcaf0;
+    --font-sans: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-serif: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: #f8f9fa;
+}
+
+h1, h2, h3, h4, h5, h6, .font-serif, .serif {
+    font-family: var(--font-serif) !important;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.negocio-card {
+    border-left: 4px solid var(--primary-color);
+}
+
+.peluquero-card {
+    border-left: 4px solid var(--secondary-color);
+}
+
+.horario-disponible {
+    background-color: #e8f5e9;
+    border-left: 4px solid #4caf50;
+}
+
+.horario-ocupado {
+    background-color: #ffebee;
+    border-left: 4px solid #f44336;
+}
+
+.festivo {
+    background-color: #fff3e0;
+    border-left: 4px solid #ff9800;
+}
+
+.profile-img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cover-img {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.fc-daygrid-event {
+    cursor: pointer;
+}
+
+.fs-3rem { font-size: 3rem; }
+.fs-5rem { font-size: 5rem; }
+
+@media (max-width: 768px) {
+    .fc-toolbar-title {
+        font-size: 1.2rem;
+    }
+    .fc-button {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.8rem;
+    }
+} 

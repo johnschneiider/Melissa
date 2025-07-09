@@ -1,0 +1,6 @@
+@import url('base.css');
+
+/* Personalización para cancelar_matricula (puedes agregar más estilos si se requiere) */
+.cancelar-matricula-card {
+    /* Ejemplo: border-color: var(--color-purple-accent); */
+} 

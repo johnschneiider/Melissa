@@ -1,0 +1,39 @@
+:root {
+  /* Tipografía */
+  --font-sans: 'Manrope', 'Segoe UI', Arial, sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-size-base: 1.08rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 2rem;
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+
+  /* Colores principales */
+  --color-bg: #f7f7fa;
+  --color-header-bg: #fff;
+  --color-header-border: #e5e7eb;
+  --color-primary: #764ba2;
+  --color-primary-hover: #5a357a;
+  --color-secondary: #ff3366;
+  --color-secondary-hover: #d81b60;
+  --color-success: #198754;
+  --color-warning: #ffc107;
+  --color-danger: #ff3366;
+  --color-info: #0d6efd;
+  --color-text: #181818;
+  --color-muted: #6c757d;
+  --color-border: #e5e7eb;
+  --color-white: #fff;
+  --color-black: #181818;
+
+  /* Botones */
+  --btn-radius: 1.2rem;
+  --btn-padding: 0.55em 1.4em;
+  --btn-font-size: 1rem;
+  --btn-font-weight: 600;
+  --btn-transition: 0.18s cubic-bezier(.4,1,.4,1);
+
+  /* Sombra y bordes */
+  --shadow-light: 0 2px 8px rgba(46,46,58,0.04);
+  --border-radius: 1.2rem;
+} 

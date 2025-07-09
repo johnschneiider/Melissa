@@ -1,0 +1,40 @@
+@import url('base.css');
+
+/* Utilidades globales para la app negocios */
+.img-cover-200 {
+    height: 200px;
+    object-fit: cover;
+}
+.img-cover-220 {
+    height: 220px;
+    object-fit: cover;
+}
+.img-cover-180 {
+    height: 180px;
+    object-fit: cover;
+}
+.img-cover-120-80 {
+    width: 120px;
+    height: 80px;
+    object-fit: cover;
+}
+.img-cover-80 {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+.img-cover-60 {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+.icon-3rem {
+    font-size: 3rem;
+}
+.bg-pos-rel {
+    position: relative;
+    z-index: 10;
+}
+.w-100vw {
+    max-width: 100vw;
+} 

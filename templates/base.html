@@ -10,7 +10,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -57,7 +57,7 @@
   {% block extra_css %}{% endblock %}
 </head>
 
-<body>
+<body style="background:var(--color-black-deep);color:var(--color-smoke-white);font-family:var(--font-ui);">
   <!-- Loader global -->
   <div id="global-loader" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2000;background:rgba(255,255,255,0.7);align-items:center;justify-content:center;">
     <div class="spinner-border text-primary" style="width:3rem;height:3rem;" role="status" aria-label="Cargando..."></div>
@@ -72,21 +72,21 @@
     </div>
   </div>
   <!-- Header -->
-  <header class="header" id="header" role="banner">
+  <header class="header fixed-top" id="header" role="banner" style="background:var(--color-black-deep);color:var(--color-smoke-white);">
     <!-- Desktop header -->
     <div class="container d-none d-md-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-3">
         <a href="{% url 'inicio' %}" class="brand logo-text">Melissa</a>
         <div id="city-selector" style="display:flex;align-items:center;gap:0.4rem;background:#fff;padding:0.35em 1em;border-radius:1.5em;box-shadow:0 2px 8px rgba(46,46,58,0.04);margin-left:1.2rem;">
-          <svg width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 21s7-7.16 7-12A7 7 0 1 0 4 9c0 4.84 7 12 7 12Z" stroke="var(--color-teal-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="9" r="2.5" fill="var(--color-teal-accent)"/></svg>
-          <span id="user-city" style="font-weight:600;color:var(--color-deep-charcoal);font-family:var(--font-ui);">Detectando...</span>
-          <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:0.2em;"><path d="M4 6l4 4 4-4" stroke="var(--color-teal-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 21s7-7.16 7-12A7 7 0 1 0 4 9c0 4.84 7 12 7 12Z" stroke="var(--color-mint-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="9" r="2.5" fill="var(--color-mint-green)"/></svg>
+          <span id="user-city" style="font-weight:600;color:#0D0D0D;font-family:var(--font-ui);">Detectando...</span>
+          <svg width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:0.2em;"><path d="M4 6l4 4 4-4" stroke="var(--color-mint-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
       </div>
       <div class="d-flex align-items-center gap-3">
-        <a href="{% if user.is_authenticated %}{% url 'cuentas:enviar_feedback' %}{% else %}{% url 'account_login' %}?next={% url 'cuentas:enviar_feedback' %}{% endif %}" class="btn btn-outline-primary fw-bold d-flex align-items-center" style="gap:0.5em;">
-          <i class="bi bi-lightbulb"></i> Dinos cómo mejoramos
-        </a>
+        <button id="toggle-theme" class="btn d-flex align-items-center justify-content-center" style="width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:transparent;" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+          <span id="theme-icon" style="font-size:1.3rem;">🌙</span>
+        </button>
         <a href="{% url 'chat:lista_conversaciones' %}" class="nav-link position-relative" title="Chat">
           <i class="bi bi-chat-dots fs-4 position-relative" id="chatIcon"></i>
           <span id="chatCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" style="font-size:0.85rem; min-width:1.2em;">0</span>
@@ -105,6 +105,7 @@
             <i class="bi bi-person-circle"></i> {{ user.username }}
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" href="{% url 'cuentas:enviar_feedback' %}"><i class="bi bi-lightbulb"></i> Dinos cómo mejorar</a></li>
             {% if user.is_superuser or user.tipo == 'super_admin' %}
               <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:ejecutar_tests' %}"><i class="bi bi-bug-fill"></i> Ejecutar Tests Automáticos</a></li>
@@ -146,7 +147,7 @@
         <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-primary fw-bold me-2">
           <i class="bi bi-person-plus"></i> Registrarse
         </a>
-        <a href="{% url 'account_login' %}" class="btn btn-outline-secondary fw-bold">
+        <a href="{% url 'account_login' %}" class="btn btn-primary fw-bold">
           <i class="bi bi-box-arrow-in-right"></i> Iniciar Sesión
         </a>
         {% endif %}
@@ -155,12 +156,16 @@
     <!-- Mobile header: logo left, avatar right -->
     <div class="d-flex d-md-none align-items-center w-100 justify-content-between px-3" style="min-height:56px;">
       <a href="{% url 'inicio' %}" class="brand logo-text" style="font-size:1.5rem;">Melissa</a>
+      <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-2" style="width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:transparent;" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+        <span id="theme-icon-mobile" style="font-size:1.3rem;">🌙</span>
+      </button>
       {% if user.is_authenticated %}
         <div class="dropdown">
           <a href="#" class="nav-link p-0" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-person-circle" style="font-size:2rem;"></i>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile" style="min-width:220px;">
+            <li><a class="dropdown-item" href="{% url 'cuentas:enviar_feedback' %}"><i class="bi bi-lightbulb"></i> Dinos cómo mejorar</a></li>
             {% if user.is_superuser or user.tipo == 'super_admin' %}
               <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:ejecutar_tests' %}"><i class="bi bi-bug-fill"></i> Ejecutar Tests Automáticos</a></li>
@@ -203,7 +208,7 @@
           <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-primary fw-bold me-2">
             <i class="bi bi-person-plus"></i>
           </a>
-          <a href="{% url 'account_login' %}" class="btn btn-outline-secondary fw-bold">
+          <a href="{% url 'account_login' %}" class="btn btn-primary fw-bold">
             <i class="bi bi-box-arrow-in-right"></i>
           </a>
         </div>
@@ -225,37 +230,37 @@
   {% endif %}
 
   <!-- Contenido principal -->
-  <main class="container-fluid px-0">
+  <main class="container-fluid px-0" style="background:var(--color-black-deep);color:var(--color-smoke-white);padding-top:80px;">
     {% block content %}{% endblock %}
   </main>
 
   <!-- Footer -->
-  <footer class="mt-auto pt-4 pb-2 bg-light border-top" role="contentinfo">
+  <footer class="mt-auto pt-4 pb-2 border-top" role="contentinfo" style="background:var(--color-graphite-gray);color:var(--color-smoke-white);">
     <div class="container">
       <div class="row">
         <div class="col-md-4 mb-3">
-          <h5 class="mb-3" style="font-family:var(--font-serif-title);color:var(--color-teal-accent);">Melissa</h5>
-          <p class="text-muted">La plataforma líder para la gestión de citas en peluquerías. Simplifica tu negocio con nuestra tecnología intuitiva.</p>
+          <h5 class="mb-3" style="font-family:var(--font-serif-title);color:var(--color-mint-green);">Melissa</h5>
+          <p style="color:var(--color-smoke-white);">La plataforma líder para la gestión de citas en peluquerías. Simplifica tu negocio con nuestra tecnología intuitiva.</p>
         </div>
         <div class="col-md-4 mb-3">
-          <h6 class="mb-3">Enlaces Útiles</h6>
+          <h6 class="mb-3" style="color:var(--color-mint-green);">Enlaces Útiles</h6>
           <ul class="footer-links list-unstyled">
-            <li><a href="{% url 'inicio' %}">Inicio</a></li>
-            <li><a href="{% url 'clientes:dashboard' %}">Buscar Negocios</a></li>
+            <li><a href="{% url 'inicio' %}" style="color:var(--color-smoke-white);">Inicio</a></li>
+            <li><a href="{% url 'clientes:dashboard' %}" style="color:var(--color-smoke-white);">Buscar Negocios</a></li>
             {% if user.is_authenticated %}
-              <li><a href="{% url 'account_logout' %}">Cerrar Sesión</a></li>
+              <li><a href="{% url 'account_logout' %}" style="color:var(--color-smoke-white);">Cerrar Sesión</a></li>
             {% else %}
-              <li><a href="{% url 'account_login' %}">Iniciar Sesión</a></li>
+              <li><a href="{% url 'account_login' %}" style="color:var(--color-smoke-white);">Iniciar Sesión</a></li>
             {% endif %}
           </ul>
         </div>
         <div class="col-md-4 mb-3">
-          <h6 class="mb-3">Contacto</h6>
-          <p class="text-muted mb-1"><i class="bi bi-envelope me-2"></i>soporte@melissa.com</p>
-          <p class="text-muted"><i class="bi bi-whatsapp me-2"></i>+54 9 11 1234-5678</p>
+          <h6 class="mb-3" style="color:var(--color-mint-green);">Contacto</h6>
+          <p class="mb-1" style="color:var(--color-smoke-white);"><i class="bi bi-envelope me-2"></i>soporte@melissa.com</p>
+          <p style="color:var(--color-smoke-white);"><i class="bi bi-whatsapp me-2"></i>+54 9 11 1234-5678</p>
         </div>
       </div>
-      <div class="text-center text-muted small mt-3">&copy; {{ now|date:'Y' }} Melissa. Todos los derechos reservados.</div>
+      <div class="text-center small mt-3" style="color:var(--color-smoke-white);">&copy; {{ now|date:'Y' }} Melissa. Todos los derechos reservados.</div>
     </div>
   </footer>
 
@@ -445,5 +450,38 @@ document.addEventListener('DOMContentLoaded', detectCity);
       bsToast.show();
     }
   </script>
+  <script>
+// Cambiar tema claro/oscuro para desktop y mobile
+function setTheme(mode) {
+  const btns = [document.getElementById('toggle-theme'), document.getElementById('toggle-theme-mobile')];
+  if (mode === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-icon').textContent = '☀️';
+    if(document.getElementById('theme-icon-mobile')) document.getElementById('theme-icon-mobile').textContent = '☀️';
+    btns.forEach(btn => { if(btn) btn.style.border = 'none'; });
+    localStorage.setItem('theme', 'light');
+  } else {
+    document.body.classList.remove('light-mode');
+    document.getElementById('theme-icon').textContent = '🌙';
+    if(document.getElementById('theme-icon-mobile')) document.getElementById('theme-icon-mobile').textContent = '🌙';
+    btns.forEach(btn => { if(btn) btn.style.border = '2px solid #fff'; });
+    localStorage.setItem('theme', 'dark');
+  }
+}
+document.getElementById('toggle-theme').addEventListener('click', function() {
+  const isLight = document.body.classList.contains('light-mode');
+  setTheme(isLight ? 'dark' : 'light');
+});
+if(document.getElementById('toggle-theme-mobile')) {
+  document.getElementById('toggle-theme-mobile').addEventListener('click', function() {
+    const isLight = document.body.classList.contains('light-mode');
+    setTheme(isLight ? 'dark' : 'light');
+  });
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') setTheme('light');
+})();
+</script>
 </body>
 </html>

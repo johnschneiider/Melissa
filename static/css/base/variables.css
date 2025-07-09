@@ -1,17 +1,160 @@
 /* Paleta NeoWellness reforzada */
 :root {
-  --color-teal-accent: #1ec6b6;
-  --color-aqua-mint: #7fffd4;
-  --color-coral-blush: #ffd6d6;
-  --color-soft-lavender-gray: #f4f2fa;
-  --color-warm-sand: #f9f6f2;
-  --color-deep-charcoal: #2e2e3a;
-  --color-warning: #ffe066;
-  --color-success: #4fd18b;
-  --color-error: #ff6f61;
-  --color-info: #b2e0ff;
+  --color-black-deep: #0D0D0D;
+  --color-graphite-gray: #1F1F1F;
+  --color-smoke-white: #F5F5F5;
+  --color-mint-green: #A8E6CF;
+  --color-champagne-beige: #EFE5DC;
+  --color-light-blue-gray: #DDE6E8;
+  --color-mint-green-dark: #3CB371;
+
+  --font-poppins: 'Poppins', 'Inter', 'Manrope', 'Space Grotesk', sans-serif;
+  --font-ui: var(--font-poppins);
   --font-serif-title: 'Playfair Display', serif;
-  --font-sans-content: 'Manrope', Arial, sans-serif;
-  --font-ui: 'Manrope', Arial, sans-serif;
-  --font-branding: 'Playfair Display', serif;
+}
+
+body {
+  background: var(--color-black-deep);
+  color: #FFFFFF;
+  font-family: var(--font-ui);
+}
+
+.header, header {
+  background: var(--color-black-deep);
+  color: #FFFFFF;
+}
+
+footer {
+  background: var(--color-graphite-gray);
+  color: #FFFFFF;
+}
+
+.card, .tarjeta, .box, .modal-content {
+  background: var(--color-graphite-gray);
+  color: #FFFFFF;
+  border-radius: 1rem;
+  border: none;
+}
+
+.btn-primary, .btn-success, .btn-accent, .btn-mint {
+  background: var(--color-mint-green) !important;
+  color: var(--color-black-deep) !important;
+  border: none;
+}
+
+.btn-outline-primary, .btn-outline-accent {
+  color: var(--color-mint-green) !important;
+  border-color: var(--color-mint-green) !important;
+}
+
+.btn-outline-primary:hover, .btn-outline-accent:hover {
+  background: var(--color-mint-green) !important;
+  color: var(--color-black-deep) !important;
+}
+
+.divider, hr, .border-top {
+  border-color: var(--color-light-blue-gray) !important;
+}
+
+.bg-soft, .bg-light, .bg-fondo-suave {
+  background: var(--color-light-blue-gray) !important;
+  color: var(--color-black-deep) !important;
+}
+
+.text-strong {
+  color: #FFFFFF !important;
+  font-weight: 600;
+}
+
+.text-accent {
+  color: var(--color-mint-green) !important;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.text-secondary {
+  color: var(--color-champagne-beige) !important;
+  opacity: 0.85;
+}
+
+.light-mode {
+  --color-black-deep: #fff;
+  --color-graphite-gray: #F5F5F5;
+  --color-smoke-white: #0D0D0D;
+  --color-mint-green: var(--color-mint-green-dark);
+  --color-champagne-beige: #EFE5DC;
+  --color-light-blue-gray: #DDE6E8;
+}
+
+.light-mode body,
+.light-mode .header,
+.light-mode header,
+.light-mode footer,
+.light-mode .card, .light-mode .tarjeta, .light-mode .box, .light-mode .modal-content {
+  background: var(--color-black-deep) !important;
+  color: var(--color-smoke-white) !important;
+}
+
+.light-mode .btn, .light-mode .btn-primary, .light-mode .btn-success, .light-mode .btn-accent, .light-mode .btn-mint {
+  background: var(--color-mint-green) !important;
+  color: var(--color-smoke-white) !important;
+}
+
+.light-mode .btn-outline-primary, .light-mode .btn-outline-accent {
+  color: var(--color-mint-green) !important;
+  border-color: var(--color-mint-green) !important;
+}
+
+.light-mode .btn-outline-primary:hover, .light-mode .btn-outline-accent:hover {
+  background: var(--color-mint-green) !important;
+  color: var(--color-smoke-white) !important;
+}
+
+.light-mode .divider, .light-mode hr, .light-mode .border-top {
+  border-color: var(--color-light-blue-gray) !important;
+}
+
+.light-mode .bg-soft, .light-mode .bg-light, .light-mode .bg-fondo-suave {
+  background: var(--color-light-blue-gray) !important;
+  color: var(--color-smoke-white) !important;
+}
+
+.light-mode .text-strong {
+  color: var(--color-smoke-white) !important;
+  font-weight: 600;
+}
+
+.light-mode .text-accent {
+  color: var(--color-mint-green) !important;
+}
+
+.light-mode .text-secondary {
+  color: var(--color-champagne-beige) !important;
+}
+
+/* CTA Section global styles */
+.cta-section {
+  background: var(--color-mint-green) !important;
+}
+.cta-section .cta-title, .cta-section .cta-desc {
+  color: var(--color-smoke-white);
+  font-family: var(--font-ui);
+}
+.light-mode .cta-section {
+  background: #F5F5F5 !important;
+}
+.light-mode .cta-section .cta-title, .light-mode .cta-section .cta-desc {
+  color: #0D0D0D;
+}
+section.cta-section .cta-title, section.cta-section .cta-desc {
+  color: var(--color-smoke-white) !important;
+  font-family: var(--font-ui);
+}
+.light-mode section.cta-section .cta-title, .light-mode section.cta-section .cta-desc {
+  color: #0D0D0D !important;
+}
+section.cta-section .btn {
+  color: #0D0D0D !important;
+}
+.light-mode section.cta-section .btn {
+  color: #0D0D0D !important;
 } 

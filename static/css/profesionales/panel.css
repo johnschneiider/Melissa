@@ -1,0 +1,23 @@
+@import url('base.css');
+
+/* Estilos migrados desde panel.html */
+.perfil-portada {
+    height: 180px;
+    background-position: center;
+    background-size: cover;
+    border-radius: 1rem 1rem 0 0;
+}
+.perfil-foto {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+}
+.perfil-avatar {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+    color: var(--color-purple-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 

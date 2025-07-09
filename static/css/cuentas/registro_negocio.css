@@ -1,0 +1,16 @@
+@import url('base.css');
+
+/* Utilidades para registro de negocio */
+.card {
+    border-radius: 1rem;
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 600;
+}
+
+.input-group .toggle-password {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+} 

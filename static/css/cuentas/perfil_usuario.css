@@ -1,0 +1,12 @@
+@import url('base.css');
+
+/* Utilidades para perfil de usuario */
+.card {
+    border-radius: 1rem;
+}
+
+.badge {
+    font-size: 0.85rem;
+    padding: 0.5em 1em;
+    border-radius: 1em;
+} 

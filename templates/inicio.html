@@ -8,11 +8,11 @@
 
 
 <!-- Hero Section -->
-<section class="hero-section-custom d-flex flex-column justify-content-center align-items-center text-center min-vh-100 position-relative p-0" style="padding-top:0;">
-    <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="z-index:0;"></div>
+<section class="hero-section-custom d-flex flex-column justify-content-center align-items-center text-center min-vh-100 position-relative p-0" style="padding-top:0;background:var(--color-black-deep);color:var(--color-smoke-white);font-family:var(--font-ui);">
+    <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="z-index:0;background:linear-gradient(135deg,var(--color-black-deep) 60%,var(--color-graphite-gray) 100%);"></div>
 
     <div class="container position-relative" style="z-index:1;">
-        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto animated-hero-title" style="font-family: var(--font-serif); color: #181818; margin-top: 3.5rem;">
+        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto animated-hero-title" style="font-family: var(--font-ui); color: var(--color-smoke-white); margin-top: 3.5rem;">
             Reserva con tus peluquerias<br />
             <span id="frase-rotativa">o descubre tu favorita</span>
         </h1>
@@ -22,7 +22,7 @@
 <section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px;">
     <div class="container">
         <!-- Desktop/Tablet: barra extendida -->
-        <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;">
+        <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;background:var(--color-graphite-gray);color:var(--color-smoke-white);">
             <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
                 <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Ubicación</label>
                 <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
@@ -50,7 +50,7 @@
         </div>
         <!-- Mobile: barra compacta que abre modal -->
         <div class="d-block d-md-none">
-            <div class="search-bar-mobile bg-white rounded-pill shadow mx-auto d-flex align-items-center px-3 py-3 justify-content-center w-100" style="max-width: 100%; min-height: 54px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" data-bs-toggle="modal" data-bs-target="#busquedaModal">
+            <div class="search-bar-mobile rounded-pill shadow mx-auto d-flex align-items-center px-3 py-3 justify-content-center w-100" style="max-width: 100%; min-height: 54px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background:var(--color-graphite-gray);color:var(--color-smoke-white);" data-bs-toggle="modal" data-bs-target="#busquedaModal">
                 <i class="bi bi-search fs-4 text-muted me-2"></i>
                 <span class="text-muted flex-grow-1 text-center" style="font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">¿Qué reserva buscar hoy?</span>
             </div>
@@ -60,18 +60,18 @@
 
 {% if user.is_authenticated and is_cliente %}
 <div class="d-flex justify-content-center mt-4">
-    <a href="{% url 'clientes:dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold">
+    <a href="{% url 'clientes:dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);">
         <i class="bi bi-calendar-plus me-2"></i>Reservar ahora
     </a>
 </div>
 {% endif %}
 
         <div class="mt-5 mb-4">
-            <span class="fw-bold" style="font-size:1.5rem; letter-spacing:1px;">{{ total_reservas|intcomma }}</span>
-            <span style="font-size:1.2rem; color:#222;">citas reservadas</span>
+            <span class="fw-bold" style="font-size:1.5rem; letter-spacing:1px;color:var(--color-mint-green);font-family:var(--font-ui);">{{ total_reservas|intcomma }}</span>
+            <span style="font-size:1.2rem; color:var(--color-champagne-beige);">citas reservadas</span>
         </div>
         <div class="d-flex justify-content-center">
-            <a href="{% url 'clientes:proximamente_app' %}" class="btn btn-light border px-4 py-2 rounded-pill fw-bold d-flex align-items-center" style="font-size:1.1rem;">
+            <a href="{% url 'clientes:proximamente_app' %}" class="btn btn-light border px-4 py-2 rounded-pill fw-bold d-flex align-items-center" style="font-size:1.1rem;background:var(--color-champagne-beige);color:var(--color-black-deep);border:none;">
                 Obtener la app <i class="bi bi-qr-code-scan ms-2"></i>
             </a>
         </div>
@@ -83,7 +83,7 @@
 <!-- Modal búsqueda mobile (adaptado) -->
 <div class="modal fade" id="busquedaModal" tabindex="-1" aria-labelledby="busquedaModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content rounded-4 p-2" style="background: #fff;">
+    <div class="modal-content rounded-4 p-2" style="background: var(--color-graphite-gray);color:var(--color-smoke-white);">
       <div class="modal-header border-0 pb-0">
         <h5 class="modal-title fw-bold" id="busquedaModalLabel">Buscar servicios</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -123,10 +123,10 @@
     <div class="container">
         <div class="row text-center mb-5">
             <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold text-dark mb-4">
-                    ¿Por qué elegir <span class="text-primary">Melissa</span>?
+                <h2 class="display-5 fw-bold mb-4" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
+                    ¿Por qué elegir <span class="text-accent" style="color:var(--color-mint-green);">Melissa</span>?
                 </h2>
-                <p class="lead text-muted">
+                <p class="lead mb-5" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
                     La plataforma más avanzada para peluquerías que buscan la excelencia
                 </p>
             </div>
@@ -134,36 +134,36 @@
         
         <div class="row g-4">
             <div class="col-lg-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-calendar-check text-primary fs-1"></i>
+                <div class="feature-card text-center p-4 h-100" style="background:var(--color-graphite-gray);color:var(--color-smoke-white);border-radius:1rem;">
+                    <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-4 icon-inteligente">
+                        <i class="bi bi-calendar-check fs-1"></i>
                     </div>
-                    <h4 class="fw-bold mb-3">Gestión Inteligente</h4>
-                    <p class="text-muted">
+                    <h4 class="fw-bold mb-3 feature-title">Gestión Inteligente</h4>
+                    <p class="feature-desc">
                         Sistema de reservas automático que optimiza tu agenda y maximiza tus ingresos
                     </p>
                 </div>
             </div>
             
             <div class="col-lg-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-star text-success fs-1"></i>
+                <div class="feature-card text-center p-4 h-100" style="background:var(--color-graphite-gray);color:var(--color-smoke-white);border-radius:1rem;">
+                    <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-4 icon-premium">
+                        <i class="bi bi-star fs-1"></i>
                     </div>
-                    <h4 class="fw-bold mb-3">Experiencia Premium</h4>
-                    <p class="text-muted">
+                    <h4 class="fw-bold mb-3 feature-title">Experiencia Premium</h4>
+                    <p class="feature-desc">
                         Interfaz elegante que refleja la calidad de tu negocio y mejora la satisfacción del cliente
                     </p>
                 </div>
             </div>
             
             <div class="col-lg-4">
-                <div class="feature-card text-center p-4 h-100">
-                    <div class="feature-icon bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
-                        <i class="bi bi-graph-up text-warning fs-1"></i>
+                <div class="feature-card text-center p-4 h-100" style="background:var(--color-graphite-gray);color:var(--color-smoke-white);border-radius:1rem;">
+                    <div class="feature-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-4 icon-analytics">
+                        <i class="bi bi-graph-up fs-1"></i>
                     </div>
-                    <h4 class="fw-bold mb-3">Analytics Avanzados</h4>
-                    <p class="text-muted">
+                    <h4 class="fw-bold mb-3 feature-title">Analytics Avanzados</h4>
+                    <p class="feature-desc">
                         Métricas detalladas para tomar decisiones informadas y hacer crecer tu negocio
                     </p>
                 </div>
@@ -173,25 +173,25 @@
 </section>
 
 <!-- CTA Section -->
-<section class="cta-section py-5" style="background:var(--color-teal-accent);">
+<section class="cta-section py-5">
     <div class="container text-center">
-        <h2 class="display-6 fw-bold mb-4" style="color:#fff;">
+        <h2 class="fw-bold mb-4 cta-title">
             ¿Listo para transformar tu peluquería?
         </h2>
-        <p class="lead mb-5 opacity-90" style="color:#fff;">
+        <p class="mb-5 opacity-90 cta-desc">
             Únete a cientos de peluquerías que ya confían en Melissa
         </p>
         {% if not user.is_authenticated %}
-            <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold">
+            <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-champagne-beige);color:var(--color-black-deep);border:none;">
                 <i class="bi bi-rocket-takeoff me-2"></i>Comenzar Gratis
             </a>
         {% else %}
             {% if is_cliente %}
-                <a href="{% url 'clientes:dashboard' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold">
+                <a href="{% url 'clientes:dashboard' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);border:none;">
                     <i class="bi bi-search me-2"></i>Explorar Negocios
                 </a>
             {% elif is_negocio %}
-                <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold">
+                <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);border:none;">
                     <i class="bi bi-plus-circle me-2"></i>Crear mi Negocio
                 </a>
             {% endif %}

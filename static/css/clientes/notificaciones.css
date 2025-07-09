@@ -1,0 +1,23 @@
+@import url('base.css');
+
+/* Animación de eliminación de notificación */
+.noti-fade-out {
+    transition: opacity 0.4s;
+    opacity: 0;
+}
+
+/* Ajustes visuales para la lista de notificaciones */
+#notificaciones-lista .list-group-item {
+    border-radius: 0.75rem;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 2px 8px rgba(80,80,120,0.06);
+    border: none;
+}
+
+#notificaciones-lista .list-group-item.bg-light {
+    background-color: var(--color-light-bg, #f8f9fa) !important;
+}
+
+#notificaciones-lista .badge.bg-primary {
+    background: var(--color-blue-primary, #667eea);
+} 

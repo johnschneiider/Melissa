@@ -1,0 +1,8 @@
+@import url('base.css');
+
+.reiniciar-servidor-resultado {
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 1rem;
+    background: #f8f9fa;
+} 

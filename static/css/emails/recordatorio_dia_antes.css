@@ -1,0 +1,47 @@
+@import url('../../base/variables.css');
+
+body {
+    font-family: 'Roboto', var(--font-sans-content, Arial, sans-serif);
+    line-height: 1.6;
+    color: var(--color-deep-charcoal, #333);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Roboto', var(--font-sans-content, Arial, sans-serif);
+}
+.header {
+    background: var(--gradient-blue-purple);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+}
+.content {
+    background: var(--color-warm-sand, #f9f9f9);
+    padding: 30px;
+    border-radius: 0 0 10px 10px;
+}
+.reserva-info {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid var(--color-blue-primary);
+}
+.btn {
+    display: inline-block;
+    background: var(--color-blue-primary);
+    color: white;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #666;
+    font-size: 14px;
+} 

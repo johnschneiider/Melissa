@@ -1,0 +1,16 @@
+@import url('base.css');
+
+.reservar-turno-avatar {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+}
+
+.reservar-turno-avatar-placeholder {
+    width: 60px;
+    height: 60px;
+}
+
+.reservar-turno-avatar-icon {
+    font-size: 1.5rem;
+} 

@@ -1,0 +1,12 @@
+@import url('base.css');
+
+/* Notificación no leída */
+.noti-nueva {
+    background-color: var(--color-noti-nueva, #f5f7ff) !important;
+}
+
+/* Animación de eliminación (opcional, para transición suave) */
+.noti-eliminando {
+    transition: opacity 0.4s;
+    opacity: 0;
+} 

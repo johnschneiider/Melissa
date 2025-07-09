@@ -1,0 +1,45 @@
+@import url('base.css');
+
+.form-check-input:checked + .form-check-label {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.form-check-label {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-check-label:hover {
+    border-color: #0d6efd !important;
+    background-color: #f8f9ff;
+}
+
+.btn-outline-dark {
+    transition: all 0.3s ease;
+}
+
+.btn-outline-dark:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Más espacio arriba y abajo del formulario */
+@media (min-width: 768px) {
+  .card.shadow-lg {
+    margin-top: 2.5rem !important;
+    margin-bottom: 2.5rem !important;
+  }
+}
+
+/* Iconos más pequeños en escritorio para que quepan las 3 opciones */
+.icon-responsive {
+  font-size: 2.1rem;
+}
+
+@media (min-width: 768px) {
+  .icon-responsive {
+    font-size: 1.7rem;
+  }
+} 

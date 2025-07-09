@@ -1,0 +1,7 @@
+@import url('base.css');
+
+/* Estilos migrados desde detalle_negocio.html */
+.detalle-negocio-titulo {
+    font-family: var(--font-serif-title);
+    color: var(--color-teal-accent);
+} 

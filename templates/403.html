@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Error 403 - Acción no permitida{% endblock %}
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="display-1 text-danger mb-4"><i class="bi bi-shield-lock"></i></div>
+    <h1 class="mb-3">Error 403 - Acción no permitida</h1>
+    <p class="lead mb-4">Por tu seguridad, esta acción fue bloqueada por el sistema de protección CSRF.<br>
+    Esto puede ocurrir si tu sesión expiró, si abriste el sitio en varias pestañas, o si tu navegador bloqueó cookies.</p>
+    <p>¿Qué puedes hacer?</p>
+    <ul class="list-unstyled mb-4">
+        <li>• Recarga la página e inténtalo de nuevo.</li>
+        <li>• Si el problema persiste, cierra sesión y vuelve a ingresar.</li>
+        <li>• Si crees que es un error, contacta al soporte.</li>
+    </ul>
+    <a href="/" class="btn btn-primary btn-lg"><i class="bi bi-arrow-clockwise me-2"></i>Recargar página</a>
+</div>
+{% endblock %} 

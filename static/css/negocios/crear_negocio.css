@@ -1,0 +1,55 @@
+@import url('base.css');
+
+/* Estilos migrados desde crear_negocio.html */
+.bg-gradient-primary {
+    background: var(--gradient-blue-purple);
+}
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #e0e0e0;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--color-blue-primary);
+    box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+}
+.btn {
+    border-radius: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+.btn-primary {
+    background: var(--gradient-blue-purple);
+    border: none;
+}
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+.alert {
+    border-radius: 0.75rem;
+    border: none;
+}
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+  }
+  .container, .container.py-5, .row, .card, .card-body, .input-group, .form-control, .form-select, .btn, .col-12, .col-md-6, .col-lg-8 {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .form-control, .form-select, .input-group {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .container.py-5 {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+  .card.shadow-lg {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+} 

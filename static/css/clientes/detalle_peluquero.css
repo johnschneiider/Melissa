@@ -1,0 +1,52 @@
+@import url('base.css');
+
+.portada-negocio {
+    height: 240px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: var(--gradient-blue-purple);
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+.portada-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.logo-superpuesto {
+    left: 2rem;
+    bottom: -40px;
+    z-index: 2;
+}
+.logo-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #fff;
+    background: #fff;
+}
+.logo-placeholder {
+    font-size: 3rem;
+    color: var(--color-purple-accent);
+}
+.mt-60 { margin-top: 60px; }
+.galeria-img {
+    object-fit: cover;
+    width: 100%;
+    height: 160px;
+}
+.hover-card {
+    transition: all 0.2s;
+}
+.hover-card.cursor-pointer { cursor: pointer; }
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    border-color: var(--color-blue-primary) !important;
+}
+.hover-card:hover small {
+    color: var(--color-blue-primary) !important;
+}
+.transition-all { transition: all 0.2s; } 

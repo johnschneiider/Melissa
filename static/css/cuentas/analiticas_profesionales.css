@@ -1,0 +1,19 @@
+@import url('base.css');
+
+/* Utilidades para analíticas de profesionales */
+#graficoTopProfesionales, #graficoTasaCancelaciones, #graficoHorasTrabajadas {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(80,80,120,0.06);
+    margin-bottom: 1.5rem;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: var(--color-light-bg, #f8f9fa);
+}
+
+.list-group-item .badge {
+    font-size: 1rem;
+    padding: 0.5em 1em;
+    border-radius: 1em;
+} 

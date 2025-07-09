@@ -1,0 +1,24 @@
+@import url('base.css');
+
+/* Fondo principal */
+.completar-perfil-bg {
+    background: var(--gradient-blue-purple);
+}
+
+/* Logo circular */
+.completar-perfil-logo {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+    background: var(--gradient-blue-purple);
+    color: var(--color-purple-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 1rem;
+} 

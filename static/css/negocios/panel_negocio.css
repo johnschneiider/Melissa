@@ -1,0 +1,128 @@
+@import url('base.css');
+
+/* Estilos migrados desde panel_negocio.html */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+}
+
+.horario-card {
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    min-width: 100px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.horario-card.bg-gradient-primary {
+    background: var(--gradient-blue-purple);
+    color: white;
+}
+.horario-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.modal-content {
+    border-radius: 1rem;
+}
+
+/* Botones */
+.btn-primary {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+.btn-primary:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+/* Logo y avatar */
+.logo-negocio-panel {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    cursor: pointer;
+}
+.logo-negocio-panel-lg {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+.avatar-negocio-panel {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}
+.avatar-negocio-panel-lg {
+    width: 150px;
+    height: 150px;
+}
+.avatar-bg {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.avatar-bg-lg {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Badges y spans */
+.badge-servicio-panel {
+    font-size: 1rem;
+}
+.badge-servicio-duracion {
+    font-size: 0.9em;
+}
+
+/* Sliders */
+.slider-panel {
+    width: 70%;
+}
+
+/* Flatpickr */
+.flatpickr-input {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    color: #111827;
+    box-shadow: none;
+    transition: border-color 0.2s;
+}
+.flatpickr-input:focus {
+    border-color: #3b82f6;
+    outline: none;
+}
+.flatpickr-calendar {
+    border-radius: 1rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(59,130,246,0.08);
+    font-family: inherit;
+}
+.flatpickr-time {
+    border-radius: 0.5rem;
+    background: #f3f4f6;
+}
+
+@media (max-width: 768px) {
+    .display-5 {
+        font-size: 2rem;
+    }
+    .horario-card {
+        min-width: 80px;
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+} 
