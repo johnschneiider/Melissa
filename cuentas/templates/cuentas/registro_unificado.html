@@ -4,16 +4,16 @@
 {% block title %}Registro - Melissa{% endblock %}
 
 {% block content %}
-<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+<div class="container-fluid min-vh-100 d-flex align-items-center justify-content-center bg-app-gradient">
     <div class="row w-100 justify-content-center">
         <div class="col-md-8 col-lg-7 col-xl-6">
-            <div class="card shadow-lg border-0 rounded-4 mt-4 mb-4">
+            <div class="card shadow-lg border-0 rounded-4 mt-4 mb-4 form-card">
                 <div class="card-body p-4 p-md-5" style="margin-top: 2.5rem; margin-bottom: 2.5rem;">
                     <!-- Header -->
                     <div class="text-center mb-4">
                         <div class="logo mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">M</div>
-                        <h2 class="fw-bold text-dark mb-2">Únete a Melissa</h2>
-                        <p class="text-muted">Crea tu cuenta y comienza a disfrutar</p>
+                        <h2 class="fw-bold form-title mb-2">Únete a Melissa</h2>
+                        <p class="form-subtitle">Crea tu cuenta y comienza a disfrutar</p>
                     </div>
 
                     <!-- Formulario -->
@@ -22,15 +22,15 @@
                         
                         <!-- Selección de tipo de cuenta -->
                         <div class="mb-4">
-                            <label class="form-label fw-bold text-dark">¿Qué tipo de cuenta quieres crear?</label>
+                            <label class="form-label fw-bold form-title">¿Qué tipo de cuenta quieres crear?</label>
                             <div class="d-flex flex-column flex-md-row gap-3 justify-content-md-center align-items-md-stretch">
                                 <div class="flex-fill">
                                     <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_cliente" value="cliente" required>
-                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_cliente" style="min-width: 0;">
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2 form-option" for="tipo_cliente" style="min-width: 0;">
                                             <div class="text-start flex-grow-1">
-                                                <span class="fw-bold">Cliente</span><br>
-                                                <small class="text-muted">Reservar servicios</small>
+                                                <span class="fw-bold form-text">Cliente</span><br>
+                                                <small class="form-subtitle">Reservar servicios</small>
                                             </div>
                                             <i class="bi bi-person-circle text-primary ms-2 icon-responsive"></i>
                                         </label>
@@ -39,10 +39,10 @@
                                 <div class="flex-fill">
                                     <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_negocio" value="negocio" required>
-                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_negocio" style="min-width: 0;">
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2 form-option" for="tipo_negocio" style="min-width: 0;">
                                             <div class="text-start flex-grow-1">
-                                                <span class="fw-bold">Negocio</span><br>
-                                                <small class="text-muted">Ofrecer servicios</small>
+                                                <span class="fw-bold form-text">Negocio</span><br>
+                                                <small class="form-subtitle">Ofrecer servicios</small>
                                             </div>
                                             <i class="bi bi-shop text-warning ms-2 icon-responsive"></i>
                                         </label>
@@ -51,10 +51,10 @@
                                 <div class="flex-fill">
                                     <div class="form-check w-100 h-100">
                                         <input class="form-check-input" type="radio" name="tipo" id="tipo_profesional" value="profesional" required>
-                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2" for="tipo_profesional" style="min-width: 0;">
+                                        <label class="form-check-label w-100 h-100 p-2 p-md-3 border rounded-3 d-flex flex-row align-items-center justify-content-between text-center gap-2 form-option" for="tipo_profesional" style="min-width: 0;">
                                             <div class="text-start flex-grow-1">
-                                                <span class="fw-bold">Profesional</span><br>
-                                                <small class="text-muted">Soy peluquero</small>
+                                                <span class="fw-bold form-text">Profesional</span><br>
+                                                <small class="form-subtitle">Soy peluquero</small>
                                             </div>
                                             <i class="bi bi-scissors text-success ms-2 icon-responsive"></i>
                                         </label>
@@ -70,7 +70,7 @@
 
                         <!-- Campos del formulario -->
                         <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de usuario</label>
+                            <label for="{{ form.username.id_for_label }}" class="form-label form-text">Nombre de usuario</label>
                             {{ form.username }}
                             {% if form.username.errors %}
                                 <div class="invalid-feedback d-block">
@@ -80,7 +80,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Correo electrónico</label>
+                            <label for="{{ form.email.id_for_label }}" class="form-label form-text">Correo electrónico</label>
                             {{ form.email }}
                             {% if form.email.errors %}
                                 <div class="invalid-feedback d-block">
@@ -90,7 +90,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.telefono.id_for_label }}" class="form-label">Teléfono</label>
+                            <label for="{{ form.telefono.id_for_label }}" class="form-label form-text">Teléfono</label>
                             {{ form.telefono }}
                             {% if form.telefono.errors %}
                                 <div class="invalid-feedback d-block">
@@ -100,7 +100,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.password1.id_for_label }}" class="form-label">Contraseña</label>
+                            <label for="{{ form.password1.id_for_label }}" class="form-label form-text">Contraseña</label>
                             <div class="input-group">
                                 {{ form.password1 }}
                                 <button type="button" class="btn btn-outline-secondary toggle-password" data-target="id_password1" tabindex="-1">
@@ -115,7 +115,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirmar contraseña</label>
+                            <label for="{{ form.password2.id_for_label }}" class="form-label form-text">Confirmar contraseña</label>
                             <div class="input-group">
                                 {{ form.password2 }}
                                 <button type="button" class="btn btn-outline-secondary toggle-password" data-target="id_password2" tabindex="-1">
@@ -132,8 +132,8 @@
                         <!-- Checkbox de política de tratamiento de datos -->
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" id="politica_datos" name="politica_datos" checked required>
-                            <label class="form-check-label" for="politica_datos">
-                                Acepto las <a href="{% url 'cuentas:politica_datos' %}" target="_blank">políticas de tratamiento de datos</a>
+                            <label class="form-check-label form-text" for="politica_datos">
+                                Acepto las <a href="{% url 'cuentas:politica_datos' %}" target="_blank" class="form-link">políticas de tratamiento de datos</a>
                             </label>
                         </div>
 
@@ -146,14 +146,14 @@
                     <!-- Separador -->
                     <div class="position-relative my-4">
                         <hr class="border-1">
-                        <div class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted">
+                        <div class="position-absolute top-50 start-50 translate-middle separator-box px-3 text-nowrap">
                             o regístrate con
                         </div>
                     </div>
 
                     <!-- Botón de Google -->
                     <div class="mb-4">
-                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark rounded-pill py-3 w-100 d-flex align-items-center justify-content-center gap-3">
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-dark btn-google rounded-pill py-3 w-100 d-flex align-items-center justify-content-center gap-3">
                             <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg" alt="Google" width="20">
                             <span class="fw-medium">Continuar con Google</span>
                         </a>
@@ -161,9 +161,9 @@
 
                     <!-- Enlace a login -->
                     <div class="text-center">
-                        <p class="mb-0 text-muted">
+                        <p class="mb-0 form-subtitle">
                             ¿Ya tienes una cuenta? 
-                            <a href="{% url 'account_login' %}" class="text-decoration-none fw-bold">Inicia sesión</a>
+                            <a href="{% url 'account_login' %}" class="text-decoration-none fw-bold form-link">Inicia sesión</a>
                         </p>
                     </div>
                 </div>
@@ -173,9 +173,60 @@
 </div>
 
 <style>
+.bg-app-gradient {
+  background: var(--color-smoke-white, #f5f5f5);
+}
+.form-card {
+  background: #fff !important;
+  color: #181818 !important;
+}
+.form-title,
+.form-label,
+.form-text,
+.form-subtitle,
+.form-link,
+.form-check-label {
+  color: #181818 !important;
+}
+.separator-box {
+  background: #fff !important;
+  color: #181818 !important;
+  border-radius: 0.5em;
+  font-weight: 500;
+}
+.form-link {
+  color: var(--color-mint-green, #4ade80) !important;
+}
+@media (prefers-color-scheme: dark) {
+  .bg-app-gradient, body {
+    background: var(--color-black-deep, #0D0D0D) !important;
+  }
+  /* El formulario sigue blanco con letras negras */
+  .form-card {
+    background: #fff !important;
+    color: #181818 !important;
+  }
+  .form-title,
+  .form-label,
+  .form-text,
+  .form-subtitle,
+  .form-link,
+  .form-check-label {
+    color: #181818 !important;
+  }
+  .separator-box {
+    background: #fff !important;
+    color: #181818 !important;
+  }
+  .form-link {
+    color: var(--color-mint-green, #4ade80) !important;
+  }
+}
+
 .form-check-input:checked + .form-check-label {
-    border-color: #0d6efd !important;
-    background-color: #f8f9ff;
+    border-color: var(--color-mint-green, #4ade80) !important;
+    background-color: var(--color-mint-green, #4ade80) !important;
+    color: var(--color-black-deep, #0D0D0D) !important;
 }
 
 .form-check-label {
@@ -183,17 +234,12 @@
     transition: all 0.3s ease;
 }
 
-.form-check-label:hover {
-    border-color: #0d6efd !important;
-    background-color: #f8f9ff;
-}
-
 .btn-outline-dark {
     transition: all 0.3s ease;
 }
 
 .btn-outline-dark:hover {
-    background-color: #f8f9fa;
+    background-color: var(--color-mint-green, #4ade80);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -215,6 +261,50 @@
   .icon-responsive {
     font-size: 1.7rem;
   }
+}
+
+.form-check-input[type="radio"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.btn-google {
+  border: none !important;
+  box-shadow: none !important;
+}
+.form-check-input[type="checkbox"] {
+  border-radius: 50% !important;
+  width: 20px;
+  height: 20px;
+  background-color: #fff !important;
+  border: 2px solid var(--color-mint-green, #4ade80) !important;
+  box-shadow: none !important;
+  accent-color: var(--color-mint-green, #4ade80) !important;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+.form-check-input[type="checkbox"]:checked {
+  background-color: #fff !important;
+  border-color: var(--color-mint-green, #4ade80) !important;
+}
+.form-check-input[type="checkbox"]:checked::after {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-mint-green, #4ade80);
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+.form-check-label.form-text, .form-check-label {
+  color: #181818 !important;
+  background: none !important;
 }
 </style>
 

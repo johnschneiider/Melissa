@@ -172,6 +172,56 @@
     </div>
 </section>
 
+<!-- Video Section -->
+<section class="video-section py-5" style="background:var(--color-black-deep);color:var(--color-smoke-white);">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-lg-8 mx-auto">
+                <h2 class="display-5 fw-bold mb-4" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
+                    Conoce <span class="text-accent" style="color:var(--color-mint-green);">Melissa</span> en acción
+                </h2>
+                <p class="lead mb-5" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
+                    Descubre cómo nuestra plataforma revoluciona la gestión de peluquerías
+                </p>
+            </div>
+        </div>
+        
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Video autoplay</title>
+          <style>
+            .video-container {
+              border-radius: 1rem;
+              overflow: hidden;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+              max-width: 800px;
+              margin: 2rem auto;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="video-container">
+            <iframe
+              width="100%"
+              height="450"
+              src="https://www.youtube.com/embed/0M3uF7qgG4w?autoplay=1&mute=1&loop=1&playlist=0M3uF7qgG4w&controls=0&modestbranding=1&rel=0"
+              title="Melissa - Plataforma de Gestión para Peluquerías"
+              frameborder="0"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+              style="border: none; border-radius: 1rem;">
+            </iframe>
+          </div>
+        </body>
+        </html>
+        
+          
+        
+    </div>
+</section>
+
 <!-- CTA Section -->
 <section class="cta-section py-5">
     <div class="container text-center">
@@ -619,7 +669,7 @@ function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, 
         timeout = setTimeout(() => buscarSugerencias(input.value), 400);
     });
     document.addEventListener('click', function(e) {
-        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+        if (sugerenciasDiv && !sugerenciasDiv.contains(e.target) && e.target !== input) {
             sugerenciasDiv.innerHTML = '';
         }
     });
@@ -760,7 +810,7 @@ servicioInput.addEventListener('focus', function() {
 });
 // Ocultar dropdown si se hace click fuera
 document.addEventListener('click', function(e) {
-    if (!servicioInput.contains(e.target) && !negociosDropdown.contains(e.target)) {
+    if ((typeof servicioInput !== 'undefined' && servicioInput && !servicioInput.contains(e.target)) && (typeof negociosDropdown !== 'undefined' && negociosDropdown && !negociosDropdown.contains(e.target))) {
         negociosDropdown.classList.remove('show');
     }
 });
@@ -881,7 +931,7 @@ function setupServicioAutocomplete(inputId, sugerenciasId) {
     });
     
     document.addEventListener('click', function(e) {
-        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+        if (sugerenciasDiv && !sugerenciasDiv.contains(e.target) && e.target !== input) {
             sugerenciasDiv.innerHTML = '';
         }
     });
@@ -942,7 +992,7 @@ function setupNegocioAutocomplete(inputId, sugerenciasId) {
     });
     
     document.addEventListener('click', function(e) {
-        if (!sugerenciasDiv.contains(e.target) && e.target !== input) {
+        if (sugerenciasDiv && !sugerenciasDiv.contains(e.target) && e.target !== input) {
             sugerenciasDiv.innerHTML = '';
         }
     });
@@ -1016,6 +1066,124 @@ const btnBuscarMobile = document.querySelector('#busquedaModal .btn-pink');
 if (btnBuscarMobile) {
     btnBuscarMobile.addEventListener('click', buscarNegociosMobile);
 }
+
+// Video Section Styles
+document.addEventListener('DOMContentLoaded', function() {
+    const videoIframe = document.querySelector('.video-iframe');
+    const videoContainer = document.querySelector('.video-container');
+    
+    if (videoIframe && videoContainer) {
+        // Responsive height
+        const aspectRatio = 16 / 9;
+        function resizeVideo() {
+            const containerWidth = videoContainer.offsetWidth;
+            const containerHeight = containerWidth / aspectRatio;
+            videoIframe.style.height = containerHeight + 'px';
+        }
+        resizeVideo();
+        window.addEventListener('resize', resizeVideo);
+    }
+});
 </script>
+
+<style>
+/* Video Section Responsive Styles */
+.video-section {
+    background: var(--color-black-deep) !important;
+    color: var(--color-smoke-white) !important;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+    background: #000;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.video-iframe {
+    width: 100%;
+    height: 0;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    border: none;
+    border-radius: 1.5rem;
+    position: relative;
+    z-index: 2;
+    background: #000;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.1);
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 1.5rem;
+}
+
+.video-play-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .video-container {
+        margin: 0 1rem;
+        border-radius: 1rem;
+    }
+    
+    .video-iframe {
+        padding-bottom: 56.25%; /* Mantener 16:9 en mobile */
+        border-radius: 1rem;
+    }
+    
+    .video-section h2 {
+        font-size: 2rem;
+    }
+    
+    .video-section .lead {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .video-section h2 {
+        font-size: 1.75rem;
+    }
+    
+    .video-section .lead {
+        font-size: 1rem;
+    }
+}
+
+/* Light mode adjustments */
+.light-mode .video-section {
+    background: var(--color-black-deep) !important;
+    color: var(--color-smoke-white) !important;
+}
+
+.light-mode .video-container {
+    box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+}
+</style>
 {% endblock %}
 {% endblock %} 

@@ -3,6 +3,40 @@
 {% block title %}Buscar Negocio - Melissa{% endblock %}
 
 {% block content %}
+<style>
+.bg-app-gradient, body {
+  background: var(--color-smoke-white, #f5f5f5);
+}
+.card, .form-card {
+  background: #fff !important;
+  color: #181818 !important;
+}
+.form-title,
+.form-label,
+.form-text,
+.form-subtitle,
+.form-link,
+.form-check-label {
+  color: #181818 !important;
+}
+@media (prefers-color-scheme: dark) {
+  .bg-app-gradient, body {
+    background: var(--color-black-deep, #0D0D0D) !important;
+  }
+  .card, .form-card {
+    background: #fff !important;
+    color: #181818 !important;
+  }
+  .form-title,
+  .form-label,
+  .form-text,
+  .form-subtitle,
+  .form-link,
+  .form-check-label {
+    color: #181818 !important;
+  }
+}
+</style>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-10">

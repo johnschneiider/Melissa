@@ -131,6 +131,36 @@ footer {
   color: var(--color-champagne-beige) !important;
 }
 
+/* Colores de texto globales para modo claro y oscuro */
+.text-muted {
+  color: #6c757d !important;
+}
+.text-dark {
+  color: #181818 !important;
+}
+.text-light {
+  color: #f5f5f5 !important;
+}
+.text-secondary {
+  color: var(--color-champagne-beige) !important;
+  opacity: 0.85;
+}
+@media (prefers-color-scheme: dark) {
+  .text-muted {
+    color: #bdbdbd !important;
+  }
+  .text-dark {
+    color: #f5f5f5 !important;
+  }
+  .text-light {
+    color: #fff !important;
+  }
+  .text-secondary {
+    color: #e0e0e0 !important;
+    opacity: 0.92;
+  }
+}
+
 /* CTA Section global styles */
 .cta-section {
   background: var(--color-mint-green) !important;
@@ -157,4 +187,43 @@ section.cta-section .btn {
 }
 .light-mode section.cta-section .btn {
   color: #0D0D0D !important;
+}
+
+/* Botones de tema: solo glifos puros, sin fondo ni borde */
+#toggle-theme, #toggle-theme-mobile {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: none;
+}
+
+#toggle-theme:hover, #toggle-theme-mobile:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#toggle-theme:focus, #toggle-theme-mobile:focus {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none;
+}
+
+#toggle-theme span, #toggle-theme-mobile span {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--color-smoke-white) !important;
+}
+
+.light-mode #toggle-theme span, .light-mode #toggle-theme-mobile span {
+  color: var(--color-smoke-white) !important;
 } 

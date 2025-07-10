@@ -3,6 +3,82 @@
 
 {% block title %}Buscar Usuarios{% endblock %}
 
+{% block extra_css %}
+<style>
+:root {
+  --chat-bg-light: #fff;
+  --chat-bg-dark: #181818;
+  --chat-card-light: #fff;
+  --chat-card-dark: #23232b;
+  --chat-header-light: #f8f9fa;
+  --chat-header-dark: #23232b;
+  --chat-border-light: #dee2e6;
+  --chat-border-dark: #333646;
+  --chat-message-text-light: #181818;
+  --chat-message-text-dark: #fff;
+  --chat-muted-light: #6c757d;
+  --chat-muted-dark: #bdbdbd;
+}
+body, .bg-app-gradient {
+  background: var(--chat-bg-light);
+}
+.card {
+  background: var(--chat-card-light) !important;
+  color: var(--chat-message-text-light) !important;
+}
+.card-header {
+  background: var(--chat-header-light);
+  border-bottom: 1px solid var(--chat-border-light);
+  color: var(--chat-message-text-light);
+}
+.card-body {
+  background: var(--chat-card-light);
+  color: var(--chat-message-text-light);
+}
+.text-muted {
+  color: var(--chat-muted-light) !important;
+}
+.btn-primary {
+  background: var(--color-mint-green, #4ade80) !important;
+  border: none !important;
+  color: #181818 !important;
+}
+.btn-outline-secondary {
+  color: var(--chat-message-text-light) !important;
+  border-color: var(--chat-border-light) !important;
+}
+@media (prefers-color-scheme: dark) {
+  body, .bg-app-gradient {
+    background: var(--chat-bg-dark) !important;
+  }
+  .card {
+    background: var(--chat-card-dark) !important;
+    color: var(--chat-message-text-dark) !important;
+  }
+  .card-header {
+    background: var(--chat-header-dark);
+    border-bottom: 1px solid var(--chat-border-dark);
+    color: var(--chat-message-text-dark);
+  }
+  .card-body {
+    background: var(--chat-card-dark);
+    color: var(--chat-message-text-dark);
+  }
+  .text-muted {
+    color: var(--chat-muted-dark) !important;
+  }
+  .btn-primary {
+    background: var(--color-mint-green, #4ade80) !important;
+    color: #181818 !important;
+  }
+  .btn-outline-secondary {
+    color: var(--chat-message-text-dark) !important;
+    border-color: var(--chat-border-dark) !important;
+  }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">

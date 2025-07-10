@@ -84,7 +84,7 @@
         </div>
       </div>
       <div class="d-flex align-items-center gap-3">
-        <button id="toggle-theme" class="btn d-flex align-items-center justify-content-center" style="width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:transparent;" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+        <button id="toggle-theme" class="btn d-flex align-items-center justify-content-center" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
           <span id="theme-icon" style="font-size:1.3rem;">🌙</span>
         </button>
         <a href="{% url 'chat:lista_conversaciones' %}" class="nav-link position-relative" title="Chat">
@@ -156,7 +156,7 @@
     <!-- Mobile header: logo left, avatar right -->
     <div class="d-flex d-md-none align-items-center w-100 justify-content-between px-3" style="min-height:56px;">
       <a href="{% url 'inicio' %}" class="brand logo-text" style="font-size:1.5rem;">Melissa</a>
-      <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-2" style="width:40px;height:40px;border-radius:50%;border:2px solid #fff;background:transparent;" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
+      <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-2" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
         <span id="theme-icon-mobile" style="font-size:1.3rem;">🌙</span>
       </button>
       {% if user.is_authenticated %}
@@ -464,7 +464,7 @@ function setTheme(mode) {
     document.body.classList.remove('light-mode');
     document.getElementById('theme-icon').textContent = '🌙';
     if(document.getElementById('theme-icon-mobile')) document.getElementById('theme-icon-mobile').textContent = '🌙';
-    btns.forEach(btn => { if(btn) btn.style.border = '2px solid #fff'; });
+            btns.forEach(btn => { if(btn) btn.style.border = 'none'; });
     localStorage.setItem('theme', 'dark');
   }
 }

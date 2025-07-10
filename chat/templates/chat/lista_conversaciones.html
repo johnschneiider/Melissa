@@ -3,6 +3,88 @@
 
 {% block title %}Mis Conversaciones{% endblock %}
 
+{% block extra_css %}
+<style>
+:root {
+  --chat-bg-light: #fff;
+  --chat-bg-dark: #181818;
+  --chat-card-light: #fff;
+  --chat-card-dark: #23232b;
+  --chat-header-light: #f8f9fa;
+  --chat-header-dark: #23232b;
+  --chat-border-light: #dee2e6;
+  --chat-border-dark: #333646;
+  --chat-message-text-light: #181818;
+  --chat-message-text-dark: #fff;
+  --chat-muted-light: #6c757d;
+  --chat-muted-dark: #bdbdbd;
+}
+body, .bg-app-gradient {
+  background: var(--chat-bg-light);
+}
+.card {
+  background: var(--chat-card-light) !important;
+  color: var(--chat-message-text-light) !important;
+}
+.card-header {
+  background: var(--chat-header-light);
+  border-bottom: 1px solid var(--chat-border-light);
+  color: var(--chat-message-text-light);
+}
+.card-body {
+  background: var(--chat-card-light);
+  color: var(--chat-message-text-light);
+}
+.text-muted, .text-secondary, .chat-empty-title, .chat-empty-subtitle {
+  color: var(--chat-muted-light) !important;
+  opacity: 1 !important;
+}
+.text-center .fa-comments, .text-center .fa-users, .text-center .fa-search {
+  color: var(--chat-muted-light) !important;
+  opacity: 1 !important;
+}
+.btn-primary {
+  background: var(--color-mint-green, #4ade80) !important;
+  border: none !important;
+  color: #181818 !important;
+}
+.list-group-item {
+  background: var(--chat-card-light) !important;
+  color: var(--chat-message-text-light) !important;
+}
+.badge.bg-primary {
+  background: var(--color-mint-green, #4ade80) !important;
+  color: #181818 !important;
+}
+@media (prefers-color-scheme: dark) {
+  body, .bg-app-gradient {
+    background: var(--chat-bg-dark) !important;
+  }
+  .card {
+    background: var(--chat-card-dark) !important;
+    color: var(--chat-message-text-dark) !important;
+  }
+  .card-header {
+    background: var(--chat-header-dark);
+    border-bottom: 1px solid var(--chat-border-dark);
+    color: var(--chat-message-text-dark);
+  }
+  .card-body {
+    background: var(--chat-card-dark);
+    color: var(--chat-message-text-dark);
+  }
+  .text-muted, .text-secondary, .chat-empty-title, .chat-empty-subtitle {
+    color: #f5f5f5 !important;
+    opacity: 1 !important;
+  }
+  .text-center .fa-comments, .text-center .fa-users, .text-center .fa-search {
+    color: #f5f5f5 !important;
+    opacity: 1 !important;
+  }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="row">

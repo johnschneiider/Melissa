@@ -2,7 +2,7 @@
 {% block title %}Ajustes de Usuario{% endblock %}
 {% block content %}
 <div class="container py-5">
-    <a href="/clientes/dashboard/" class="btn btn-outline-primary mb-4 d-inline-flex align-items-center" style="gap:0.5em;">
+    <a href="/clientes/dashboard/" class="btn mb-4 d-inline-flex align-items-center" style="gap:0.5em; border:none; color:#181818 !important;">
       <i class="bi bi-arrow-left"></i> Regresar al panel
     </a>
     <div class="row justify-content-center">
@@ -42,7 +42,7 @@
                     <p class="text-muted mb-3">¿Estás seguro de que quieres salir de Melissa?</p>
                     <form method="post" action="#">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger fw-bold px-4 py-2">Eliminar mi cuenta</button>
+                        <button type="submit" class="btn fw-bold px-4 py-2" style="border:none; color:#181818 !important;">Eliminar mi cuenta</button>
                     </form>
                 </div>
             </div>
