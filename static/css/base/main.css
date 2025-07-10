@@ -330,3 +330,54 @@ footer.bg-light {
     display: none;
   }
 } 
+
+@media (max-width: 768px) {
+  .header.d-md-none, header.d-md-none,
+  .header.d-md-none > *, header.d-md-none > * {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 0 !important;
+  }
+  .header.d-md-none .d-flex,
+  .header.d-md-none .align-items-center,
+  .header.d-md-none .gap-2 {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+  }
+  .header.d-md-none button,
+  .header.d-md-none .btn {
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+} 
+
+/* Refuerzo: header móvil, sin fondo ni borde en avatar y hamburguesa */
+@media (max-width: 768px) {
+  #menu-mobile-btn,
+  #userDropdownMobile,
+  #userDropdownMobile.btn,
+  #menu-mobile-btn.btn {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  #menu-mobile-btn .bi-list,
+  #userDropdownMobile .bi-person-circle {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+} 
+
+/* Refuerzo: iconos de menú y avatar blancos en modo oscuro */
+@media (max-width: 768px) {
+  body:not(.light-mode) #menu-mobile-btn .bi-list,
+  body:not(.light-mode) #userDropdownMobile .bi-person-circle {
+    color: #fff !important;
+    fill: #fff !important;
+  }
+} 

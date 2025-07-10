@@ -40,6 +40,13 @@ SESSION_COOKIE_AGE = 86400  # 24 horas
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://vitalmix.com.co",
+    "https://www.vitalmix.com.co",
+    "https://www.vitalmix.com.co",
+]
 # Configuración de mensajes
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 

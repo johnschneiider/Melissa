@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container py-5">
+<div class="container py-5 mis-negocios-main">
     <!-- Header con acciones -->
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex mis-negocios-flex-col justify-content-between align-items-center mb-5">
         <div>
             <h2 class="mb-1"><i class="bi bi-shop me-2"></i> Mis Negocios</h2>
             <p class="text-muted mb-0">Administra tus establecimientos registrados</p>
@@ -198,8 +198,9 @@
         }
     }
     
+    /* Cambiado: solo afecta a los flex internos de mis_negocios */
     @media (max-width: 768px) {
-        .d-flex {
+        .mis-negocios-flex-col {
             flex-direction: column;
             gap: 1rem;
             align-items: flex-start !important;

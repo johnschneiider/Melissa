@@ -68,7 +68,8 @@
     }
 }
 @media (max-width: 768px) {
-    .d-flex {
+    /* Solo aplicar a los d-flex internos, no al header */
+    .mis-negocios-main .d-flex {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start !important;

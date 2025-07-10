@@ -153,18 +153,19 @@
         {% endif %}
       </div>
     </div>
-    <!-- Mobile header: logo left, avatar right -->
+    <!-- Mobile header: logo left, luna/sol, avatar o hamburguesa -->
     <div class="d-flex d-md-none align-items-center w-100 justify-content-between px-3" style="min-height:56px;">
       <a href="{% url 'inicio' %}" class="brand logo-text" style="font-size:1.5rem;">Melissa</a>
-      <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-2" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro">
-        <span id="theme-icon-mobile" style="font-size:1.3rem;">🌙</span>
-      </button>
-      {% if user.is_authenticated %}
+      <div class="d-flex align-items-center gap-2">
+        <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-1" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro" style="background:transparent;">
+          <span id="theme-icon-mobile" style="font-size:1.3rem;">🌙</span>
+        </button>
+        {% if user.is_authenticated %}
         <div class="dropdown">
-          <a href="#" class="nav-link p-0" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-person-circle" style="font-size:2rem;"></i>
+          <a class="btn d-flex align-items-center justify-content-center p-0" href="#" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background:transparent;border:none;box-shadow:none;font-size:2rem;">
+            <i class="bi bi-person-circle"></i>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile" style="min-width:220px;">
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile">
             <li><a class="dropdown-item" href="{% url 'cuentas:enviar_feedback' %}"><i class="bi bi-lightbulb"></i> Dinos cómo mejorar</a></li>
             {% if user.is_superuser or user.tipo == 'super_admin' %}
               <li><a class="dropdown-item" href="{% url 'cuentas:dashboard_super_admin' %}"><i class="bi bi-speedometer2"></i> Panel Super Admin</a></li>
@@ -203,17 +204,59 @@
             <li><a class="dropdown-item" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
           </ul>
         </div>
-      {% else %}
-        <div>
-          <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-primary fw-bold me-2">
-            <i class="bi bi-person-plus"></i>
-          </a>
-          <a href="{% url 'account_login' %}" class="btn btn-primary fw-bold">
-            <i class="bi bi-box-arrow-in-right"></i>
-          </a>
-        </div>
-      {% endif %}
+        {% else %}
+        <button id="menu-mobile-btn" class="btn d-flex align-items-center justify-content-center p-0" style="background:transparent;border:none;box-shadow:none;font-size:2rem;" aria-label="Abrir menú">
+          <i class="bi bi-list"></i>
+        </button>
+        {% endif %}
+      </div>
     </div>
+    <!-- Modal menú móvil -->
+    <div class="modal fade" id="menuMobileModal" tabindex="-1" aria-labelledby="menuMobileModalLabel" aria-hidden="true" data-bs-backdrop="false">
+      <div class="modal-dialog modal-fullscreen m-0">
+        <div class="modal-content" style="background:#f5f5f5;color:#181818;border-radius:0;box-shadow:none;">
+          <div class="d-flex justify-content-between align-items-center w-100" style="padding:1.2rem 1.5rem 0.5rem 1.5rem;">
+            <h2 class="fw-bold mb-0" id="menuMobileModalLabel" style="font-size:1.5rem;">Menú Melissa</h2>
+            <button type="button" data-bs-dismiss="modal" aria-label="Cerrar" style="background:transparent;border:none;box-shadow:none;font-size:2.3rem;line-height:1;color:#181818;opacity:1;padding:0 0.5rem 0 0;">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body d-flex flex-column justify-content-center align-items-center gap-4" style="padding:2.5rem 1.5rem;">
+            <div class="w-100" style="max-width:370px;">
+              <div class="bg-white rounded-4 shadow-sm p-0 mb-3" style="overflow:hidden;">
+                <a href="{% url 'account_login' %}" class="d-flex align-items-center justify-content-between px-4 py-3 text-decoration-none" style="color:#181818;font-size:1.13rem;font-weight:500;border-bottom:1px solid #f0f0f0;">
+                  Iniciar sesión
+                  <span style="font-size:1.2rem;">&#8594;</span>
+                </a>
+                <a href="{% url 'cuentas:registro_unificado' %}" class="d-flex align-items-center justify-content-between px-4 py-3 text-decoration-none" style="color:#181818;font-size:1.13rem;font-weight:500;border-bottom:1px solid #f0f0f0;">
+                  Registrarse
+                  <span style="font-size:1.2rem;">&#8594;</span>
+                </a>
+                <a href="{% url 'cuentas:enviar_feedback' %}" class="d-flex align-items-center justify-content-between px-4 py-3 text-decoration-none" style="color:#181818;font-size:1.13rem;font-weight:500;border-bottom:1px solid #f0f0f0;">
+                  Dinos cómo mejorar
+                  <span style="font-size:1.2rem;">&#8594;</span>
+                </a>
+                <a href="{% url 'cuentas:politica_datos' %}" class="d-flex align-items-center justify-content-between px-4 py-3 text-decoration-none" style="color:#181818;font-size:1.13rem;font-weight:500;">
+                  Políticas de privacidad
+                  <span style="font-size:1.2rem;">&#8594;</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        var menuBtn = document.getElementById('menu-mobile-btn');
+        var menuModal = new bootstrap.Modal(document.getElementById('menuMobileModal'));
+        if(menuBtn) {
+          menuBtn.addEventListener('click', function() {
+            menuModal.show();
+          });
+        }
+      });
+    </script>
   </header>
 
   <!-- Mensajes de alerta -->
