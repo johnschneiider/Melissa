@@ -709,12 +709,90 @@ def reservar_negocio(request, negocio_id):
     
     # Si no es POST, mostrar formulario normal
     form = ReservaNegocioForm(negocio=negocio, profesional_preseleccionado=profesional_preseleccionado, initial=initial)
+
+    # --- NUEVO: calcular disponibilidad diaria para el mes visible si hay profesional seleccionado ---
+    from datetime import date, timedelta
+    import calendar
+    disponibilidad = {}
+    hoy = date.today()
+    mes = hoy.month
+    anio = hoy.year
+    # Si hay fecha preseleccionada, usar ese mes
+    if fecha_preseleccionada:
+        try:
+            partes = fecha_preseleccionada.split('-')
+            anio = int(partes[0])
+            mes = int(partes[1])
+        except Exception:
+            pass
+    # Calcular primer y último día del mes
+    primer_dia = date(anio, mes, 1)
+    ultimo_dia = date(anio, mes, calendar.monthrange(anio, mes)[1])
+    dias_mes = (ultimo_dia - primer_dia).days + 1
+    profesional = profesional_preseleccionado
+    servicio = None
+    if servicio_id:
+        try:
+            servicio = negocio.servicios_negocio.get(id=servicio_id)
+        except Exception:
+            servicio = None
+    for i in range(dias_mes):
+        dia = primer_dia + timedelta(days=i)
+        disponible = False
+        if profesional and servicio:
+            # Verificar si es festivo/domingo
+            import holidays
+            co_holidays = holidays.CountryHoliday('CO')
+            nombre_dia = dia.strftime('%A')
+            nombre_dia_es = {
+                'Monday': 'lunes',
+                'Tuesday': 'martes',
+                'Wednesday': 'miercoles',
+                'Thursday': 'jueves',
+                'Friday': 'viernes',
+                'Saturday': 'sabado',
+                'Sunday': 'domingo'
+            }.get(nombre_dia, nombre_dia)
+            es_festivo = dia in co_holidays or nombre_dia_es == 'domingo'
+            if not es_festivo:
+                from profesionales.models import HorarioProfesional
+                horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
+                if horario_prof:
+                    # Verificar si hay al menos un slot disponible
+                    inicio = horario_prof.hora_inicio
+                    fin = horario_prof.hora_fin
+                    duracion = servicio.duracion or 30
+                    inicio_minutos = inicio.hour * 60 + inicio.minute
+                    fin_minutos = fin.hour * 60 + fin.minute
+                    tiempo_actual = inicio_minutos
+                    reservas = Reserva.objects.filter(
+                        peluquero=negocio,
+                        profesional=profesional,
+                        fecha=dia,
+                        estado__in=['pendiente', 'confirmado']
+                    ).values_list('hora_inicio', 'hora_fin')
+                    while tiempo_actual + duracion <= fin_minutos:
+                        hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
+                        hora_fin = time((tiempo_actual + duracion) // 60, (tiempo_actual + duracion) % 60)
+                        ocupado = False
+                        for reserva_inicio, reserva_fin in reservas:
+                            if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                                ocupado = True
+                                break
+                        if not ocupado:
+                            disponible = True
+                            break
+                        tiempo_actual += duracion
+        disponibilidad[dia.strftime('%Y-%m-%d')] = disponible
+    # --- FIN NUEVO ---
+
     return render(request, 'clientes/reservar_negocio.html', {
         'negocio': negocio,
         'servicios': servicios,
         'form': form,
         'profesional_preseleccionado': profesional_preseleccionado,
         'fecha_preseleccionada': fecha_preseleccionada,
+        'disponibilidad': disponibilidad,  # <-- pasar al contexto
     })
 
 @login_required
@@ -1279,3 +1357,73 @@ def buscar_negocios(request):
             'total_resultados': 0,
             'error': 'Error en la búsqueda'
         })
+
+@require_GET
+def disponibilidad_dias(request):
+    from datetime import date, timedelta
+    import calendar
+    import holidays
+    from profesionales.models import HorarioProfesional
+    profesional_id = request.GET.get('profesional_id')
+    servicio_id = request.GET.get('servicio_id')
+    mes = int(request.GET.get('mes'))
+    anio = int(request.GET.get('anio'))
+    negocio_id = request.GET.get('negocio_id')
+    disponibilidad = {}
+    if not (profesional_id and servicio_id and negocio_id):
+        return JsonResponse({'disponibilidad': disponibilidad})
+    try:
+        negocio = Negocio.objects.get(id=negocio_id)
+        profesional = Profesional.objects.get(id=profesional_id)
+        servicio = negocio.servicios_negocio.get(id=servicio_id)
+    except Exception:
+        return JsonResponse({'disponibilidad': disponibilidad})
+    primer_dia = date(anio, mes, 1)
+    ultimo_dia = date(anio, mes, calendar.monthrange(anio, mes)[1])
+    dias_mes = (ultimo_dia - primer_dia).days + 1
+    for i in range(dias_mes):
+        dia = primer_dia + timedelta(days=i)
+        disponible = False
+        # Verificar si es festivo/domingo
+        co_holidays = holidays.CountryHoliday('CO')
+        nombre_dia = dia.strftime('%A')
+        nombre_dia_es = {
+            'Monday': 'lunes',
+            'Tuesday': 'martes',
+            'Wednesday': 'miercoles',
+            'Thursday': 'jueves',
+            'Friday': 'viernes',
+            'Saturday': 'sabado',
+            'Sunday': 'domingo'
+        }.get(nombre_dia, nombre_dia)
+        es_festivo = dia in co_holidays or nombre_dia_es == 'domingo'
+        if not es_festivo:
+            horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
+            if horario_prof:
+                # Verificar si hay al menos un slot disponible
+                inicio = horario_prof.hora_inicio
+                fin = horario_prof.hora_fin
+                duracion = servicio.duracion or 30
+                inicio_minutos = inicio.hour * 60 + inicio.minute
+                fin_minutos = fin.hour * 60 + fin.minute
+                tiempo_actual = inicio_minutos
+                reservas = Reserva.objects.filter(
+                    peluquero=negocio,
+                    profesional=profesional,
+                    fecha=dia,
+                    estado__in=['pendiente', 'confirmado']
+                ).values_list('hora_inicio', 'hora_fin')
+                while tiempo_actual + duracion <= fin_minutos:
+                    hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
+                    hora_fin = time((tiempo_actual + duracion) // 60, (tiempo_actual + duracion) % 60)
+                    ocupado = False
+                    for reserva_inicio, reserva_fin in reservas:
+                        if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                            ocupado = True
+                            break
+                    if not ocupado:
+                        disponible = True
+                        break
+                    tiempo_actual += duracion
+        disponibilidad[dia.strftime('%Y-%m-%d')] = disponible
+    return JsonResponse({'disponibilidad': disponibilidad})

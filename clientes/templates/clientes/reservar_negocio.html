@@ -64,13 +64,33 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="calendario-reserva" class="form-label">Fecha</label>
-                            <div id="calendario-reserva"></div>
+                            <label class="form-label">Fecha</label>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div id="carrusel-semana" class="flex-grow-1"></div>
+                                <button type="button" class="btn btn-outline-secondary ms-2" id="btn-abrir-modal-calendario">
+                                    <i class="fa fa-calendar"></i>
+                                </button>
+                            </div>
                             <input type="hidden" name="fecha" id="id_fecha" value="{% if fecha_preseleccionada %}{{ fecha_preseleccionada }}{% else %}{{ form.initial.fecha|default:'' }}{% endif %}">
                         </div>
+
+                        <!-- Modal Calendario Mensual -->
+                        <div class="modal fade" id="modalCalendario" tabindex="-1" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-body p-4">
+                                <div id="calendario-mensual"></div>
+                                <div class="d-flex justify-content-end mt-3">
+                                  <button type="button" class="btn btn-primary" id="btn-confirmar-calendario">Confirmar</button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Horarios disponibles</label>
-                            <div id="slots-disponibles" class="row g-2"></div>
+                            <div id="slots-disponibles" class="d-flex flex-column gap-2"></div>
                             <div id="hora-input-wrapper" style="display:none;">
                                 {{ form.hora_inicio.label_tag }}
                                 {{ form.hora_inicio }}
@@ -87,6 +107,7 @@
         </div>
     </div>
 </div>
+{{ disponibilidad|json_script:"disponibilidad-json" }}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const servicioField = document.getElementById('id_servicio');
@@ -114,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = form.querySelector('button[type="submit"]');
 
         if (!servicioId || !profesionalId || !fecha) {
-            slotsDiv.innerHTML = '<div class="col-12 text-muted">Selecciona servicio, profesional y fecha para ver horarios.</div>';
+            slotsDiv.innerHTML = '<div class="text-muted">Selecciona servicio, profesional y fecha para ver horarios.</div>';
             submitBtn.disabled = true;
             return;
         }
@@ -125,7 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (!data.disponibles || data.disponibles.length === 0) {
                     slotsDiv.innerHTML = `
-                        <div class="col-12 text-danger fw-bold">
+                        <div class="text-danger fw-bold">
                             No hay horarios disponibles para este día.<br>
                             El profesional no trabaja o está ocupado.<br>
                             <span class="text-muted">Por favor, elige otra fecha u horario.</span>
@@ -134,24 +155,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     submitBtn.disabled = true;
                     return;
                 }
-                // Si hay horarios, habilitar el botón
                 submitBtn.disabled = false;
-                // Mostrar los slots disponibles
                 let html = '';
                 data.disponibles.forEach(slot => {
-                    html += `<div class="col-auto">
-                        <button type="button" class="btn btn-outline-primary btn-sm slot-btn" data-hora="${slot.inicio}">
-                            ${slot.inicio} - ${slot.fin}
-                        </button>
-                    </div>`;
+                    html += `<button type="button" class="btn slot-btn w-100 mb-1" data-hora="${slot.inicio}">
+                        ${slot.inicio} - ${slot.fin}
+                    </button>`;
                 });
                 slotsDiv.innerHTML = html;
                 horaInputWrapper.style.display = 'block';
                 // Manejar selección de slot
                 document.querySelectorAll('.slot-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
-                        this.classList.add('active');
+                        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('slot-btn-selected', 'active'));
+                        this.classList.add('slot-btn-selected', 'active');
                         horaInicioField.value = this.getAttribute('data-hora');
                         horaInicioField.required = true;
                     });
@@ -159,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error fetching slots:', error);
-                slotsDiv.innerHTML = '<div class="col-12 text-danger">Error al cargar horarios.</div>';
+                slotsDiv.innerHTML = '<div class="text-danger">Error al cargar horarios.</div>';
                 submitBtn.disabled = true;
             });
     }
@@ -187,69 +204,219 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Reemplazar input de fecha por calendario visual
-(function() {
-    const fechaInput = document.getElementById('id_fecha');
-    const calendarioDiv = document.getElementById('calendario-reserva');
+// --- Utilidades de fecha ---
+function getMonday(d) {
+    d = new Date(d);
+    var day = d.getDay(), diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    return new Date(d.setDate(diff));
+}
+function formatDate(date) {
+    return date.toISOString().slice(0,10);
+}
+function addDays(date, days) {
+    var d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+}
+function getWeekDates(selectedDate) {
+    let monday = getMonday(selectedDate);
+    let days = [];
+    for (let i = 0; i < 7; i++) {
+        days.push(addDays(monday, i));
+    }
+    return days;
+}
+// --- Fin utilidades ---
+
+let DISPONIBILIDAD = JSON.parse(document.getElementById('disponibilidad-json').textContent);
+const DIAS_SEMANA = ['lun','mar','mié','jue','vie','sáb','dom'];
+let fechaSeleccionada = document.getElementById('id_fecha').value || formatDate(new Date());
+let semanaActual = getWeekDates(new Date(fechaSeleccionada));
+
+function renderCarruselSemana() {
+    const carrusel = document.getElementById('carrusel-semana');
+    carrusel.innerHTML = '';
+    // Flecha izquierda
+    const btnPrev = document.createElement('button');
+    btnPrev.className = 'btn btn-link px-2';
+    btnPrev.innerHTML = '<i class="fa fa-chevron-left"></i>';
+    btnPrev.onclick = () => {
+        semanaActual = getWeekDates(addDays(semanaActual[0], -7));
+        renderCarruselSemana();
+    };
+    carrusel.appendChild(btnPrev);
+    // Días de la semana
+    semanaActual.forEach((date, idx) => {
+        const fechaStr = formatDate(date);
+        const disponible = DISPONIBILIDAD[fechaStr];
+        const isSelected = fechaSeleccionada === fechaStr;
+        let btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn mx-1 d-flex flex-column align-items-center justify-content-center';
+        btn.style.background = 'transparent';
+        btn.style.border = 'none';
+        btn.style.padding = '0';
+        btn.style.margin = '0 2px';
+        btn.innerHTML = `<span class="fw-bold dia-circulo${isSelected ? ' dia-circulo-activo' : ''}">${date.getDate()}</span><span class="small text-lowercase d-block mt-1">${DIAS_SEMANA[date.getDay() === 0 ? 6 : date.getDay()-1]}</span>`;
+        if (!disponible) {
+            btn.classList.add('text-decoration-line-through', 'text-muted');
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => {
+                fechaSeleccionada = fechaStr;
+                document.getElementById('id_fecha').value = fechaStr;
+                renderCarruselSemana();
+                document.getElementById('id_fecha').dispatchEvent(new Event('change'));
+            };
+        }
+        carrusel.appendChild(btn);
+    });
+    // Flecha derecha
+    const btnNext = document.createElement('button');
+    btnNext.className = 'btn btn-link px-2';
+    btnNext.innerHTML = '<i class="fa fa-chevron-right"></i>';
+    btnNext.onclick = () => {
+        semanaActual = getWeekDates(addDays(semanaActual[0], 7));
+        renderCarruselSemana();
+    };
+    carrusel.appendChild(btnNext);
+}
+
+// --- Modal calendario mensual ---
+let mesActual = (new Date(fechaSeleccionada)).getMonth();
+let anioActual = (new Date(fechaSeleccionada)).getFullYear();
+let fechaSeleccionadaModal = fechaSeleccionada;
+
+function renderCalendarioMensual() {
+    const calDiv = document.getElementById('calendario-mensual');
+    calDiv.innerHTML = '';
+    const primerDia = new Date(anioActual, mesActual, 1);
+    const diasEnMes = new Date(anioActual, mesActual+1, 0).getDate();
+    const diaSemana = (primerDia.getDay() + 6) % 7; // Lunes=0
+    // Header mes
+    let header = document.createElement('div');
+    header.className = 'd-flex justify-content-between align-items-center mb-2';
+    header.innerHTML = `<button class='btn btn-link' id='cal-prev'><i class='fa fa-chevron-left'></i></button><span class='fw-bold'>${primerDia.toLocaleString('default', { month: 'long', year: 'numeric' })}</span><button class='btn btn-link' id='cal-next'><i class='fa fa-chevron-right'></i></button>`;
+    calDiv.appendChild(header);
+    // Tabla días
+    let table = document.createElement('table');
+    table.className = 'table table-borderless text-center align-middle mb-0';
+    let thead = document.createElement('thead');
+    let trh = document.createElement('tr');
+    DIAS_SEMANA.forEach(d => {
+        let th = document.createElement('th');
+        th.className = 'small';
+        th.innerText = d;
+        trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+    let tbody = document.createElement('tbody');
+    let tr = document.createElement('tr');
+    for (let i = 0; i < diaSemana; i++) {
+        tr.appendChild(document.createElement('td'));
+    }
+    let celdas = diaSemana;
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fecha = new Date(anioActual, mesActual, dia);
+        const fechaStr = formatDate(fecha);
+        const disponible = DISPONIBILIDAD[fechaStr];
+        let td = document.createElement('td');
+        let btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn rounded-circle w-100 calendario-dia';
+        btn.style.height = '40px';
+        btn.innerText = dia;
+        if (fechaSeleccionadaModal === fechaStr) {
+            btn.classList.add('btn-primary', 'text-white');
+        } else {
+            btn.classList.add('btn-outline-secondary');
+        }
+        if (!disponible) {
+            btn.classList.add('text-decoration-line-through', 'text-muted');
+            btn.disabled = true;
+        } else {
+            btn.onclick = () => {
+                fechaSeleccionadaModal = fechaStr;
+                renderCalendarioMensual();
+            };
+        }
+        td.appendChild(btn);
+        tr.appendChild(td);
+        celdas++;
+        if (celdas % 7 === 0) {
+            tbody.appendChild(tr);
+            tr = document.createElement('tr');
+        }
+    }
+    if (celdas % 7 !== 0) tbody.appendChild(tr);
+    table.appendChild(tbody);
+    calDiv.appendChild(table);
+    // Navegación mes
+    document.getElementById('cal-prev').onclick = () => {
+        mesActual--;
+        if (mesActual < 0) { mesActual = 11; anioActual--; }
+        renderCalendarioMensual();
+    };
+    document.getElementById('cal-next').onclick = () => {
+        mesActual++;
+        if (mesActual > 11) { mesActual = 0; anioActual++; }
+        renderCalendarioMensual();
+    };
+}
+
+function actualizarDisponibilidadAjax() {
+    const profesionalId = document.getElementById('id_profesional').value;
+    const servicioId = document.getElementById('id_servicio').value;
     const hoy = new Date();
-    let mes = hoy.getMonth();
+    let mes = hoy.getMonth() + 1;
     let anio = hoy.getFullYear();
-    function getDiasEnMes(mes, anio) {
-        return new Date(anio, mes + 1, 0).getDate();
+    // Si hay una fecha seleccionada, usar ese mes
+    if (fechaSeleccionada) {
+        const d = new Date(fechaSeleccionada);
+        mes = d.getMonth() + 1;
+        anio = d.getFullYear();
     }
-    function renderCalendario() {
-        const diasMes = getDiasEnMes(mes, anio);
-        const primerDia = new Date(anio, mes, 1);
-        let html = '<table class="table table-bordered text-center align-middle"><thead><tr>';
-        const diasSemana = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-        for (let d of diasSemana) html += `<th class="small">${d}</th>`;
-        html += '</tr></thead><tbody><tr>';
-        let diaSemana = (primerDia.getDay() + 6) % 7; // Lunes=0
-        let celdas = 0;
-        for (let i = 0; i < diaSemana; i++) {
-            html += '<td></td>';
-            celdas++;
-        }
-        for (let dia = 1; dia <= diasMes; dia++) {
-            const fecha = new Date(anio, mes, dia);
-            const fechaStr = fecha.toISOString().slice(0,10);
-            // Marcar la fecha seleccionada
-            let btnClass = 'btn btn-sm btn-light w-100 py-2 px-0 calendario-dia';
-            if (fechaInput.value === fechaStr) {
-                btnClass += ' bg-success text-white';
-            }
-            html += `<td><button type="button" class="${btnClass}" data-fecha="${fechaStr}">${dia}</button></td>`;
-            celdas++;
-            if (celdas % 7 === 0) html += '</tr><tr>';
-        }
-        html += `</tr></tbody></table>`;
-        html += `<div class="d-flex justify-content-between align-items-center mt-2">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-prev">&lt; Mes anterior</button>
-            <span class="fw-bold">${primerDia.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-next">Mes siguiente &gt;</button>
-        </div>`;
-        calendarioDiv.innerHTML = html;
-        document.querySelectorAll('.calendario-dia').forEach(btn => {
-            btn.addEventListener('click', function() {
-                fechaInput.value = this.dataset.fecha;
-                document.querySelectorAll('.calendario-dia').forEach(b => b.classList.remove('bg-success', 'text-white'));
-                this.classList.add('bg-success', 'text-white');
-                fechaInput.dispatchEvent(new Event('change'));
-            });
+    if (!profesionalId || !servicioId) {
+        DISPONIBILIDAD = {};
+        renderCarruselSemana();
+        return;
+    }
+    fetch(`/clientes/api/disponibilidad-dias/?profesional_id=${profesionalId}&servicio_id=${servicioId}&mes=${mes}&anio=${anio}&negocio_id={{ negocio.id }}`)
+        .then(resp => resp.json())
+        .then(data => {
+            DISPONIBILIDAD = data.disponibilidad || {};
+            renderCarruselSemana();
         });
-        document.getElementById('cal-prev').onclick = function() {
-            mes--;
-            if (mes < 0) { mes = 11; anio--; }
-            renderCalendario();
-        };
-        document.getElementById('cal-next').onclick = function() {
-            mes++;
-            if (mes > 11) { mes = 0; anio++; }
-            renderCalendario();
-        };
-    }
-    renderCalendario();
-})();
+}
+
+// --- Eventos ---
+document.addEventListener('DOMContentLoaded', function() {
+    renderCarruselSemana();
+    // Abrir modal calendario
+    document.getElementById('btn-abrir-modal-calendario').onclick = function() {
+        fechaSeleccionadaModal = fechaSeleccionada;
+        mesActual = (new Date(fechaSeleccionada)).getMonth();
+        anioActual = (new Date(fechaSeleccionada)).getFullYear();
+        renderCalendarioMensual();
+        var modal = new bootstrap.Modal(document.getElementById('modalCalendario'));
+        modal.show();
+    };
+    // Confirmar selección en modal
+    document.getElementById('btn-confirmar-calendario').onclick = function() {
+        if (fechaSeleccionadaModal) {
+            fechaSeleccionada = fechaSeleccionadaModal;
+            document.getElementById('id_fecha').value = fechaSeleccionada;
+            renderCarruselSemana();
+            document.getElementById('id_fecha').dispatchEvent(new Event('change'));
+        }
+        var modal = bootstrap.Modal.getInstance(document.getElementById('modalCalendario'));
+        modal.hide();
+    };
+    // AJAX: actualizar disponibilidad al cambiar profesional o servicio
+    document.getElementById('id_profesional').addEventListener('change', actualizarDisponibilidadAjax);
+    document.getElementById('id_servicio').addEventListener('change', actualizarDisponibilidadAjax);
+});
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -271,36 +438,100 @@ document.addEventListener('DOMContentLoaded', function() {
 .calendario-dia.text-white {
     color: #fff !important;
 }
-.slot-btn {
-    background: #e9ecef !important;
+.slot-btn, .slot-btn.btn, .slot-btn.btn-success, .slot-btn.btn-primary {
+    background: #fff !important;
     color: #222 !important;
-    border: none !important;
+    border: 1px solid #d1d5db !important;
     border-radius: 1.5rem !important;
     font-weight: 600;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.7rem;
     white-space: nowrap;
-    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
-    padding: 0.4em 1.1em !important;
-    min-height: 2.1em;
+    transition: background 0.2s, color 0.2s, border 0.2s, box-shadow 0.2s;
+    padding: 0.7em 1.3em !important;
+    min-height: 2.5em;
     height: auto;
+    margin-bottom: 0.2em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
 }
 button.slot-btn.slot-btn-selected,
 button.slot-btn[aria-selected="true"] {
     background: #28a745 !important;
     color: #fff !important;
-    border: none !important;
-    box-shadow: none !important;
+    border: 1.5px solid #28a745 !important;
+    box-shadow: 0 2px 8px rgba(40,167,69,0.10) !important;
     z-index: 2;
 }
-#slots-disponibles .col-6, #slots-disponibles .col-md-3 {
+#slots-disponibles {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 #hora-input-wrapper { display: none !important; }
+#carrusel-semana {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+}
+#carrusel-semana .btn,
+#carrusel-semana .btn.btn-primary,
+#carrusel-semana .btn.btn-outline-secondary {
+    background: transparent !important;
+    color: #222 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 2px;
+    min-width: 54px;
+    min-height: 54px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+.dia-circulo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    color: #222;
+    font-weight: 700;
+    font-size: 1.1em;
+    transition: background 0.2s, color 0.2s;
+}
+.dia-circulo-activo {
+    background: #e5e0fa !important;
+    color: #6c63ff !important;
+}
+#carrusel-semana .btn[disabled] .dia-circulo {
+    background: transparent !important;
+    color: #bdbdbd !important;
+    opacity: 0.5;
+}
+#carrusel-semana .btn[disabled] .small {
+    color: #bdbdbd !important;
+    opacity: 0.5;
+}
+#carrusel-semana .btn.btn-primary, #carrusel-semana .btn.text-white {
+    border: 2.5px solid #6c757d !important;
+    color: #222 !important;
+    background: #fff !important;
+}
+#carrusel-semana .btn-outline-secondary, #calendario-mensual .btn-outline-secondary {
+    background: #fff !important;
+    color: #222 !important;
+    border: 1.5px solid #d1d5db !important;
+}
+.text-decoration-line-through {
+    text-decoration: line-through !important;
+}
 </style>
 {% endblock %} 

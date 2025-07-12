@@ -23,6 +23,7 @@ from .views import (
     negocios_cercanos,
     autocompletar_negocios,
     buscar_negocios,
+    disponibilidad_dias,
 )
 
 app_name = 'clientes'
@@ -53,4 +54,8 @@ urlpatterns = [
     path('api/autocompletar-servicios/', autocompletar_servicios, name='autocompletar_servicios'),
     path('api/negocios-cercanos/', negocios_cercanos, name='negocios_cercanos'),
     path('api/autocompletar-negocios/', autocompletar_negocios, name='autocompletar_negocios'),
+]
+
+urlpatterns += [
+    path('api/disponibilidad-dias/', disponibilidad_dias, name='api_disponibilidad_dias'),
 ]
