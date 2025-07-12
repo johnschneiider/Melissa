@@ -10,7 +10,15 @@ class UsuarioPersonalizado(AbstractUser):
         ('super_admin', 'Super Administrador'),
     )
     tipo = models.CharField(max_length=15, choices=TIPO_USUARIO, default='cliente')
-    telefono = models.CharField(max_length=15, blank=True) 
+    telefono = models.CharField(max_length=15, blank=True)
+    GENERO_CHOICES = [
+        ('masculino', 'Masculino'),
+        ('femenino', 'Femenino'),
+        ('otro', 'Otro'),
+        ('', 'Prefiero no decirlo'),
+    ]
+    genero = models.CharField(max_length=20, choices=GENERO_CHOICES, blank=True, null=True, default='')
+    fecha_nacimiento = models.DateField(blank=True, null=True)
 
 class Feedback(models.Model):
     ESTADO_CHOICES = (

@@ -26,11 +26,13 @@ function showAlert(message, type = 'success') {
     if (container) {
         container.insertBefore(alertDiv, container.firstChild);
         
-        // Auto-hide después de 5 segundos
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alertDiv);
-            bsAlert.close();
-        }, 5000);
+        // Auto-hide después de 5 segundos solo si NO tiene la clase no-auto-hide
+        if (!alertDiv.classList.contains('no-auto-hide')) {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alertDiv);
+                bsAlert.close();
+            }, 5000);
+        }
     }
 }
 

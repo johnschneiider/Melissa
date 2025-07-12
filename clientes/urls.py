@@ -9,7 +9,9 @@ from .views import (
     mis_reservas,
     dashboard_cliente,
     reservar_negocio,
+    confirmar_reserva,
     cancelar_reserva,
+    completar_reserva,
     reagendar_reserva,
     notificaciones_cliente,
     eliminar_notificacion_cliente,
@@ -38,7 +40,9 @@ urlpatterns = [
     path('negocio/<int:negocio_id>/reservar/', reservar_negocio, name='reservar_negocio'),
     path('notificaciones/', notificaciones_cliente, name='notificaciones'),
     path('notificaciones/eliminar/<int:notificacion_id>/', eliminar_notificacion_cliente, name='eliminar_notificacion'),
+    path('reserva/<int:reserva_id>/confirmar/', confirmar_reserva, name='confirmar_reserva'),
     path('reserva/<int:reserva_id>/cancelar/', cancelar_reserva, name='cancelar_reserva'),
+    path('reserva/<int:reserva_id>/completar/', completar_reserva, name='completar_reserva'),
     path('reserva/<int:reserva_id>/reagendar/', reagendar_reserva, name='reagendar_reserva'),
     
     # URLs de calificaciones

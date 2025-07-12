@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block title %}Gestionar Ausencias y Vacaciones{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Mis Ausencias y Vacaciones</h2>
+  
+  <!-- Información del negocio -->
+  <div class="alert alert-info mb-4">
+    <strong>Negocio:</strong> {{ negocio.nombre }}
+  </div>
+
+  <!-- Formulario para solicitar ausencia -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">Solicitar Nueva Ausencia</h5>
+    </div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3">
+            <label for="fecha_inicio" class="form-label">Desde</label>
+            <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" required>
+          </div>
+          <div class="col-md-3">
+            <label for="fecha_fin" class="form-label">Hasta</label>
+            <input type="date" class="form-control" name="fecha_fin" id="fecha_fin" required>
+          </div>
+          <div class="col-md-4">
+            <label for="motivo" class="form-label">Motivo (opcional)</label>
+            <input type="text" class="form-control" name="motivo" id="motivo" maxlength="200" placeholder="Vacaciones, enfermedad, etc.">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-success w-100" title="Solicitar ausencia">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla unificada de solicitudes -->
+  {% if solicitudes_pendientes or solicitudes_aprobadas or solicitudes_rechazadas %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-success text-white">
+      <h5 class="mb-0">Mis Solicitudes de Ausencia</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-success">
+            <tr>
+              <th>Desde</th>
+              <th>Hasta</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Comentario</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for solicitud in solicitudes_pendientes %}
+            <tr>
+              <td>{{ solicitud.fecha_inicio }}</td>
+              <td>{{ solicitud.fecha_fin }}</td>
+              <td>{{ solicitud.motivo|default:'-' }}</td>
+              <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+              <td>{{ solicitud.fecha_solicitud|date:"d/m/Y" }}</td>
+              <td>-</td>
+              <td>
+                <form method="post" action="{% url 'profesionales:cancelar_solicitud_ausencia' solicitud.id %}" style="display:inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger btn-sm" title="Cancelar solicitud" onclick="return confirm('¿Seguro que deseas cancelar esta solicitud?');">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            
+            {% for solicitud in solicitudes_aprobadas %}
+            <tr>
+              <td>{{ solicitud.fecha_inicio }}</td>
+              <td>{{ solicitud.fecha_fin }}</td>
+              <td>{{ solicitud.motivo|default:'-' }}</td>
+              <td><span class="badge bg-success">Aprobada</span></td>
+              <td>{{ solicitud.fecha_respuesta|date:"d/m/Y" }}</td>
+              <td>{{ solicitud.comentario_respuesta|default:'-' }}</td>
+              <td>-</td>
+            </tr>
+            {% endfor %}
+            
+            {% for solicitud in solicitudes_rechazadas %}
+            <tr>
+              <td>{{ solicitud.fecha_inicio }}</td>
+              <td>{{ solicitud.fecha_fin }}</td>
+              <td>{{ solicitud.motivo|default:'-' }}</td>
+              <td><span class="badge bg-danger">Rechazada</span></td>
+              <td>{{ solicitud.fecha_respuesta|date:"d/m/Y" }}</td>
+              <td>{{ solicitud.comentario_respuesta|default:'-' }}</td>
+              <td>-</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Ausencias Activas -->
+  {% if ausencias_activas %}
+  <div class="card shadow-sm">
+    <div class="card-header bg-info text-white">
+      <h5 class="mb-0">Ausencias Activas</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-info">
+            <tr>
+              <th>Desde</th>
+              <th>Hasta</th>
+              <th>Motivo</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ausencia in ausencias_activas %}
+            <tr>
+              <td>{{ ausencia.fecha_inicio }}</td>
+              <td>{{ ausencia.fecha_fin }}</td>
+              <td>{{ ausencia.motivo|default:'-' }}</td>
+              <td>
+                <a href="?eliminar_ausencia={{ ausencia.id }}" class="btn btn-danger btn-sm" 
+                   title="Eliminar ausencia" onclick="return confirm('¿Eliminar esta ausencia?');">
+                  <i class="fas fa-trash"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Mensaje si no hay nada -->
+  {% if not solicitudes_pendientes and not solicitudes_aprobadas and not solicitudes_rechazadas and not ausencias_activas %}
+  <div class="text-center text-muted py-4">
+    <i class="fas fa-calendar-times fa-3x mb-3"></i>
+    <h5>No tienes solicitudes de ausencia ni ausencias activas</h5>
+    <p>Usa el formulario de arriba para solicitar una nueva ausencia.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %} 

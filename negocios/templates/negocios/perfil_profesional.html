@@ -29,6 +29,14 @@
                                 <span class="fw-bold">Servicios:</span>
                                 {% for s in profesional.servicios.all %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
                             </div>
+                            {% else %}
+                            <div class="mb-2">
+                                <span class="fw-bold text-warning">Servicios:</span>
+                                <span class="text-muted">No tiene servicios asignados</span>
+                                {% if negocio and user.is_authenticated and user == negocio.propietario %}
+                                <br><small class="text-info">Asigna servicios desde el botón de editar</small>
+                                {% endif %}
+                            </div>
                             {% endif %}
                             <p class="mb-2"><i class="bi bi-award me-1"></i> {{ profesional.experiencia_anos }} años de experiencia</p>
                             <p class="mb-2"><i class="bi bi-card-text me-1"></i> {{ profesional.descripcion|default:'Sin descripción' }}</p>

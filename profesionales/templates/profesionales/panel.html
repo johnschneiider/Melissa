@@ -49,18 +49,16 @@
                                 </a>
                             </div>
                             <!-- Estado de matriculación -->
-                            {% if profesional.matriculaciones.exists %}
-                                {% with matriculacion=profesional.matriculaciones.last %}
-                                    <div class="alert alert-info p-2 small">
-                                        <i class="bi bi-building me-1"></i>
-                                        Matriculado en: <strong>{{ matriculacion.negocio.nombre }}</strong><br>
-                                        Estado: <span class="badge bg-secondary">{{ matriculacion.get_estado_display }}</span>
-                                    </div>
-                                {% endwith %}
+                            {% if matricula_activa %}
+                                <div class="alert alert-info p-2 small no-auto-hide">
+                                    <i class="bi bi-building me-1"></i>
+                                    Matriculado en: <strong>{{ matricula_activa.negocio.nombre }}</strong><br>
+                                    Estado: <span class="badge bg-success">Aprobada</span>
+                                </div>
                             {% else %}
-                                <div class="alert alert-warning p-2 small">
+                                <div class="alert alert-warning p-2 small no-auto-hide">
                                     <i class="bi bi-exclamation-triangle me-1"></i>
-                                    No estás matriculado en ningún negocio.
+                                    No estás matriculado en ningún negocio actualmente.
                                 </div>
                             {% endif %}
                             <a href="{% url 'profesionales:buscar_negocio' %}" class="btn btn-success btn-sm mt-2">Buscar Negocios</a>
@@ -112,6 +110,9 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div class="mt-3">
+        <a href="{% url 'profesionales:gestionar_ausencias' %}" class="btn btn-outline-warning btn-sm">Gestionar Ausencias/Vacaciones</a>
     </div>
 </div>
 {% endblock %} 

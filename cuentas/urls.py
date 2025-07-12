@@ -34,4 +34,5 @@ urlpatterns = [
     path('ver-logs-servidor/', ver_logs_servidor, name='ver_logs_servidor'),
     path('test-rate-limit/', test_rate_limit, name='test_rate_limit'),
     path('gestionar-rate-limiting/', gestionar_rate_limiting, name='gestionar_rate_limiting'),
+    path('control-reservas/', views.control_reservas, name='control_reservas'),
 ]

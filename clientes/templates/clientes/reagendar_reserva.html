@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Reagendar Reserva{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-event me-2"></i>
+                        Reagendar Reserva
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Reagendar reserva</strong>
+                        <br>
+                        Selecciona una nueva fecha y hora para la reserva.
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Detalles de la Reserva Actual</h6>
+                            <ul class="list-unstyled">
+                                <li><strong>Cliente:</strong> {{ reserva.cliente.username }}</li>
+                                <li><strong>Negocio:</strong> {{ reserva.peluquero.nombre }}</li>
+                                {% if reserva.profesional %}
+                                    <li><strong>Profesional:</strong> {{ reserva.profesional.nombre_completo }}</li>
+                                {% endif %}
+                                <li><strong>Fecha actual:</strong> {{ reserva.fecha|date:"d/m/Y" }}</li>
+                                <li><strong>Hora actual:</strong> {{ reserva.hora_inicio|time:"H:i" }} - {{ reserva.hora_fin|time:"H:i" }}</li>
+                                {% if reserva.servicio %}
+                                    <li><strong>Servicio:</strong> {{ reserva.servicio.servicio.nombre }}</li>
+                                {% endif %}
+                                <li><strong>Estado actual:</strong> 
+                                    <span class="badge bg-{% if reserva.estado == 'pendiente' %}warning{% else %}success{% endif %}">
+                                        {{ reserva.get_estado_display }}
+                                    </span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Notas actuales</h6>
+                            <div class="border rounded p-3 bg-light">
+                                {% if reserva.notas %}
+                                    {{ reserva.notas|linebreaks }}
+                                {% else %}
+                                    <em class="text-muted">Sin notas</em>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <form method="post" id="reagendarForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nueva_fecha" class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Nueva fecha
+                                    </label>
+                                    <input 
+                                        type="date" 
+                                        class="form-control" 
+                                        id="nueva_fecha" 
+                                        name="nueva_fecha" 
+                                        required
+                                        min="{{ reserva.fecha|date:'Y-m-d' }}"
+                                    >
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="motivo" class="form-label">
+                                        <i class="bi bi-chat-text me-1"></i>
+                                        Motivo del reagendamiento
+                                    </label>
+                                    <textarea 
+                                        class="form-control" 
+                                        id="motivo" 
+                                        name="motivo" 
+                                        rows="2" 
+                                        placeholder="Explicar el motivo del reagendamiento..."
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nueva_hora_inicio" class="form-label">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Nueva hora de inicio
+                                    </label>
+                                    <input 
+                                        type="time" 
+                                        class="form-control" 
+                                        id="nueva_hora_inicio" 
+                                        name="nueva_hora_inicio" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="nueva_hora_fin" class="form-label">
+                                        <i class="bi bi-clock-fill me-1"></i>
+                                        Nueva hora de fin
+                                    </label>
+                                    <input 
+                                        type="time" 
+                                        class="form-control" 
+                                        id="nueva_hora_fin" 
+                                        name="nueva_hora_fin" 
+                                        required
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'clientes:mis_reservas' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                Reagendar Reserva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('reagendarForm');
+    const fechaInput = document.getElementById('nueva_fecha');
+    const horaInicioInput = document.getElementById('nueva_hora_inicio');
+    const horaFinInput = document.getElementById('nueva_hora_fin');
+    
+    // Establecer fecha mínima como hoy
+    const today = new Date().toISOString().split('T')[0];
+    fechaInput.min = today;
+    
+    // Validar que la hora de fin sea después de la hora de inicio
+    function validateTimes() {
+        const inicio = horaInicioInput.value;
+        const fin = horaFinInput.value;
+        
+        if (inicio && fin && inicio >= fin) {
+            horaFinInput.setCustomValidity('La hora de fin debe ser después de la hora de inicio');
+        } else {
+            horaFinInput.setCustomValidity('');
+        }
+    }
+    
+    horaInicioInput.addEventListener('change', validateTimes);
+    horaFinInput.addEventListener('change', validateTimes);
+    
+    form.addEventListener('submit', function(e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

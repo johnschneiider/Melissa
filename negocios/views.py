@@ -21,13 +21,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Avg, Sum, Count, Max, Q
 import numpy as np
-from profesionales.models import Matriculacion, Profesional
+from profesionales.models import Matriculacion, Profesional, SolicitudAusencia
 from profesionales.models import Notificacion
 from negocios.models import ImagenNegocio as ImagenGaleria
 from django.db import models
 from django.forms import ModelForm
 from django.forms import modelformset_factory
 from .models import NotificacionNegocio
+from negocios.models import DiaDescanso
+from datetime import date
 
 logger = logging.getLogger(__name__)
 
@@ -640,6 +642,13 @@ def editar_profesional_negocio(request, negocio_id, profesional_id):
         servicios_a_asignar = [s.servicio for s in servicios_negocio if str(s.id) in servicios_ids]
         profesional.servicios.set(servicios_a_asignar)
         
+        # Mensaje específico sobre servicios
+        if servicios_a_asignar:
+            servicios_nombres = ', '.join([s.nombre for s in servicios_a_asignar])
+            messages.success(request, f'Servicios asignados correctamente: {servicios_nombres}')
+        else:
+            messages.warning(request, 'No se asignaron servicios al profesional.')
+        
         # Actualizar horarios usando el modelo HorarioProfesional
         from profesionales.models import HorarioProfesional
         from datetime import time
@@ -773,3 +782,256 @@ def notificaciones_negocio(request):
     negocios_usuario = request.user.negocios.all()
     notificaciones = NotificacionNegocio.objects.filter(negocio__in=negocios_usuario).order_by('-fecha_creacion')
     return render(request, 'negocios/notificaciones.html', {'notificaciones': notificaciones})
+
+@login_required
+def solicitudes_ausencia(request):
+    """Vista para que el negocio vea las solicitudes de ausencia pendientes"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    # Obtener solicitudes de ausencia de todos los negocios del usuario
+    negocios_usuario = request.user.negocios.all()
+    
+    # Debug: verificar todos los estados de solicitudes
+    todas_solicitudes = SolicitudAusencia.objects.filter(
+        negocio__in=negocios_usuario
+    ).select_related('profesional', 'negocio')
+    
+    print(f"DEBUG: Total de solicitudes encontradas: {todas_solicitudes.count()}")
+    for solicitud in todas_solicitudes:
+        print(f"DEBUG: Solicitud {solicitud.id} - Estado: {solicitud.estado} - Profesional: {solicitud.profesional.nombre_completo}")
+    
+    solicitudes_pendientes = todas_solicitudes.filter(estado='pendiente').order_by('-fecha_solicitud')
+    solicitudes_aprobadas = todas_solicitudes.filter(estado='aprobada').order_by('-fecha_respuesta')
+    solicitudes_rechazadas = todas_solicitudes.filter(estado='rechazada').order_by('-fecha_respuesta')
+    
+    print(f"DEBUG: Pendientes: {solicitudes_pendientes.count()}, Aprobadas: {solicitudes_aprobadas.count()}, Rechazadas: {solicitudes_rechazadas.count()}")
+    
+    return render(request, 'negocios/solicitudes_ausencia.html', {
+        'solicitudes_pendientes': solicitudes_pendientes,
+        'solicitudes_aprobadas': solicitudes_aprobadas,
+        'solicitudes_rechazadas': solicitudes_rechazadas,
+    })
+
+@login_required
+def revisar_solicitud_ausencia(request, solicitud_id):
+    """Vista para que el negocio revise una solicitud específica de ausencia"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    solicitud = get_object_or_404(
+        SolicitudAusencia, 
+        id=solicitud_id,
+        negocio__propietario=request.user,
+        estado='pendiente'
+    )
+    
+    if request.method == 'POST':
+        print(f"DEBUG: POST recibido para solicitud {solicitud_id}")
+        print(f"DEBUG: POST data: {request.POST}")
+        
+        accion = request.POST.get('accion')
+        comentario = request.POST.get('comentario', '')
+        
+        print(f"DEBUG: Acción extraída: '{accion}'")
+        print(f"DEBUG: Comentario extraído: '{comentario}'")
+
+        if not accion:
+            print(f"DEBUG: No se recibió acción, mostrando error")
+            messages.error(request, 'Debes elegir una acción (Aprobar o Rechazar) usando los botones.')
+            return redirect(request.path)
+        
+        print(f"DEBUG: Procesando acción '{accion}' para solicitud {solicitud_id}")
+        print(f"DEBUG: Estado actual de la solicitud: {solicitud.estado}")
+        
+        if accion == 'aprobar':
+            # Aprobar la solicitud
+            solicitud.aprobar(comentario)
+            
+            # Verificar que el estado se actualizó correctamente
+            solicitud.refresh_from_db()
+            print(f"DEBUG: Estado después de aprobar: {solicitud.estado}")
+            
+            # Crear notificación para el profesional
+            Notificacion.objects.create(
+                profesional=solicitud.profesional,
+                tipo='solicitud_ausencia',
+                titulo='Solicitud de ausencia aprobada',
+                mensaje=f'Tu solicitud de ausencia del {solicitud.fecha_inicio} al {solicitud.fecha_fin} ha sido aprobada por {solicitud.negocio.nombre}.',
+                url_relacionada='/profesionales/gestionar-ausencias/',
+            )
+            
+            messages.success(request, f'Solicitud de ausencia aprobada correctamente. La solicitud de {solicitud.profesional.nombre_completo} ahora aparece en la lista de aprobadas.')
+            
+        elif accion == 'rechazar':
+            # Rechazar la solicitud
+            solicitud.rechazar(comentario)
+            
+            # Verificar que el estado se actualizó correctamente
+            solicitud.refresh_from_db()
+            print(f"DEBUG: Estado después de rechazar: {solicitud.estado}")
+            
+            # Crear notificación para el profesional
+            Notificacion.objects.create(
+                profesional=solicitud.profesional,
+                tipo='solicitud_ausencia',
+                titulo='Solicitud de ausencia rechazada',
+                mensaje=f'Tu solicitud de ausencia del {solicitud.fecha_inicio} al {solicitud.fecha_fin} ha sido rechazada por {solicitud.negocio.nombre}.',
+                url_relacionada='/profesionales/gestionar-ausencias/',
+            )
+            
+            messages.success(request, f'Solicitud de ausencia rechazada correctamente. La solicitud de {solicitud.profesional.nombre_completo} ahora aparece en la lista de rechazadas.')
+        
+        # Forzar un refresh de la página para mostrar los cambios
+        return redirect('negocios:solicitudes_ausencia')
+    
+    return render(request, 'negocios/revisar_solicitud_ausencia.html', {
+        'solicitud': solicitud,
+    })
+
+@login_required
+def listar_dias_descanso(request):
+    """Vista para que el negocio vea sus días de descanso"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    # Obtener días de descanso de todos los negocios del usuario
+    negocios_usuario = request.user.negocios.all()
+    dias_descanso = DiaDescanso.objects.filter(
+        negocio__in=negocios_usuario
+    ).select_related('negocio').order_by('-fecha')
+    
+    dias_activos = dias_descanso.filter(activo=True).count()
+    dias_futuros = dias_descanso.filter(fecha__gte=date.today()).count()
+    
+    context = {
+        'dias_descanso': dias_descanso,
+        'negocios': negocios_usuario,
+        'dias_activos': dias_activos,
+        'dias_futuros': dias_futuros,
+    }
+    return render(request, 'negocios/listar_dias_descanso.html', context)
+
+@login_required
+def crear_dia_descanso(request):
+    """Vista para que el negocio cree un nuevo día de descanso"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    if request.method == 'POST':
+        negocio_id = request.POST.get('negocio')
+        fecha = request.POST.get('fecha')
+        tipo = request.POST.get('tipo')
+        motivo = request.POST.get('motivo', '')
+        descripcion = request.POST.get('descripcion', '')
+        
+        try:
+            negocio = request.user.negocios.get(id=negocio_id)
+            
+            # Verificar que no exista ya un día de descanso para esa fecha
+            if DiaDescanso.objects.filter(negocio=negocio, fecha=fecha).exists():
+                messages.error(request, f'Ya existe un día de descanso programado para el {fecha}.')
+                return redirect('negocios:listar_dias_descanso')
+            
+            # Crear el día de descanso
+            dia_descanso = DiaDescanso.objects.create(
+                negocio=negocio,
+                fecha=fecha,
+                tipo=tipo,
+                motivo=motivo,
+                descripcion=descripcion
+            )
+            
+            messages.success(request, f'Día de descanso programado para el {fecha} correctamente.')
+            return redirect('negocios:listar_dias_descanso')
+            
+        except Negocio.DoesNotExist:
+            messages.error(request, 'Negocio no válido.')
+        except Exception as e:
+            logger.error(f"Error al crear día de descanso: {str(e)}")
+            messages.error(request, f'Error al crear el día de descanso: {str(e)}')
+            # Log detallado para debugging
+            import traceback
+            logger.error(f"Traceback completo: {traceback.format_exc()}")
+    
+    # Obtener negocios del usuario para el formulario
+    negocios = request.user.negocios.all()
+    
+    context = {
+        'negocios': negocios,
+        'tipos': DiaDescanso.TIPO_CHOICES,
+    }
+    return render(request, 'negocios/crear_dia_descanso.html', context)
+
+@login_required
+def editar_dia_descanso(request, dia_id):
+    """Vista para que el negocio edite un día de descanso"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    dia_descanso = get_object_or_404(
+        DiaDescanso, 
+        id=dia_id,
+        negocio__propietario=request.user
+    )
+    
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        tipo = request.POST.get('tipo')
+        motivo = request.POST.get('motivo', '')
+        descripcion = request.POST.get('descripcion', '')
+        activo = request.POST.get('activo') == 'on'
+        
+        try:
+            # Verificar que no exista otro día de descanso para esa fecha (excluyendo el actual)
+            if DiaDescanso.objects.filter(negocio=dia_descanso.negocio, fecha=fecha).exclude(id=dia_id).exists():
+                messages.error(request, f'Ya existe un día de descanso programado para el {fecha}.')
+                return redirect('negocios:listar_dias_descanso')
+            
+            # Actualizar el día de descanso
+            dia_descanso.fecha = fecha
+            dia_descanso.tipo = tipo
+            dia_descanso.motivo = motivo
+            dia_descanso.descripcion = descripcion
+            dia_descanso.activo = activo
+            dia_descanso.save()
+            
+            messages.success(request, 'Día de descanso actualizado correctamente.')
+            return redirect('negocios:listar_dias_descanso')
+            
+        except Exception as e:
+            messages.error(request, f'Error al actualizar el día de descanso: {str(e)}')
+    
+    context = {
+        'dia_descanso': dia_descanso,
+        'tipos': DiaDescanso.TIPO_CHOICES,
+    }
+    return render(request, 'negocios/editar_dia_descanso.html', context)
+
+@login_required
+def eliminar_dia_descanso(request, dia_id):
+    """Vista para que el negocio elimine un día de descanso"""
+    if getattr(request.user, 'tipo', None) != 'negocio':
+        messages.error(request, 'Solo negocios pueden ver esta página.')
+        return redirect('inicio')
+    
+    dia_descanso = get_object_or_404(
+        DiaDescanso, 
+        id=dia_id,
+        negocio__propietario=request.user
+    )
+    
+    if request.method == 'POST':
+        dia_descanso.delete()
+        messages.success(request, 'Día de descanso eliminado correctamente.')
+        return redirect('negocios:listar_dias_descanso')
+    
+    context = {
+        'dia_descanso': dia_descanso,
+    }
+    return render(request, 'negocios/eliminar_dia_descanso.html', context)

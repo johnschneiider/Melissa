@@ -147,6 +147,7 @@ class NotificacionNegocio(models.Model):
     TIPO_CHOICES = (
         ('matriculacion', 'Nueva Solicitud de Matriculación'),
         ('reserva', 'Nueva Reserva'),
+        ('solicitud_ausencia', 'Nueva Solicitud de Ausencia'),
         ('sistema', 'Notificación del Sistema'),
     )
     negocio = models.ForeignKey('Negocio', on_delete=models.CASCADE, related_name='notificaciones_negocio')
@@ -170,4 +171,57 @@ class NotificacionNegocio(models.Model):
         self.leida = True
         self.fecha_lectura = timezone.now()
         self.save()
+
+class DiaDescanso(models.Model):
+    """Modelo para gestionar días de descanso de los negocios"""
+    TIPO_CHOICES = [
+        ('feriado', 'Feriado'),
+        ('cierre_especial', 'Cierre Especial'),
+        ('mantenimiento', 'Mantenimiento'),
+        ('vacaciones', 'Vacaciones'),
+        ('otro', 'Otro'),
+    ]
+    
+    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='dias_descanso')
+    fecha = models.DateField()
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='feriado')
+    motivo = models.CharField(max_length=200, blank=True)
+    descripcion = models.TextField(blank=True)
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_modificacion = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['negocio', 'fecha']
+        ordering = ['-fecha']
+    
+    def __str__(self):
+        return f"{self.negocio.nombre} - {self.fecha} ({self.get_tipo_display()})"
+    
+    def save(self, *args, **kwargs):
+        # Si es un día nuevo, notificar a los profesionales
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        
+        if is_new and self.activo:
+            self.notificar_profesionales()
+    
+    def notificar_profesionales(self):
+        """Notificar a todos los profesionales del negocio sobre el día de descanso"""
+        from profesionales.models import Notificacion, Matriculacion
+        
+        # Obtener profesionales matriculados y aprobados en este negocio
+        matriculaciones_aprobadas = Matriculacion.objects.filter(
+            negocio=self.negocio,
+            estado='aprobada'
+        ).select_related('profesional')
+        
+        for matriculacion in matriculaciones_aprobadas:
+            Notificacion.objects.create(
+                profesional=matriculacion.profesional,
+                tipo='dia_descanso',
+                titulo=f'Día de descanso programado - {self.negocio.nombre}',
+                mensaje=f'El negocio {self.negocio.nombre} ha programado un día de descanso el {self.fecha} ({self.get_tipo_display()}). No se podrán realizar reservas en esa fecha.',
+                url_relacionada='/profesionales/panel/',
+            )
 

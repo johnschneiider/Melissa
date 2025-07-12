@@ -229,6 +229,17 @@ def reservar_turno(request, peluquero_id):
                         details=f"Negocio: {negocio.nombre}, Servicio: {servicio.nombre}, Fecha: {fecha}, Hora: {hora_inicio}"
                     )
                     
+                    # Crear notificación para el profesional si existe
+                    if reserva.profesional:
+                        from profesionales.models import Notificacion
+                        Notificacion.objects.create(
+                            profesional=reserva.profesional,
+                            tipo='reserva',
+                            titulo='Nueva Reserva',
+                            mensaje=f'Nueva reserva pendiente para el {reserva.fecha} a las {reserva.hora_inicio} con {reserva.cliente.username}.',
+                            url_relacionada='/profesionales/panel/'
+                        )
+                    
                     # Enviar email de confirmación
                     try:
                         enviar_email_reserva_confirmada(reserva)
@@ -599,6 +610,7 @@ def reservar_negocio(request, negocio_id):
     negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
     servicios = negocio.servicios_negocio.select_related('servicio').all()
     profesional_id = request.GET.get('profesional')
+    servicio_id = request.GET.get('servicio')
     fecha_preseleccionada = request.GET.get('fecha')
     profesional_preseleccionado = None
     if profesional_id:
@@ -606,7 +618,9 @@ def reservar_negocio(request, negocio_id):
             profesional_preseleccionado = Profesional.objects.get(id=profesional_id)
         except Profesional.DoesNotExist:
             profesional_preseleccionado = None
-    
+    initial = {}
+    if servicio_id:
+        initial['servicio'] = servicio_id
     if request.method == 'POST':
         logger.info(f"POST recibido en reservar_negocio - negocio_id: {negocio_id}")
         form = ReservaNegocioForm(request.POST, negocio=negocio, profesional_preseleccionado=profesional_preseleccionado)
@@ -671,6 +685,17 @@ def reservar_negocio(request, negocio_id):
                 
                 reserva.save()
                 
+                # Crear notificación para el profesional si existe
+                if reserva.profesional:
+                    from profesionales.models import Notificacion
+                    Notificacion.objects.create(
+                        profesional=reserva.profesional,
+                        tipo='reserva',
+                        titulo='Nueva Reserva',
+                        mensaje=f'Nueva reserva pendiente para el {reserva.fecha} a las {reserva.hora_inicio} con {reserva.cliente.username}.',
+                        url_relacionada='/profesionales/panel/'
+                    )
+                
                 logger.info(f"Reserva creada exitosamente: {reserva.id}")
                 messages.success(request, '¡Reserva realizada con éxito!')
                 return redirect('clientes:confirmacion_reserva', reserva_id=reserva.id)
@@ -683,7 +708,7 @@ def reservar_negocio(request, negocio_id):
             messages.error(request, 'Por favor corrige los errores en el formulario.')
     
     # Si no es POST, mostrar formulario normal
-    form = ReservaNegocioForm(negocio=negocio, profesional_preseleccionado=profesional_preseleccionado)
+    form = ReservaNegocioForm(negocio=negocio, profesional_preseleccionado=profesional_preseleccionado, initial=initial)
     return render(request, 'clientes/reservar_negocio.html', {
         'negocio': negocio,
         'servicios': servicios,
@@ -709,175 +734,214 @@ def eliminar_notificacion_cliente(request, notificacion_id):
         return JsonResponse({'ok': False, 'error': 'No encontrada'}, status=404)
 
 @login_required
-@ratelimit(key='ip', rate='5/m', method=['POST'])
-def cancelar_reserva(request, reserva_id):
-    reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
-    if reserva.estado not in ['cancelado', 'completado']:
-        # Guardar el estado anterior para el email
-        estado_anterior = reserva.estado
+def confirmar_reserva(request, reserva_id):
+    """
+    Vista para confirmar una reserva pendiente
+    """
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    # Verificar permisos
+    if request.user.tipo == 'negocio':
+        # El negocio puede confirmar reservas de sus negocios
+        if not reserva.peluquero.propietario == request.user:
+            messages.error(request, 'No tienes permisos para confirmar esta reserva.')
+            return redirect('clientes:mis_reservas')
+    elif request.user.tipo == 'cliente':
+        # El cliente solo puede confirmar sus propias reservas
+        if not reserva.cliente == request.user:
+            messages.error(request, 'No tienes permisos para confirmar esta reserva.')
+            return redirect('clientes:mis_reservas')
+    else:
+        messages.error(request, 'No tienes permisos para confirmar reservas.')
+        return redirect('clientes:mis_reservas')
+    
+    if request.method == 'POST':
+        notas_adicionales = request.POST.get('notas_adicionales', '')
         
-        reserva.estado = 'cancelado'
-        reserva.save()
-        
-        # Log de actividad de cancelación
-        log_reservation_activity(
-            user=request.user,
-            reservation=reserva,
-            action="reserva_cancelada",
-            details=f"Estado anterior: {estado_anterior}, Negocio: {reserva.peluquero.nombre}"
-        )
-        
-        # Enviar email de cancelación
         try:
-            enviar_email_reserva_cancelada(reserva)
-        except Exception as e:
-            log_error(
-                error_type="email_cancelacion_fallido",
-                error_message=str(e),
-                user=request.user,
-                context={"reserva_id": reserva.id}
-            )
-            # No fallar la cancelación si el email falla
+            reserva.confirmar(notas_adicionales)
+            messages.success(request, 'Reserva confirmada exitosamente.')
+        except ValidationError as e:
+            messages.error(request, str(e))
         
-        msg = 'Reserva cancelada exitosamente.'
-        success = True
-    else:
-        log_user_activity(
-            user=request.user,
-            action="intento_cancelar_reserva_invalida",
-            details=f"Reserva ID: {reserva_id}, Estado actual: {reserva.estado}",
-            ip_address=request.META.get('REMOTE_ADDR')
-        )
-        msg = 'No se puede cancelar una reserva ya cancelada o completada.'
-        success = False
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return JsonResponse({'success': success, 'message': msg})
-    if success:
-        messages.success(request, msg)
-    else:
-        messages.warning(request, msg)
-    return redirect('clientes:mis_reservas')
+        return redirect('clientes:mis_reservas')
+    
+    context = {
+        'reserva': reserva,
+        'accion': 'confirmar'
+    }
+    return render(request, 'clientes/confirmar_reserva.html', context)
 
 @login_required
-@ratelimit(key='ip', rate='5/m', method=['POST'])
-def reagendar_reserva(request, reserva_id):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Método no permitido'}, status=405)
+def cancelar_reserva(request, reserva_id):
+    """
+    Vista para cancelar una reserva
+    """
+    logger.info(f"=== INICIO cancelar_reserva ===")
+    logger.info(f"Reserva ID: {reserva_id}")
+    logger.info(f"Usuario: {request.user.username} ({request.user.tipo})")
+    logger.info(f"Método HTTP: {request.method}")
+    logger.info(f"POST data: {request.POST}")
+    logger.info(f"GET data: {request.GET}")
     
     try:
-        reserva = get_object_or_404(Reserva, id=reserva_id, cliente=request.user)
+        reserva = get_object_or_404(Reserva, id=reserva_id)
+        logger.info(f"Reserva encontrada: {reserva.id}, estado: {reserva.estado}, cliente: {reserva.cliente.username}")
         
-        if reserva.estado in ['cancelado', 'completado']:
-            return JsonResponse({
-                'success': False, 
-                'message': 'No se puede reagendar una reserva cancelada o completada'
-            })
+        # Verificar permisos
+        if request.user.tipo == 'negocio':
+            # El negocio puede cancelar reservas de sus negocios
+            if not reserva.peluquero.propietario == request.user:
+                logger.warning(f"Usuario {request.user.username} intentó cancelar reserva {reserva_id} sin permisos (negocio)")
+                messages.error(request, 'No tienes permisos para cancelar esta reserva.')
+                return redirect('clientes:mis_reservas')
+        elif request.user.tipo == 'cliente':
+            # El cliente solo puede cancelar sus propias reservas
+            if not reserva.cliente == request.user:
+                logger.warning(f"Usuario {request.user.username} intentó cancelar reserva {reserva_id} sin permisos (cliente)")
+                messages.error(request, 'No tienes permisos para cancelar esta reserva.')
+                return redirect('clientes:mis_reservas')
+        else:
+            logger.warning(f"Usuario {request.user.username} de tipo {request.user.tipo} intentó cancelar reserva {reserva_id}")
+            messages.error(request, 'No tienes permisos para cancelar reservas.')
+            return redirect('clientes:mis_reservas')
         
-        data = json.loads(request.body)
-        nueva_fecha = data.get('fecha')
-        nueva_hora = data.get('hora_inicio')
+        if request.method == 'POST':
+            motivo = request.POST.get('motivo', '')
+            cancelado_por = request.user.tipo
+            
+            logger.info(f"Cancelando reserva {reserva_id} con motivo: '{motivo}', cancelado por: {cancelado_por}")
+            
+            try:
+                reserva.cancelar(motivo, cancelado_por)
+                logger.info(f"Reserva {reserva_id} cancelada exitosamente")
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': 'Reserva cancelada exitosamente.'
+                    })
+                else:
+                    messages.success(request, 'Reserva cancelada exitosamente.')
+                    return redirect('clientes:mis_reservas')
+                    
+            except ValidationError as e:
+                error_msg = str(e)
+                logger.error(f"Error de validación al cancelar reserva {reserva_id}: {error_msg}")
+                
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': error_msg
+                    })
+                else:
+                    messages.error(request, error_msg)
+                    context = {
+                        'reserva': reserva,
+                        'accion': 'cancelar'
+                    }
+                    return render(request, 'clientes/cancelar_reserva.html', context)
+            except Exception as e:
+                logger.error(f"Error inesperado al cancelar reserva {reserva_id}: {str(e)}")
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Error al cancelar la reserva: {str(e)}'
+                    })
+                else:
+                    messages.error(request, f'Error al cancelar la reserva: {str(e)}')
         
-        if not nueva_fecha or not nueva_hora:
-            return JsonResponse({
-                'success': False,
-                'errors': {'fecha': ['Fecha requerida'], 'hora_inicio': ['Hora requerida']}
-            })
+        context = {
+            'reserva': reserva,
+            'accion': 'cancelar'
+        }
+        logger.info(f"Renderizando template para reserva {reserva_id}")
+        return render(request, 'clientes/cancelar_reserva.html', context)
         
-        # Validar fecha
-        try:
-            fecha_obj = datetime.strptime(nueva_fecha, '%Y-%m-%d').date()
-            if fecha_obj < timezone.now().date():
-                return JsonResponse({
-                    'success': False,
-                    'errors': {'fecha': ['No puedes seleccionar una fecha pasada']}
-                })
-        except ValueError:
-            return JsonResponse({
-                'success': False,
-                'errors': {'fecha': ['Formato de fecha inválido']}
-            })
-        
-        # Validar hora
-        try:
-            hora_obj = datetime.strptime(nueva_hora, '%H:%M').time()
-        except ValueError:
-            return JsonResponse({
-                'success': False,
-                'errors': {'hora_inicio': ['Formato de hora inválido']}
-            })
-        
-        # Verificar disponibilidad
-        hora_fin = (timezone.make_aware(
-            datetime.combine(fecha_obj, hora_obj) + timedelta(minutes=reserva.servicio.duracion if reserva.servicio else 30)
-        ).time())
-        
-        # Verificar si hay conflictos
-        reservas_conflicto = Reserva.objects.filter(
-            peluquero=reserva.peluquero,
-            fecha=fecha_obj,
-            estado__in=['pendiente', 'confirmado']
-        ).exclude(id=reserva.id)
-        
-        for otra_reserva in reservas_conflicto:
-            if not (hora_fin <= otra_reserva.hora_inicio or hora_obj >= otra_reserva.hora_fin):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'El horario seleccionado no está disponible'
-                })
-        
-        # Actualizar reserva
-        reserva.fecha = fecha_obj
-        reserva.hora_inicio = hora_obj
-        reserva.hora_fin = hora_fin
-        reserva.save()
-        
-        # Log de actividad de reagendamiento
-        log_reservation_activity(
-            user=request.user,
-            reservation=reserva,
-            action="reserva_reagendada",
-            details=f"Nueva fecha: {fecha_obj}, Nueva hora: {hora_obj}, Negocio: {reserva.peluquero.nombre}"
-        )
-        
-        # Enviar email de reagendamiento
-        try:
-            enviar_email_reserva_reagendada(reserva)
-        except Exception as e:
-            log_error(
-                error_type="email_reagendamiento_fallido",
-                error_message=str(e),
-                user=request.user,
-                context={"reserva_id": reserva.id}
-            )
-            # No fallar el reagendamiento si el email falla
-        
-        return JsonResponse({
-            'success': True,
-            'message': 'Reserva reagendada exitosamente'
-        })
-        
-    except json.JSONDecodeError:
-        log_error(
-            error_type="json_invalido_reagendar",
-            error_message="JSON inválido en request body",
-            user=request.user,
-            context={"reserva_id": reserva_id}
-        )
-        return JsonResponse({
-            'success': False,
-            'message': 'Datos JSON inválidos'
-        })
     except Exception as e:
-        log_error(
-            error_type="error_reagendar_reserva",
-            error_message=str(e),
-            user=request.user,
-            context={"reserva_id": reserva_id}
-        )
-        return JsonResponse({
-            'success': False,
-            'message': 'Error interno del servidor'
-        })
+        logger.error(f"Error general en cancelar_reserva para reserva {reserva_id}: {str(e)}")
+        messages.error(request, 'Error al procesar la solicitud de cancelación.')
+        return redirect('clientes:mis_reservas')
+
+@login_required
+def completar_reserva(request, reserva_id):
+    """
+    Vista para marcar una reserva como completada
+    """
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    # Verificar permisos - solo negocios pueden completar reservas
+    if request.user.tipo != 'negocio':
+        messages.error(request, 'Solo los negocios pueden marcar reservas como completadas.')
+        return redirect('clientes:mis_reservas')
+    
+    if not reserva.peluquero.propietario == request.user:
+        messages.error(request, 'No tienes permisos para completar esta reserva.')
+        return redirect('clientes:mis_reservas')
+    
+    if request.method == 'POST':
+        notas_adicionales = request.POST.get('notas_adicionales', '')
+        
+        try:
+            reserva.completar(notas_adicionales)
+            messages.success(request, 'Reserva marcada como completada exitosamente.')
+        except ValidationError as e:
+            messages.error(request, str(e))
+        
+        return redirect('clientes:mis_reservas')
+    
+    context = {
+        'reserva': reserva,
+        'accion': 'completar'
+    }
+    return render(request, 'clientes/completar_reserva.html', context)
+
+@login_required
+def reagendar_reserva(request, reserva_id):
+    """
+    Vista para reagendar una reserva
+    """
+    reserva = get_object_or_404(Reserva, id=reserva_id)
+    
+    # Verificar permisos
+    if request.user.tipo == 'negocio':
+        # El negocio puede reagendar reservas de sus negocios
+        if not reserva.peluquero.propietario == request.user:
+            messages.error(request, 'No tienes permisos para reagendar esta reserva.')
+            return redirect('clientes:mis_reservas')
+    elif request.user.tipo == 'cliente':
+        # El cliente solo puede reagendar sus propias reservas
+        if not reserva.cliente == request.user:
+            messages.error(request, 'No tienes permisos para reagendar esta reserva.')
+            return redirect('clientes:mis_reservas')
+    else:
+        messages.error(request, 'No tienes permisos para reagendar reservas.')
+        return redirect('clientes:mis_reservas')
+    
+    if request.method == 'POST':
+        nueva_fecha = request.POST.get('nueva_fecha')
+        nueva_hora_inicio = request.POST.get('nueva_hora_inicio')
+        nueva_hora_fin = request.POST.get('nueva_hora_fin')
+        motivo = request.POST.get('motivo', '')
+        
+        try:
+            from datetime import datetime
+            nueva_fecha = datetime.strptime(nueva_fecha, '%Y-%m-%d').date()
+            nueva_hora_inicio = datetime.strptime(nueva_hora_inicio, '%H:%M').time()
+            nueva_hora_fin = datetime.strptime(nueva_hora_fin, '%H:%M').time()
+            
+            reserva.reagendar(nueva_fecha, nueva_hora_inicio, nueva_hora_fin, motivo)
+            messages.success(request, 'Reserva reagendada exitosamente.')
+        except (ValidationError, ValueError) as e:
+            messages.error(request, f'Error al reagendar: {str(e)}')
+        
+        return redirect('clientes:mis_reservas')
+    
+    context = {
+        'reserva': reserva,
+        'accion': 'reagendar'
+    }
+    return render(request, 'clientes/reagendar_reserva.html', context)
 
 @login_required
 def crear_calificacion(request, negocio_id, profesional_id):

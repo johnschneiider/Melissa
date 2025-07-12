@@ -41,7 +41,31 @@ class ReservaForm(forms.ModelForm):
         hora_inicio = cleaned_data.get('hora_inicio')
         profesional = cleaned_data.get('profesional')
         servicio = cleaned_data.get('servicio')
-        
+        cliente = self.instance.cliente if self.instance and self.instance.pk else self.initial.get('cliente')
+        if not cliente and hasattr(self, 'user'):
+            cliente = self.user
+        # Validación de solapamiento de reservas del cliente
+        if fecha and hora_inicio and cliente:
+            # Calcular hora_fin tentativa
+            duracion = servicio.duracion if servicio else 30
+            hora_inicio_dt = datetime.combine(fecha, hora_inicio)
+            hora_fin_dt = hora_inicio_dt + timezone.timedelta(minutes=duracion)
+            hora_fin = hora_fin_dt.time()
+            reservas_cliente = Reserva.objects.filter(
+                fecha=fecha,
+                cliente=cliente,
+                estado__in=['pendiente', 'confirmado']
+            ).exclude(
+                id=self.instance.id if self.instance and self.instance.pk else None
+            )
+            for reserva_existente in reservas_cliente:
+                if (hora_inicio < reserva_existente.hora_fin and hora_fin > reserva_existente.hora_inicio):
+                    raise forms.ValidationError(
+                        f"Ya tienes una reserva para el {fecha.strftime('%d/%m/%Y')} entre las "
+                        f"{reserva_existente.hora_inicio.strftime('%H:%M')} y {reserva_existente.hora_fin.strftime('%H:%M')}. "
+                        f"No puedes reservar dos turnos solapados."
+                    )
+            
         if fecha and hora_inicio:
             # Hacer que la fecha/hora de reserva sea aware
             fecha_hora_reserva = timezone.make_aware(
@@ -84,6 +108,42 @@ class ReservaForm(forms.ModelForm):
                             f"Por favor, selecciona otro horario."
                         )
                 
+        # Validación de máximo 2 reservas activas por cliente, por día y servicio
+        if fecha and servicio and cliente:
+            reservas_activas = Reserva.objects.filter(
+                fecha=fecha,
+                cliente=cliente,
+                servicio=servicio,
+                estado__in=['pendiente', 'confirmado']
+            ).exclude(
+                id=self.instance.id if self.instance and self.instance.pk else None
+            ).count()
+            if reservas_activas >= 2:
+                raise forms.ValidationError(
+                    f"No puedes tener más de 2 reservas activas para el mismo servicio el {fecha.strftime('%d/%m/%Y')}."
+                )
+                
+        # Validar que la reserva esté dentro del horario laboral del profesional
+        if fecha and hora_inicio and profesional:
+            dia_semana = fecha.strftime('%A').lower()
+            if dia_semana == 'wednesday': dia_semana = 'miercoles'
+            elif dia_semana == 'saturday': dia_semana = 'sabado'
+            elif dia_semana == 'sunday': dia_semana = 'domingo'
+            horario = profesional.horarios.filter(dia_semana=dia_semana, disponible=True).first()
+            if not horario:
+                print(f"ADVERTENCIA: Profesional {profesional.nombre_completo} no tiene horario configurado para {dia_semana}")
+            elif not (horario.hora_inicio <= hora_inicio < horario.hora_fin):
+                raise forms.ValidationError(
+                    f"El profesional no trabaja el {dia_semana.capitalize()} o fuera de su horario laboral ({horario.hora_inicio if horario else '--:--'} - {horario.hora_fin if horario else '--:--'})."
+                )
+                
+        # Validar que la fecha de la reserva no caiga en una ausencia activa del profesional
+        if fecha and profesional:
+            from profesionales.models import AusenciaProfesional
+            if AusenciaProfesional.objects.filter(profesional=profesional, activo=True, fecha_inicio__lte=fecha, fecha_fin__gte=fecha).exists():
+                raise forms.ValidationError(
+                    f"El profesional tiene una ausencia o vacaciones en la fecha seleccionada. Por favor, elige otro día.")
+                
         return cleaned_data
 
 class ReservaNegocioForm(forms.ModelForm):
@@ -120,7 +180,30 @@ class ReservaNegocioForm(forms.ModelForm):
         hora_inicio = cleaned_data.get('hora_inicio')
         profesional = cleaned_data.get('profesional')
         servicio = cleaned_data.get('servicio')
-        
+        cliente = self.initial.get('cliente')
+        if not cliente and hasattr(self, 'user'):
+            cliente = self.user
+        # Validación de solapamiento de reservas del cliente
+        if fecha and hora_inicio and cliente:
+            duracion = servicio.duracion if servicio else 30
+            hora_inicio_dt = datetime.combine(fecha, hora_inicio)
+            hora_fin_dt = hora_inicio_dt + timezone.timedelta(minutes=duracion)
+            hora_fin = hora_fin_dt.time()
+            reservas_cliente = Reserva.objects.filter(
+                fecha=fecha,
+                cliente=cliente,
+                estado__in=['pendiente', 'confirmado']
+            ).exclude(
+                id=self.instance.id if self.instance and self.instance.pk else None
+            )
+            for reserva_existente in reservas_cliente:
+                if (hora_inicio < reserva_existente.hora_fin and hora_fin > reserva_existente.hora_inicio):
+                    raise forms.ValidationError(
+                        f"Ya tienes una reserva para el {fecha.strftime('%d/%m/%Y')} entre las "
+                        f"{reserva_existente.hora_inicio.strftime('%H:%M')} y {reserva_existente.hora_fin.strftime('%H:%M')}. "
+                        f"No puedes reservar dos turnos solapados."
+                    )
+                
         if fecha and hora_inicio and profesional and servicio:
             # Calcular hora_fin basada en la duración del servicio
             duracion = servicio.duracion
@@ -149,6 +232,40 @@ class ReservaNegocioForm(forms.ModelForm):
                         f"{reserva_existente.hora_fin.strftime('%H:%M')}. "
                         f"Por favor, selecciona otro horario."
                     )
+                
+        # Validación de máximo 2 reservas activas por cliente, por día y servicio
+        if fecha and servicio and cliente:
+            reservas_activas = Reserva.objects.filter(
+                fecha=fecha,
+                cliente=cliente,
+                servicio=servicio,
+                estado__in=['pendiente', 'confirmado']
+            ).exclude(
+                id=self.instance.id if self.instance and self.instance.pk else None
+            ).count()
+            if reservas_activas >= 2:
+                raise forms.ValidationError(
+                    f"No puedes tener más de 2 reservas activas para el mismo servicio el {fecha.strftime('%d/%m/%Y')}."
+                )
+                
+        # Validar que la reserva esté dentro del horario laboral del profesional
+        if fecha and hora_inicio and profesional:
+            dia_semana = fecha.strftime('%A').lower()
+            if dia_semana == 'wednesday': dia_semana = 'miercoles'
+            elif dia_semana == 'saturday': dia_semana = 'sabado'
+            elif dia_semana == 'sunday': dia_semana = 'domingo'
+            horario = profesional.horarios.filter(dia_semana=dia_semana, disponible=True).first()
+            if not horario or not (horario.hora_inicio <= hora_inicio < horario.hora_fin):
+                raise forms.ValidationError(
+                    f"El profesional no trabaja el {dia_semana.capitalize()} o fuera de su horario laboral ({horario.hora_inicio if horario else '--:--'} - {horario.hora_fin if horario else '--:--'})."
+                )
+                
+        # Validar que la fecha de la reserva no caiga en una ausencia activa del profesional
+        if fecha and profesional:
+            from profesionales.models import AusenciaProfesional
+            if AusenciaProfesional.objects.filter(profesional=profesional, activo=True, fecha_inicio__lte=fecha, fecha_fin__gte=fecha).exists():
+                raise forms.ValidationError(
+                    f"El profesional tiene una ausencia o vacaciones en la fecha seleccionada. Por favor, elige otro día.")
                 
         return cleaned_data
 

@@ -398,12 +398,12 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console', 'file_general'],
-            'level': 'INFO',
+            'level': 'WARNING',
             'propagate': False,
         },
         'django.request': {
-            'handlers': ['file_errors', 'mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['file_errors', 'mail_admins', 'console'],
+            'level': 'WARNING',
             'propagate': False,
         },
         'django.security': {
@@ -412,7 +412,7 @@ LOGGING = {
             'propagate': False,
         },
         'django.db.backends': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file_errors'],
             'level': 'WARNING',
             'propagate': False,
         },
@@ -428,8 +428,8 @@ LOGGING = {
             'propagate': False,
         },
         'melissa.errors': {
-            'handlers': ['file_errors', 'mail_admins'],
-            'level': 'ERROR',
+            'handlers': ['file_errors', 'mail_admins', 'console'],
+            'level': 'WARNING',
             'propagate': False,
         },
         'melissa.business': {
@@ -442,9 +442,14 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.server': {
+            'handlers': ['console', 'file_errors'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
     'root': {
         'handlers': ['console', 'file_general'],
-        'level': 'INFO',
+        'level': 'WARNING',
     },
 }

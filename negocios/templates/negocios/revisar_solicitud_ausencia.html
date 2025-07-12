@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Revisar Solicitud de Ausencia{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">
+            <i class="fas fa-calendar-times"></i> Revisar Solicitud de Ausencia
+          </h4>
+        </div>
+        <div class="card-body">
+          <!-- Información de la solicitud -->
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6 class="text-muted">Profesional</h6>
+              <p class="h5">{{ solicitud.profesional.nombre_completo }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-muted">Negocio</h6>
+              <p class="h5">{{ solicitud.negocio.nombre }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <h6 class="text-muted">Fecha de Inicio</h6>
+              <p class="h5">{{ solicitud.fecha_inicio|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-md-6">
+              <h6 class="text-muted">Fecha de Fin</h6>
+              <p class="h5">{{ solicitud.fecha_fin|date:"d/m/Y" }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-muted">Motivo</h6>
+              <p class="h5">{{ solicitud.motivo|default:"No especificado" }}</p>
+            </div>
+          </div>
+
+          <div class="row mb-4">
+            <div class="col-12">
+              <h6 class="text-muted">Fecha de Solicitud</h6>
+              <p class="h5">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+            </div>
+          </div>
+
+          <!-- Formulario de respuesta -->
+          <form method="post" class="mt-4" id="formSolicitud" onkeydown="if(event.key==='Enter' && event.target.tagName!=='TEXTAREA'){event.preventDefault();}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="comentario" class="form-label">Comentario (opcional)</label>
+              <textarea class="form-control" id="comentario" name="comentario" rows="3" 
+                        placeholder="Agrega un comentario sobre tu decisión..."></textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="button" onclick="enviarFormulario('aprobar')" 
+                      class="btn btn-success flex-fill">
+                <i class="fas fa-check"></i> Aprobar Solicitud
+              </button>
+              <button type="button" onclick="enviarFormulario('rechazar')" 
+                      class="btn btn-danger flex-fill">
+                <i class="fas fa-times"></i> Rechazar Solicitud
+              </button>
+            </div>
+            
+            <!-- Campo oculto para la acción -->
+            <input type="hidden" name="accion" id="accion" value="">
+          </form>
+
+          <script>
+            function enviarFormulario(accion) {
+              document.getElementById('accion').value = accion;
+              document.getElementById('formSolicitud').submit();
+            }
+          </script>
+
+          <!-- Botones de navegación -->
+          <div class="mt-4">
+            <a href="{% url 'negocios:solicitudes_ausencia' %}" class="btn btn-secondary">
+              <i class="fas fa-arrow-left"></i> Volver a Solicitudes
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

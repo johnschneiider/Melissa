@@ -191,3 +191,18 @@ class CambiarEstadoTicketForm(forms.Form):
         }),
         required=False
     )
+
+class EditarPerfilClienteForm(forms.ModelForm):
+    class Meta:
+        model = UsuarioPersonalizado
+        fields = [
+            'first_name', 'last_name', 'telefono', 'email', 'fecha_nacimiento', 'genero'
+        ]
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+            'fecha_nacimiento': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'genero': forms.Select(attrs={'class': 'form-control'}),
+        }

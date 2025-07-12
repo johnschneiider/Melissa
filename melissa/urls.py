@@ -9,6 +9,11 @@ def inicio(request):
     total_reservas = Reserva.objects.count()
     return render(request, 'inicio.html', {'total_reservas': total_reservas})
 
+def custom_429(request, exception=None):
+    return render(request, "429.html", status=429)
+
+handler429 = "melissa.urls.custom_429"
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),

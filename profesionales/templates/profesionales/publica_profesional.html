@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ profesional.nombre_completo }} - Perfil profesional{% endblock %}
+{% block extra_css %}
+<style>
+.perfil-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+}
+.perfil-portada {
+  width: 100%;
+  max-width: 540px;
+  height: 220px;
+  background: #eee;
+  border-radius: 0 0 2.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+}
+.perfil-portada img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+.perfil-foto-wrapper {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  z-index: 20;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  margin-top: -60px; /* Sube la foto para que quede pegada al borde inferior de la portada */
+}
+.perfil-foto {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 6px solid #fff;
+  object-fit: cover;
+  background: #fff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  display: block;
+  z-index: 21;
+}
+@media (max-width: 600px) {
+  .perfil-portada {
+    max-width: 100vw;
+    height: 100px;
+    border-radius: 0 0 1.2rem 1.2rem;
+  }
+  .perfil-foto-wrapper, .perfil-foto {
+    width: 80px;
+    height: 80px;
+  }
+  .perfil-foto-wrapper {
+    margin-top: -40px;
+  }
+  .perfil-main {
+    margin-top: 10px;
+  }
+}
+.perfil-main {
+  margin-top: 20px;
+  text-align: center;
+  font-family: var(--font-ui), sans-serif;
+  max-width: 540px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  background: #fff;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+  padding: 2.5rem 2rem 2rem 2rem;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .perfil-main {
+    margin-top: 60px;
+  }
+}
+.pulse-button {
+  font-family: var(--font-ui), arial, sans-serif;
+  padding: .75rem 1.5rem;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-size: 1.25rem;
+  font-weight: 500;
+  display: inline-block;
+  color: #f5f6fd;
+  position: relative;
+  border: none;
+  box-shadow: 0 0 0 0 #198754;
+  background-color: #198754;
+  cursor: pointer;
+  animation: pulse-green 2s infinite cubic-bezier(0.66, 0, 0, 1);
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  transition: background 0.2s;
+}
+.pulse-button:hover {
+  animation: none;
+  background: #157347;
+}
+@keyframes pulse-green {to {box-shadow: 0 0 0 45px rgba(25, 135, 84, 0);}}
+.perfil-rating {
+  font-size: 1.5rem;
+  color: #fd3b44;
+  font-weight: 600;
+  margin-bottom: 1.2em;
+  font-family: var(--font-ui), sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+}
+.perfil-rating .estrellas i {
+  font-size: 1.5em;
+  margin: 0 0.05em;
+}
+.perfil-horarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  justify-content: center;
+  margin-bottom: 1.5em;
+}
+.horario-chip {
+  background: #f4f6f8;
+  color: #222;
+  border-radius: 1.2em;
+  padding: 0.4em 1.2em;
+  font-size: 1.05em;
+  font-weight: 500;
+  font-family: var(--font-ui), sans-serif;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.perfil-nombre {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.2em;
+  color: var(--color-black-deep, #181818);
+  font-family: var(--font-ui), sans-serif;
+}
+.perfil-especialidad {
+  font-size: 1.1rem;
+  color: #888;
+  margin-bottom: 0.5em;
+  font-family: var(--font-ui), sans-serif;
+}
+.perfil-desc {
+  font-size: 1.1rem;
+  color: #222;
+  margin-bottom: 1.2em;
+  font-family: var(--font-ui), sans-serif;
+}
+.perfil-servicios {
+  margin: 2em 0 1em 0;
+}
+.perfil-servicios .servicio {
+  display: inline-block;
+  background: #f4f6f8;
+  color: #222;
+  border-radius: 1.2em;
+  padding: 0.4em 1.2em;
+  margin: 0.2em 0.4em;
+  font-size: 1.05em;
+  font-weight: 500;
+  font-family: var(--font-ui), sans-serif;
+}
+.perfil-comentarios {
+  margin-top: 2em;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.comentario {
+  background: #fff;
+  border-radius: 1em;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  padding: 1.1em 1.5em;
+  margin-bottom: 1.2em;
+}
+.comentario .autor {
+  font-weight: 600;
+  color: #222;
+}
+.comentario .fecha {
+  color: #888;
+  font-size: 0.95em;
+  margin-left: 0.7em;
+}
+.comentario .estrellas {
+  color: #fd3b44;
+  font-size: 1.1em;
+  margin-left: 0.5em;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="perfil-container">
+  <div class="perfil-portada">
+    {% if profesional.portada %}
+      <img src="{{ profesional.portada.url }}" alt="Portada de {{ profesional.nombre_completo }}">
+    {% else %}
+      <div style="width:100%;height:100%;background:#eee;"></div>
+    {% endif %}
+  </div>
+  <div class="perfil-foto-wrapper">
+    {% if profesional.foto_perfil %}
+      <img src="{{ profesional.foto_perfil.url }}" class="perfil-foto" alt="{{ profesional.nombre_completo }}">
+    {% else %}
+      <img src="{% static 'images/ui/default-avatar.png' %}" class="perfil-foto" alt="{{ profesional.nombre_completo }}">
+    {% endif %}
+  </div>
+  <div class="perfil-main">
+    <div class="perfil-nombre">{{ profesional.nombre_completo }}</div>
+    {% if negocio %}
+      <div class="perfil-negocio" style="margin-bottom:0.5em; color:#198754; font-weight:600; font-size:1.1em;">
+        {{ negocio.nombre }}
+      </div>
+      <div class="perfil-direccion" style="color:#555; font-size:1em; margin-bottom:1em;">
+        {{ negocio.direccion }}
+      </div>
+    {% endif %}
+    <a href="{% if negocio %}{% url 'clientes:reservar_negocio' negocio.id %}?profesional={{ profesional.id }}{% else %}#{% endif %}" class="pulse-button" style="background:#198754; color:#fff;">Reservar con {{ profesional.nombre_completo }}</a>
+    <div class="perfil-rating">
+      {% if promedio_calificacion is not None %}
+        {% for i in "12345" %}
+          {% if promedio_calificacion >= i %}<i class="bi bi-star-fill"></i>{% elif promedio_calificacion > i|add:"-1" %}<i class="bi bi-star-half"></i>{% else %}<i class="bi bi-star" style="color:#198754;"></i>{% endif %}
+        {% endfor %}
+        <span class="text-muted" style="font-size:1rem;">({{ calificaciones|length }})</span>
+      {% else %}
+        {% for i in "12345" %}<i class="bi bi-star" style="color:#198754;"></i>{% endfor %}
+        <span class="text-muted" style="font-size:1rem;">(0)</span>
+      {% endif %}
+    </div>
+    <div class="perfil-horarios">
+      {% for h in profesional.horarios.all %}
+        <span class="horario-chip">{{ h.get_dia_semana_display|slice:":3" }} {{ h.hora_inicio|time:'H:i' }}-{{ h.hora_fin|time:'H:i' }}</span>
+      {% empty %}
+        <span class="text-muted">Sin horarios disponibles</span>
+      {% endfor %}
+    </div>
+    <div class="perfil-desc">{{ profesional.descripcion }}</div>
+    <div class="perfil-servicios">
+      {% for s in servicios %}
+        <span class="servicio">{{ s.nombre }}</span>
+      {% endfor %}
+    </div>
+    <div class="perfil-comentarios">
+      <h4 class="fw-bold mb-3">Comentarios de clientes</h4>
+      {% for c in calificaciones %}
+        <div class="comentario">
+          <span class="autor">{{ c.cliente.get_full_name|default:c.cliente.username }}</span>
+          <span class="fecha">{{ c.fecha|date:'d/m/Y' }}</span>
+          <span class="estrellas">
+            {% for i in "12345" %}
+              {% if c.puntaje >= i %}<i class="bi bi-star-fill"></i>{% elif c.puntaje > i|add:"-1" %}<i class="bi bi-star-half"></i>{% else %}<i class="bi bi-star"></i>{% endif %}
+            {% endfor %}
+          </span>
+          <div class="mt-1">{{ c.comentario }}</div>
+        </div>
+      {% empty %}
+        <div class="text-muted">Aún no hay comentarios de clientes.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %} 

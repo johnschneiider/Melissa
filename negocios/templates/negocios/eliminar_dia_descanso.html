@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Eliminar Día de Descanso{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-trash"></i> Eliminar Día de Descanso
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Información del día a eliminar -->
+          <div class="alert alert-danger">
+            <h6><i class="fas fa-exclamation-triangle"></i> Confirmar eliminación</h6>
+            <p class="mb-0">
+              ¿Estás seguro de que deseas eliminar el día de descanso del 
+              <strong>{{ dia_descanso.fecha|date:"d/m/Y" }}</strong>?
+            </p>
+          </div>
+
+          <!-- Detalles del día -->
+          <div class="card mb-3">
+            <div class="card-body">
+              <h6>Detalles del día de descanso:</h6>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Negocio:</strong> {{ dia_descanso.negocio.nombre }}</li>
+                <li><strong>Fecha:</strong> {{ dia_descanso.fecha|date:"d/m/Y" }}</li>
+                <li><strong>Tipo:</strong> {{ dia_descanso.get_tipo_display }}</li>
+                {% if dia_descanso.motivo %}
+                <li><strong>Motivo:</strong> {{ dia_descanso.motivo }}</li>
+                {% endif %}
+                <li><strong>Estado:</strong> 
+                  {% if dia_descanso.activo %}
+                    <span class="badge bg-success">Activo</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactivo</span>
+                  {% endif %}
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Advertencia -->
+          <div class="alert alert-warning">
+            <h6><i class="fas fa-info-circle"></i> Importante</h6>
+            <ul class="mb-0">
+              <li>Esta acción no se puede deshacer.</li>
+              <li>Si hay reservas existentes para esta fecha, no se verán afectadas.</li>
+              <li>Los profesionales no serán notificados de esta eliminación.</li>
+            </ul>
+          </div>
+
+          <!-- Formulario de confirmación -->
+          <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i> Sí, eliminar
+              </button>
+              <a href="{% url 'negocios:listar_dias_descanso' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

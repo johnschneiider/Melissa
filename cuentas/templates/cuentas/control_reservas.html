@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Control de Reservas{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <h2 class="mb-4">Control de reservas máximas por cliente, día y servicio</h2>
+  <form method="post" class="mb-4">
+    {% csrf_token %}
+    <div class="row align-items-end">
+      <div class="col-auto">
+        <label for="max_reservas" class="form-label">Máximo de reservas activas por cliente, día y servicio:</label>
+        <input type="number" min="1" max="10" class="form-control" id="max_reservas" name="max_reservas" value="{{ max_reservas|default:2 }}">
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </div>
+  </form>
+  <hr>
+  <h5 class="mb-3">Resumen de reservas activas por cliente (hoy)</h5>
+  <table class="table table-bordered table-sm">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Servicio</th>
+        <th>Cantidad de reservas activas hoy</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in resumen %}
+      <tr>
+        <td>{{ row.cliente }}</td>
+        <td>{{ row.servicio }}</td>
+        <td>{{ row.cantidad }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3" class="text-center text-muted">No hay reservas activas hoy.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %} 

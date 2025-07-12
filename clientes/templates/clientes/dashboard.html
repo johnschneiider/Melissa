@@ -5,29 +5,103 @@
 
 {% block extra_css %}
 <link href="{% static 'css/clientes/dashboard.css' %}" rel="stylesheet">
+<style>
+.dashboard-stats-row {
+  display: flex;
+  flex-direction: row;
+  gap: 1.2rem;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+.dashboard-stats .stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  text-align: center;
+}
+.dashboard-stats .stat-pill {
+  display: inline-block;
+  min-width: 38px;
+  padding: 0.3em 1.1em;
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-radius: 999px;
+  background: #f4f6f8;
+  color: #222;
+  margin-bottom: 0.3em;
+  border: 1.5px solid #e0e0e0;
+  font-family: var(--font-ui), sans-serif;
+}
+.dashboard-stats .stat-pill.total {
+  background: #f4f6f8;
+  color: #222;
+  border-color: #e0e0e0;
+}
+.dashboard-stats .stat-pill.pendientes {
+  background: #fff4f4;
+  color: #b80000;
+  border-color: #ffd6d6;
+}
+.dashboard-stats .stat-pill.completadas {
+  background: #e6fcfa;
+  color: #1ec6b6;
+  border-color: #1ec6b6;
+}
+.dashboard-stats .stat-desc {
+  font-size: 0.98rem;
+  color: #666;
+  font-family: var(--font-ui), sans-serif;
+  margin-bottom: 0.7em;
+  max-width: 140px;
+}
+.dashboard-stats-title {
+  font-family: var(--font-ui), sans-serif;
+  font-size: 1.1rem;
+  color: var(--color-deep-charcoal);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-align: right;
+}
+.dashboard-hero-content h1, .dashboard-hero-content h2, .dashboard-hero-content h3 {
+  font-family: var(--font-ui), sans-serif !important;
+}
+/* Cambiar fuente global en el dashboard */
+.dashboard-main *:not(i):not(svg) {
+  font-family: var(--font-ui), sans-serif !important;
+}
+.card-body h5.fw-bold {
+  color: #181818 !important;
+}
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid dashboard-main">
     <!-- Header del Dashboard -->
     <div class="row dashboard-hero mb-4 pb-2 border-bottom" style="background:#fff;border-radius:1.2rem;">
         <div class="col-md-8 dashboard-hero-content py-4 ps-4">
-            <h1 class="display-5 fw-bold mb-2" style="font-family:var(--font-serif-title);color:var(--color-teal-accent);">¡Hola, {{ user.username }}!</h1>
+            <h1 class="display-5 fw-bold mb-2">¡Hola, {{ user.username }}!</h1>
             <p class="mb-0 opacity-75 fs-5" style="color:var(--color-deep-charcoal);">Encuentra los mejores servicios de peluquería cerca de ti</p>
         </div>
-        <div class="col-md-4 d-flex align-items-center justify-content-end pe-4">
-            <div class="dashboard-stats d-flex gap-3">
-                <div class="stat-box stat-total p-3 rounded-4 shadow-sm text-center" style="background:#fff;min-width:90px;border:1.5px solid #e0e0e0;color:var(--color-deep-charcoal);">
-                    <h4 class="mb-0 fw-bold stat-number">{{ total_reservas }}</h4>
-                    <small class="stat-label">TOTAL</small>
+        <div class="col-md-4 d-flex flex-column align-items-end justify-content-center pe-4">
+            <div class="dashboard-stats-title">Tus reservas</div>
+            <div class="dashboard-stats-row dashboard-stats">
+                <div class="stat-box">
+                    <span class="stat-pill total">{{ total_reservas }}</span>
+                    <div class="stat-desc">Total de reservas que has realizado</div>
                 </div>
-                <div class="stat-box stat-pendientes p-3 rounded-4 shadow-sm text-center" style="background:#fff;min-width:90px;border:1.5px solid #ffd6d6;color:var(--color-deep-charcoal);">
-                    <h4 class="mb-0 fw-bold stat-number">{{ reservas_pendientes }}</h4>
-                    <small class="stat-label">PENDIENTES</small>
+                <div class="stat-box">
+                    <span class="stat-pill pendientes">{{ reservas_pendientes }}</span>
+                    <div class="stat-desc">Reservas que aún están pendientes de realizarse</div>
                 </div>
-                <div class="stat-box stat-completadas p-3 rounded-4 shadow-sm text-center" style="background:#fff;min-width:90px;border:1.5px solid #1ec6b6;color:var(--color-teal-accent);">
-                    <h4 class="mb-0 fw-bold stat-number">{{ reservas_completadas }}</h4>
-                    <small class="stat-label">COMPLETADAS</small>
+                <div class="stat-box">
+                    <span class="stat-pill completadas">{{ reservas_completadas }}</span>
+                    <div class="stat-desc">Reservas que ya han sido completadas</div>
                 </div>
             </div>
         </div>
@@ -68,7 +142,7 @@
             <!-- Lista de negocios -->
             <div class="col-lg-8">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold" style="font-family:var(--font-serif-title);color:var(--color-deep-charcoal);">Negocios disponibles</h2>
+                    <h2 class="fw-bold">Negocios disponibles</h2>
                     <span class="badge bg-primary fs-6">{{ negocios_info.count }} encontrados</span>
                 </div>
 
@@ -79,6 +153,7 @@
                             <div class="card h-100 shadow-sm border-0 hover-shadow p-2" style="border-radius:1.2rem;background:var(--color-warm-sand);">
                                 <div class="card-body p-4">
                                     <div class="d-flex align-items-start mb-3">
+                                        <a href="{% url 'clientes:detalle_peluquero' info.negocio.id %}">
                                         {% if info.negocio.logo %}
                                             <img src="{{ info.negocio.logo.url }}" class="rounded-circle me-3 border border-2" style="width: 60px; height: 60px; object-fit: cover;">
                                         {% else %}
@@ -86,8 +161,11 @@
                                                 <i class="bi bi-shop fs-4 text-muted"></i>
                                             </div>
                                         {% endif %}
+                                        </a>
                                         <div class="flex-grow-1">
-                                            <h5 class="fw-bold mb-1" style="font-family:var(--font-serif-title);">{{ info.negocio.nombre }}</h5>
+                                            <a href="{% url 'clientes:detalle_peluquero' info.negocio.id %}" class="text-decoration-none text-dark">
+                                                <h5 class="fw-bold mb-1">{{ info.negocio.nombre }}</h5>
+                                            </a>
                                             <p class="text-muted small mb-2"><i class="bi bi-geo-alt me-1"></i>{{ info.negocio.direccion }}</p>
                                             <div class="d-flex align-items-center mb-1">
                                                 <div class="text-warning me-2">
@@ -109,7 +187,7 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <h6 class="fw-bold mb-2" style="font-family:var(--font-ui);">Profesionales disponibles:</h6>
+                                        <h6 class="fw-bold mb-2">Profesionales disponibles:</h6>
                                         <div class="d-flex flex-wrap gap-2">
                                             {% for profesional in info.profesionales|slice:":3" %}
                                                 <div class="d-flex align-items-center bg-white rounded-3 shadow-sm px-2 py-1" style="min-width:0;">
@@ -134,9 +212,7 @@
                                         </div>
                                     </div>
                                     
-                                    <a href="{% url 'clientes:detalle_peluquero' info.negocio.id %}" class="btn btn-outline-primary w-100 mt-2">
-                                        <i class="bi bi-eye me-2"></i>Ver detalles
-                                    </a>
+                                    <a href="{% url 'clientes:detalle_peluquero' info.negocio.id %}" class="btn w-100 mt-2" style="color:#181818 !important; font-weight:600; border:none !important; background:#f4f6f8;">Reservar</a>
                                 </div>
                             </div>
                         </div>

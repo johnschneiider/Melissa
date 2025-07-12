@@ -24,5 +24,12 @@ urlpatterns = [
     path('<int:negocio_id>/api/reservas/', views.api_reservas_negocio, name='api_reservas_negocio'),
     path('<int:negocio_id>/servicios/', views.gestionar_servicios, name='gestionar_servicios'),
     path('notificaciones/', views.notificaciones_negocio, name='notificaciones'),
-    path('<int:negocio_id>/', views.detalle_negocio, name='detalle_negocio'),
+    path('solicitudes-ausencia/', views.solicitudes_ausencia, name='solicitudes_ausencia'),
+    path('revisar-solicitud-ausencia/<int:solicitud_id>/', views.revisar_solicitud_ausencia, name='revisar_solicitud_ausencia'),
+    
+    # URLs para días de descanso
+    path('dias-descanso/', views.listar_dias_descanso, name='listar_dias_descanso'),
+    path('dias-descanso/crear/', views.crear_dia_descanso, name='crear_dia_descanso'),
+    path('dias-descanso/editar/<int:dia_id>/', views.editar_dia_descanso, name='editar_dia_descanso'),
+    path('dias-descanso/eliminar/<int:dia_id>/', views.eliminar_dia_descanso, name='eliminar_dia_descanso'),
 ]

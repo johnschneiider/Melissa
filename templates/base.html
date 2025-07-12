@@ -119,20 +119,26 @@
             <li><a class="dropdown-item" href="{% url 'chat:lista_conversaciones' %}"><i class="bi bi-chat-dots"></i> Chat</a></li>
             {% if is_cliente %}
               <li><a class="dropdown-item" href="{% url 'clientes:mis_reservas' %}"><i class="bi bi-calendar-check"></i> Mis Reservas</a></li>
+              <li><a class="dropdown-item" href="{% url 'cuentas:perfil_usuario' %}"><i class="bi bi-person-circle"></i> Mi perfil</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% elif is_negocio %}
               <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a></li>
               <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a></li>
+              <li><a class="dropdown-item" href="{% url 'negocios:listar_dias_descanso' %}"><i class="bi bi-calendar-x"></i> Días de Descanso</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% elif is_profesional %}
               <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a></li>
+              <li><a class="dropdown-item" href="{% url 'profesionales:gestionar_ausencias' %}"><i class="bi bi-calendar-x"></i> Mis Ausencias</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% else %}
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
+            {% endif %}
+            {% if user.is_superuser or user.tipo == 'super_admin' %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:control_reservas' %}"><i class="bi bi-calendar2-check"></i> Control de Reservas</a></li>
             {% endif %}
             {% if is_negocio and user.negocios.first %}
               <li><a class="dropdown-item" href="{% url 'negocios:galeria_negocio' user.negocios.first.id %}"><i class="bi bi-images"></i> Galería de imágenes</a></li>
@@ -185,18 +191,24 @@
             {% elif is_negocio %}
               <li><a class="dropdown-item" href="{% url 'negocios:mis_negocios' %}"><i class="bi bi-shop me-2"></i>Mis Negocios</a></li>
               <li><a class="dropdown-item" href="{% url 'negocios:crear_negocio' %}"><i class="bi bi-plus-circle me-2"></i>Crear Negocio</a></li>
+              <li><a class="dropdown-item" href="{% url 'negocios:listar_dias_descanso' %}"><i class="bi bi-calendar-x"></i> Días de Descanso</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% elif is_profesional %}
               <li><a class="dropdown-item" href="{% url 'profesionales:panel' %}"><i class="bi bi-person-badge"></i> Panel Profesional</a></li>
+              <li><a class="dropdown-item" href="{% url 'profesionales:gestionar_ausencias' %}"><i class="bi bi-calendar-x"></i> Mis Ausencias</a></li>
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% else %}
               <li><a class="dropdown-item" href="{% url 'cuentas:mis_tickets' %}"><i class="bi bi-ticket-detailed"></i> Mis Tickets</a></li>
               <li><hr class="dropdown-divider"></li>
             {% endif %}
+            {% if user.is_superuser or user.tipo == 'super_admin' %}
+              <li><a class="dropdown-item" href="{% url 'cuentas:control_reservas' %}"><i class="bi bi-calendar2-check"></i> Control de Reservas</a></li>
+            {% endif %}
             {% if is_negocio and user.negocios.first %}
               <li><a class="dropdown-item" href="{% url 'negocios:galeria_negocio' user.negocios.first.id %}"><i class="bi bi-images"></i> Galería de imágenes</a></li>
+              <li><a class="dropdown-item" href="{% url 'negocios:listar_dias_descanso' %}"><i class="bi bi-calendar-x"></i> Días de Descanso</a></li>
             {% endif %}
             <li><a class="dropdown-item" href="{% url 'cuentas:ajustes' %}"><i class="bi bi-gear"></i> Ajustes</a></li>
             <li><a class="dropdown-item" href="{% url 'cuentas:politica_datos' %}"><i class="bi bi-shield-lock"></i> Política de Tratamiento de Datos</a></li>

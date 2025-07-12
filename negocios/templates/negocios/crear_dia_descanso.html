@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Crear Día de Descanso{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">
+            <i class="fas fa-calendar-plus"></i> Crear Día de Descanso
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Mensajes de error y éxito -->
+          {% if messages %}
+          <div class="mb-4" style="margin-top: 80px;">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              <i class="fas fa-{% if message.tags == 'error' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+          
+          <form method="post">
+            {% csrf_token %}
+            
+            <!-- Seleccionar negocio -->
+            <div class="mb-3">
+              <label for="negocio" class="form-label">Negocio *</label>
+              <select class="form-select" name="negocio" id="negocio" required>
+                <option value="">Selecciona un negocio</option>
+                {% for negocio in negocios %}
+                <option value="{{ negocio.id }}">{{ negocio.nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Fecha -->
+            <div class="mb-3">
+              <label for="fecha" class="form-label">Fecha *</label>
+              <input type="date" class="form-control" name="fecha" id="fecha" required>
+              <div class="form-text">Selecciona la fecha en la que el negocio no estará disponible.</div>
+            </div>
+
+            <!-- Tipo -->
+            <div class="mb-3">
+              <label for="tipo" class="form-label">Tipo de descanso *</label>
+              <select class="form-select" name="tipo" id="tipo" required>
+                <option value="">Selecciona el tipo</option>
+                {% for tipo_codigo, tipo_nombre in tipos %}
+                <option value="{{ tipo_codigo }}">{{ tipo_nombre }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Motivo -->
+            <div class="mb-3">
+              <label for="motivo" class="form-label">Motivo (opcional)</label>
+              <input type="text" class="form-control" name="motivo" id="motivo" 
+                     maxlength="200" placeholder="Ej: Feriado nacional, mantenimiento, etc.">
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-3">
+              <label for="descripcion" class="form-label">Descripción (opcional)</label>
+              <textarea class="form-control" name="descripcion" id="descripcion" rows="3" 
+                        placeholder="Agrega más detalles sobre el día de descanso..."></textarea>
+            </div>
+
+            <!-- Información -->
+            <div class="alert alert-info">
+              <h6><i class="fas fa-info-circle"></i> Importante</h6>
+              <ul class="mb-0">
+                <li>Los profesionales serán notificados automáticamente sobre este día de descanso.</li>
+                <li>No se podrán realizar reservas en la fecha seleccionada.</li>
+                <li>Puedes editar o eliminar el día de descanso después de crearlo.</li>
+              </ul>
+            </div>
+
+            <!-- Botones -->
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Crear Día de Descanso
+              </button>
+              <a href="{% url 'negocios:listar_dias_descanso' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Establecer fecha mínima como hoy
+document.getElementById('fecha').min = new Date().toISOString().split('T')[0];
+
+// Función para mostrar errores en modal
+function mostrarError(mensaje) {
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    document.getElementById('errorModalBody').textContent = mensaje;
+    modal.show();
+}
+
+// Función para actualizar notificaciones inmediatamente
+function actualizarNotificacionesInmediatamente() {
+    fetch('/cuentas/api/notificaciones/')
+        .then(resp => resp.json())
+        .then(data => {
+            if (typeof data.no_leidas !== 'undefined') {
+                // Llamar a la función global de actualización de notificaciones
+                if (typeof actualizarBadgeNotificaciones === 'function') {
+                    actualizarBadgeNotificaciones(data.no_leidas);
+                }
+            }
+        })
+        .catch(() => {});
+}
+
+// Mostrar errores en modal si existen
+document.addEventListener('DOMContentLoaded', function() {
+    const alerts = document.querySelectorAll('.alert-danger');
+    alerts.forEach(function(alert) {
+        const mensaje = alert.textContent.trim();
+        if (mensaje) {
+            mostrarError(mensaje);
+        }
+    });
+    
+    // Si hay mensajes de éxito, actualizar notificaciones inmediatamente
+    const successAlerts = document.querySelectorAll('.alert-success');
+    if (successAlerts.length > 0) {
+        // Esperar un momento para que las notificaciones se creen en el backend
+        setTimeout(actualizarNotificacionesInmediatamente, 1000);
+    }
+});
+
+// Interceptar el envío del formulario para actualizar notificaciones después
+document.querySelector('form').addEventListener('submit', function() {
+    // Después de un envío exitoso, actualizar notificaciones
+    setTimeout(actualizarNotificacionesInmediatamente, 2000);
+});
+</script>
+
+<!-- Modal para errores -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">
+          <i class="fas fa-exclamation-triangle"></i> Error
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="errorModalBody">
+        <!-- El contenido del error se insertará aquí -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

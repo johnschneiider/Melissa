@@ -73,6 +73,8 @@ class Notificacion(models.Model):
     TIPO_CHOICES = (
         ('reserva', 'Nueva Reserva'),
         ('matriculacion', 'Respuesta Matriculación'),
+        ('solicitud_ausencia', 'Respuesta Solicitud Ausencia'),
+        ('dia_descanso', 'Día de Descanso'),
         ('sistema', 'Notificación del Sistema'),
     )
     
@@ -138,3 +140,76 @@ class MetricaProfesional(models.Model):
         ordering = ['-fecha']
     def __str__(self):
         return f"{self.profesional.nombre_completo} - {self.fecha}"
+
+class SolicitudAusencia(models.Model):
+    """Modelo para las solicitudes de ausencia del profesional"""
+    ESTADO_CHOICES = (
+        ('pendiente', 'Pendiente'),
+        ('aprobada', 'Aprobada'),
+        ('rechazada', 'Rechazada'),
+        ('cancelada', 'Cancelada'),
+    )
+    
+    profesional = models.ForeignKey(Profesional, on_delete=models.CASCADE, related_name='solicitudes_ausencia')
+    negocio = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='solicitudes_ausencia')
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    motivo = models.CharField(max_length=200, blank=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    fecha_respuesta = models.DateTimeField(null=True, blank=True)
+    comentario_respuesta = models.TextField(blank=True)
+    
+    class Meta:
+        verbose_name = 'Solicitud de Ausencia'
+        verbose_name_plural = 'Solicitudes de Ausencia'
+        ordering = ['-fecha_solicitud']
+
+    def __str__(self):
+        return f"{self.profesional.nombre_completo} - {self.fecha_inicio} a {self.fecha_fin} ({self.estado})"
+
+    def aprobar(self, comentario=""):
+        print(f"DEBUG: === MÉTODO APROBAR EJECUTADO ===")
+        print(f"DEBUG: Aprobando solicitud {self.id}, estado actual: {self.estado}")
+        print(f"DEBUG: Comentario recibido: '{comentario}'")
+        
+        self.estado = 'aprobada'
+        self.fecha_respuesta = timezone.now()
+        self.comentario_respuesta = comentario
+        
+        print(f"DEBUG: Antes de guardar - estado: {self.estado}")
+        self.save()
+        print(f"DEBUG: Después de guardar - estado: {self.estado}")
+        
+        # Crear la ausencia aprobada
+        ausencia = AusenciaProfesional.objects.create(
+            profesional=self.profesional,
+            fecha_inicio=self.fecha_inicio,
+            fecha_fin=self.fecha_fin,
+            motivo=self.motivo,
+            activo=True
+        )
+        print(f"DEBUG: Ausencia creada: {ausencia}")
+        print(f"DEBUG: === FIN MÉTODO APROBAR ===")
+
+    def rechazar(self, comentario=""):
+        self.estado = 'rechazada'
+        self.fecha_respuesta = timezone.now()
+        self.comentario_respuesta = comentario
+        self.save()
+
+class AusenciaProfesional(models.Model):
+    """Modelo para las ausencias aprobadas del profesional"""
+    profesional = models.ForeignKey(Profesional, on_delete=models.CASCADE, related_name='ausencias')
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    motivo = models.CharField(max_length=200, blank=True)
+    activo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Ausencia Profesional'
+        verbose_name_plural = 'Ausencias Profesionales'
+        ordering = ['-fecha_inicio']
+
+    def __str__(self):
+        return f"{self.profesional.nombre_completo} - {self.fecha_inicio} a {self.fecha_fin} ({'Activa' if self.activo else 'Inactiva'})"

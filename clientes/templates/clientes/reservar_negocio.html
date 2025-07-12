@@ -17,6 +17,18 @@
                         <h2 class="fw-bold text-dark mb-2">Reservar en {{ negocio.nombre }}</h2>
                         <p class="text-muted mb-0">Selecciona el servicio, profesional, fecha y hora para tu reserva</p>
                     </div>
+                    {% if form.non_field_errors %}
+                        <div id="toast-error" class="toast align-items-center text-bg-danger border-0 show position-fixed top-0 start-50 translate-middle-x mt-4" role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999; min-width:300px;">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        </div>
+                    {% endif %}
                     <form method="post" class="mb-4">
                         {% csrf_token %}
                         {% if form.errors %}
@@ -35,21 +47,26 @@
                         {% endif %}
                         <div class="mb-3">
                             {{ form.servicio.label_tag }}
-                            {{ form.servicio }}
+                            <select name="servicio" id="id_servicio" class="form-select">
+                                <option value="">---------</option>
+                                {% for s in form.fields.servicio.queryset %}
+                                    <option value="{{ s.id }}" {% if form.fields.servicio.initial == s.id %}selected{% endif %}>{{ s.servicio.nombre }} ({{ s.duracion }} min)</option>
+                                {% endfor %}
+                            </select>
                         </div>
                         <div class="mb-3">
                             {{ form.profesional.label_tag }}
                             <select name="profesional" id="id_profesional" class="form-select">
                                 <option value="">---------</option>
                                 {% for prof in form.fields.profesional.queryset %}
-                                    <option value="{{ prof.id }}" {% if form.initial.profesional == prof.id %}selected{% endif %}>{{ prof.nombre_completo }}</option>
+                                    <option value="{{ prof.id }}" {% if form.fields.profesional.initial == prof.id %}selected{% endif %}>{{ prof.nombre_completo }}</option>
                                 {% endfor %}
                             </select>
                         </div>
                         <div class="mb-3">
                             <label for="calendario-reserva" class="form-label">Fecha</label>
                             <div id="calendario-reserva"></div>
-                            <input type="hidden" name="fecha" id="id_fecha" value="{{ form.initial.fecha|default:'' }}">
+                            <input type="hidden" name="fecha" id="id_fecha" value="{% if fecha_preseleccionada %}{{ fecha_preseleccionada }}{% else %}{{ form.initial.fecha|default:'' }}{% endif %}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Horarios disponibles</label>
@@ -94,51 +111,56 @@ document.addEventListener('DOMContentLoaded', function() {
         const servicioId = servicioField.value;
         const profesionalId = profesionalField.value;
         const fecha = fechaField.value;
-        
-        console.log('fetchSlots - servicioId:', servicioId, 'profesionalId:', profesionalId, 'fecha:', fecha);
-        
+        const submitBtn = form.querySelector('button[type="submit"]');
+
         if (!servicioId || !profesionalId || !fecha) {
             slotsDiv.innerHTML = '<div class="col-12 text-muted">Selecciona servicio, profesional y fecha para ver horarios.</div>';
+            submitBtn.disabled = true;
             return;
         }
-        
+
         const url = `/clientes/api/horarios-disponibles/{{ negocio.id }}/?fecha=${fecha}&servicio_negocio_id=${servicioId}&profesional_id=${profesionalId}`;
-        console.log('Fetching URL:', url);
-        
         fetch(url)
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Response data:', data);
-                if (data.festivo) {
-                    slotsDiv.innerHTML = '<div class="col-12 text-danger">No hay turnos disponibles este día.</div>';
+                if (!data.disponibles || data.disponibles.length === 0) {
+                    slotsDiv.innerHTML = `
+                        <div class="col-12 text-danger fw-bold">
+                            No hay horarios disponibles para este día.<br>
+                            El profesional no trabaja o está ocupado.<br>
+                            <span class="text-muted">Por favor, elige otra fecha u horario.</span>
+                        </div>
+                    `;
+                    submitBtn.disabled = true;
                     return;
                 }
-                if (data.disponibles.length === 0) {
-                    slotsDiv.innerHTML = '<div class="col-12 text-muted">No hay horarios disponibles.</div>';
-                    return;
-                }
+                // Si hay horarios, habilitar el botón
+                submitBtn.disabled = false;
+                // Mostrar los slots disponibles
+                let html = '';
                 data.disponibles.forEach(slot => {
-                    const card = document.createElement('div');
-                    card.className = 'col-6 col-md-3 mb-2';
-                    card.innerHTML = `<button type="button" class="btn btn-outline-primary w-100 slot-btn py-3" data-hora="${slot.inicio}">${slot.inicio} - ${slot.fin}</button>`;
-                    slotsDiv.appendChild(card);
+                    html += `<div class="col-auto">
+                        <button type="button" class="btn btn-outline-primary btn-sm slot-btn" data-hora="${slot.inicio}">
+                            ${slot.inicio} - ${slot.fin}
+                        </button>
+                    </div>`;
                 });
+                slotsDiv.innerHTML = html;
+                horaInputWrapper.style.display = 'block';
+                // Manejar selección de slot
                 document.querySelectorAll('.slot-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
-                        horaInicioField.value = this.dataset.hora;
-                        horaInputWrapper.style.display = 'block';
-                        horaInicioField.required = true;
                         document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
                         this.classList.add('active');
+                        horaInicioField.value = this.getAttribute('data-hora');
+                        horaInicioField.required = true;
                     });
                 });
             })
             .catch(error => {
                 console.error('Error fetching slots:', error);
                 slotsDiv.innerHTML = '<div class="col-12 text-danger">Error al cargar horarios.</div>';
+                submitBtn.disabled = true;
             });
     }
 
@@ -148,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Si hay fecha preseleccionada, intentar cargar horarios automáticamente
     {% if fecha_preseleccionada %}
-        // Esperar un momento para que los campos se carguen
         setTimeout(() => {
             if (servicioField.value && profesionalField.value) {
                 fetchSlots();
@@ -192,22 +213,27 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let dia = 1; dia <= diasMes; dia++) {
             const fecha = new Date(anio, mes, dia);
             const fechaStr = fecha.toISOString().slice(0,10);
-            html += `<td><button type="button" class="btn btn-sm btn-light w-100 py-2 px-0 calendario-dia" data-fecha="${fechaStr}">${dia}</button></td>`;
+            // Marcar la fecha seleccionada
+            let btnClass = 'btn btn-sm btn-light w-100 py-2 px-0 calendario-dia';
+            if (fechaInput.value === fechaStr) {
+                btnClass += ' bg-success text-white';
+            }
+            html += `<td><button type="button" class="${btnClass}" data-fecha="${fechaStr}">${dia}</button></td>`;
             celdas++;
             if (celdas % 7 === 0) html += '</tr><tr>';
         }
-        html += '</tr></tbody></table>';
+        html += `</tr></tbody></table>`;
         html += `<div class="d-flex justify-content-between align-items-center mt-2">
             <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-prev">&lt; Mes anterior</button>
-            <span class="fw-bold">${diasSemana[primerDia.getDay()]} ${primerDia.toLocaleString('default', { month: 'long' })} ${anio}</span>
+            <span class="fw-bold">${primerDia.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
             <button type="button" class="btn btn-outline-secondary btn-sm" id="cal-next">Mes siguiente &gt;</button>
         </div>`;
         calendarioDiv.innerHTML = html;
         document.querySelectorAll('.calendario-dia').forEach(btn => {
             btn.addEventListener('click', function() {
                 fechaInput.value = this.dataset.fecha;
-                document.querySelectorAll('.calendario-dia').forEach(b => b.classList.remove('btn-primary'));
-                this.classList.add('btn-primary');
+                document.querySelectorAll('.calendario-dia').forEach(b => b.classList.remove('bg-success', 'text-white'));
+                this.classList.add('bg-success', 'text-white');
                 fechaInput.dispatchEvent(new Event('change'));
             });
         });
@@ -225,4 +251,56 @@ document.addEventListener('DOMContentLoaded', function() {
     renderCalendario();
 })();
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var toastEl = document.getElementById('toast-error');
+  if (toastEl) {
+    setTimeout(function() {
+      toastEl.classList.remove('show');
+      toastEl.classList.add('hide');
+    }, 4000);
+  }
+});
+</script>
+<style>
+.calendario-dia.bg-success {
+    background: #28a745 !important;
+    color: #fff !important;
+    border: none !important;
+}
+.calendario-dia.text-white {
+    color: #fff !important;
+}
+.slot-btn {
+    background: #e9ecef !important;
+    color: #222 !important;
+    border: none !important;
+    border-radius: 1.5rem !important;
+    font-weight: 600;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+    padding: 0.4em 1.1em !important;
+    min-height: 2.1em;
+    height: auto;
+}
+button.slot-btn.slot-btn-selected,
+button.slot-btn[aria-selected="true"] {
+    background: #28a745 !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: none !important;
+    z-index: 2;
+}
+#slots-disponibles .col-6, #slots-disponibles .col-md-3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#hora-input-wrapper { display: none !important; }
+</style>
 {% endblock %} 

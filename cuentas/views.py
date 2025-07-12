@@ -8,11 +8,11 @@ from django.views.decorators.csrf import csrf_protect
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.urls import reverse
-from .forms import RegistroUnificadoForm, FeedbackForm, RespuestaTicketForm, CambiarEstadoTicketForm
+from .forms import RegistroUnificadoForm, FeedbackForm, RespuestaTicketForm, CambiarEstadoTicketForm, EditarPerfilClienteForm
 from .models import UsuarioPersonalizado, Feedback, NotificacionAdmin, RespuestaTicket
 import logging
 from django.http import JsonResponse
-from profesionales.models import Notificacion, Profesional, Matriculacion, MetricaProfesional
+from profesionales.models import Notificacion, Profesional, Matriculacion, MetricaProfesional, SolicitudAusencia
 from negocios.models import Negocio, ServicioNegocio, Servicio, MetricaNegocio, ReporteMensual
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
@@ -27,6 +27,9 @@ from django.http import JsonResponse
 import subprocess
 from .utils import log_user_activity, log_security_event, log_error, get_rate_limit_config
 from django_ratelimit.decorators import ratelimit
+from clientes.models import Reserva
+from django.conf import settings
+from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
@@ -185,18 +188,22 @@ def logout_personalizado(request):
 def perfil_usuario(request):
     """Vista para mostrar y editar el perfil del usuario"""
     user = request.user
-    
     if request.method == 'POST':
-        # Aquí puedes agregar lógica para actualizar el perfil
-        messages.success(request, 'Tu perfil ha sido actualizado exitosamente.')
-        return redirect('perfil_usuario')
-    
+        form = EditarPerfilClienteForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado exitosamente.')
+            return redirect('cuentas:perfil_usuario')
+        else:
+            messages.error(request, 'Por favor corrige los errores en el formulario.')
+    else:
+        form = EditarPerfilClienteForm(instance=user)
     context = {
         'user': user,
         'es_cliente': user.tipo == 'cliente',
         'es_negocio': user.tipo == 'negocio',
+        'form': form,
     }
-    
     return render(request, 'cuentas/perfil_usuario.html', context)
 
 @login_required
@@ -275,6 +282,7 @@ def api_notificaciones(request):
     if user.tipo == 'profesional':
         profesional = getattr(user, 'perfil_profesional', None)
         if profesional:
+            # Notificaciones regulares del profesional
             notis = Notificacion.objects.filter(profesional=profesional).order_by('-fecha_creacion')
             for n in notis:
                 data.append({
@@ -287,6 +295,26 @@ def api_notificaciones(request):
                     'url': n.url_relacionada,
                 })
             count_no_leidas = notis.filter(leida=False).count()
+            
+            # Solicitudes de ausencia con respuestas (aprobadas/rechazadas)
+            solicitudes_respuesta = SolicitudAusencia.objects.filter(
+                profesional=profesional,
+                estado__in=['aprobada', 'rechazada']
+            ).order_by('-fecha_respuesta')
+            
+            for solicitud in solicitudes_respuesta:
+                estado_texto = 'aprobada' if solicitud.estado == 'aprobada' else 'rechazada'
+                data.append({
+                    'id': f'ausencia_{solicitud.id}',
+                    'tipo': 'solicitud_ausencia',
+                    'titulo': f'Solicitud de ausencia {estado_texto}',
+                    'mensaje': f'Tu solicitud del {solicitud.fecha_inicio} al {solicitud.fecha_fin} ha sido {estado_texto} por {solicitud.negocio.nombre}',
+                    'leida': False,
+                    'fecha': solicitud.fecha_respuesta.strftime('%d/%m/%Y %H:%M'),
+                    'url': '/profesionales/gestionar-ausencias/',
+                })
+                count_no_leidas += 1
+                
     elif user.tipo == 'negocio':
         # Solicitudes de matriculación pendientes
         negocios = Negocio.objects.filter(propietario=user)
@@ -305,7 +333,25 @@ def api_notificaciones(request):
                     'profesional_nombre': s.profesional.nombre_completo,
                 })
             count_no_leidas += solicitudes.count()
-        # Aquí puedes agregar notificaciones de reservas para negocio si las tienes
+            
+            # Solicitudes de ausencia pendientes
+            solicitudes_ausencia = SolicitudAusencia.objects.filter(
+                negocio=negocio,
+                estado='pendiente'
+            ).order_by('-fecha_solicitud')
+            
+            for solicitud in solicitudes_ausencia:
+                data.append({
+                    'id': f'ausencia_{solicitud.id}',
+                    'tipo': 'solicitud_ausencia',
+                    'titulo': f'Nueva solicitud de ausencia de {solicitud.profesional.nombre_completo}',
+                    'mensaje': f'Solicita ausencia del {solicitud.fecha_inicio} al {solicitud.fecha_fin}',
+                    'leida': False,
+                    'fecha': solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M'),
+                    'url': f'/negocios/revisar-solicitud-ausencia/{solicitud.id}/',
+                })
+                count_no_leidas += 1
+                
     elif user.tipo == 'cliente':
         # Si implementas notificaciones para clientes, agrégalas aquí
         pass
@@ -1015,6 +1061,39 @@ def gestionar_rate_limiting(request):
     }
     
     return render(request, 'cuentas/gestionar_rate_limiting.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser or getattr(u, 'tipo', None) == 'super_admin')
+def control_reservas(request):
+    # Obtener el límite actual (de cache o default)
+    max_reservas = cache.get('max_reservas_por_servicio_dia', 2)
+    if request.method == 'POST':
+        try:
+            nuevo_limite = int(request.POST.get('max_reservas', 2))
+            if 1 <= nuevo_limite <= 10:
+                cache.set('max_reservas_por_servicio_dia', nuevo_limite, timeout=None)
+                max_reservas = nuevo_limite
+                messages.success(request, 'Límite actualizado correctamente.')
+            else:
+                messages.error(request, 'El límite debe estar entre 1 y 10.')
+        except Exception:
+            messages.error(request, 'Valor inválido para el límite.')
+    # Resumen de reservas activas por cliente y servicio para hoy
+    hoy = timezone.now().date()
+    resumen = (
+        Reserva.objects.filter(fecha=hoy, estado__in=['pendiente', 'confirmado'])
+        .values('cliente__username', 'servicio__servicio__nombre')
+        .annotate(cantidad=Count('id'))
+        .order_by('-cantidad')
+    )
+    resumen = [
+        {'cliente': r['cliente__username'], 'servicio': r['servicio__servicio__nombre'], 'cantidad': r['cantidad']}
+        for r in resumen
+    ]
+    return render(request, 'cuentas/control_reservas.html', {
+        'max_reservas': max_reservas,
+        'resumen': resumen,
+    })
 
 
 

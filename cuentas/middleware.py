@@ -9,6 +9,7 @@ from datetime import datetime
 from django.core.cache import cache
 from django.http import HttpResponseForbidden
 from django.conf import settings
+from django.shortcuts import render
 
 logger = logging.getLogger(__name__)
 logger_activity = logging.getLogger('melissa.activity')
@@ -104,9 +105,7 @@ class RateLimitMiddleware(MiddlewareMixin):
                         f"Rate limit excedido: {ip} -> {current_path}",
                         extra={'ip': ip, 'path': current_path}
                     )
-                    return HttpResponseForbidden(
-                        'Demasiadas solicitudes. Por favor, espera un momento antes de intentar nuevamente.'
-                    )
+                    return render(request, "429.html", status=429)
                 break
         
         return None
