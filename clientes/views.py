@@ -23,6 +23,12 @@ from django.db import models
 from math import radians, cos, sin, asin, sqrt
 from cuentas.utils import log_user_activity, log_reservation_activity, log_error
 from django_ratelimit.decorators import ratelimit
+from django.db.models import Avg, Count
+from .models import ActividadUsuario
+import requests
+from django.views.decorators.http import require_GET
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -1427,3 +1433,271 @@ def disponibilidad_dias(request):
                     tiempo_actual += duracion
         disponibilidad[dia.strftime('%Y-%m-%d')] = disponible
     return JsonResponse({'disponibilidad': disponibilidad})
+
+@require_GET
+def api_negocios_vistos_recientes(request):
+    """API para obtener negocios vistos recientemente desde localStorage"""
+    if request.user.is_authenticated:
+        # Para usuarios autenticados, usar la base de datos
+        actividades = ActividadUsuario.objects.filter(
+            usuario=request.user,
+            tipo='visita_negocio'
+        ).order_by('-fecha_creacion')[:10]
+        
+        negocios_ids = [act.objeto_id for act in actividades if act.objeto_id]
+        negocios = Negocio.objects.filter(id__in=negocios_ids, activo=True).annotate(
+            rating=Avg('calificaciones__puntaje'),
+            total_resenias=Count('calificaciones')
+        )[:5]
+        
+        data = []
+        for negocio in negocios:
+            data.append({
+                'id': negocio.id,
+                'nombre': negocio.nombre,
+                'direccion': negocio.direccion,
+                'rating': float(negocio.rating) if negocio.rating else 0,
+                'total_resenias': negocio.total_resenias,
+                'categoria': negocio.categoria or 'Salón de belleza',
+                'portada_url': negocio.portada.url if negocio.portada else None,
+                'url': f'/clientes/peluquero/{negocio.id}/'
+            })
+        
+        return JsonResponse({'negocios': data})
+    else:
+        # Para usuarios no autenticados, devolver lista vacía
+        # El frontend se encargará de obtener desde localStorage
+        return JsonResponse({'negocios': []})
+
+@require_GET
+def api_buscar_negocios(request):
+    """API para búsqueda AJAX de negocios con radios expandibles"""
+    try:
+        print("=== API BUSCAR NEGOCIOS INICIADA ===")
+        
+        # Parámetros de búsqueda
+        ubicacion = request.GET.get('ubicacion', '').strip()
+        lat = request.GET.get('lat')
+        lon = request.GET.get('lon')
+        servicio = request.GET.get('servicio', '').strip()
+        negocio = request.GET.get('negocio', '').strip()
+        
+        print(f"=== PARÁMETROS RECIBIDOS ===")
+        print(f"ubicacion: '{ubicacion}'")
+        print(f"lat: '{lat}'")
+        print(f"lon: '{lon}'")
+        print(f"servicio: '{servicio}'")
+        print(f"negocio: '{negocio}'")
+        print(f"Todos los parámetros GET: {dict(request.GET)}")
+        
+        # Query base - TODOS los negocios activos
+        queryset = Negocio.objects.filter(activo=True)
+        print(f"Negocios activos totales: {queryset.count()}")
+        
+        # Filtrar por servicio si se especifica
+        if servicio:
+            queryset = queryset.filter(
+                servicios_negocio__servicio__nombre__icontains=servicio
+            ).distinct()
+            print(f"Negocios después del filtro de servicio: {queryset.count()}")
+        
+        # Filtrar por ubicación textual si se especifica (sin coordenadas)
+        if ubicacion and not lat and not lon:
+            queryset = queryset.filter(
+                Q(ciudad__icontains=ubicacion) |
+                Q(barrio__icontains=ubicacion) |
+                Q(direccion__icontains=ubicacion) |
+                Q(nombre__icontains=ubicacion)
+            )
+            print(f"Negocios después del filtro de ubicación: {queryset.count()}")
+        
+        negocios_data = []
+        
+        if lat and lon:
+            print(f"=== BÚSQUEDA CON COORDENADAS ===")
+            # BÚSQUEDA CON COORDENADAS - RADIOS EXPANDIBLES
+            from math import radians, cos, sin, asin, sqrt
+            
+            try:
+                lat = float(lat)
+                lon = float(lon)
+                print(f"Coordenadas convertidas: lat={lat}, lon={lon}")
+                
+                def haversine(lat1, lon1, lat2, lon2):
+                    R = 6371.0
+                    dlat = radians(lat2 - lat1)
+                    dlon = radians(lon2 - lon1)
+                    a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
+                    c = 2 * asin(sqrt(a))
+                    return R * c * 1000  # metros
+                
+                # Radios expandibles en metros
+                radios = [500, 2000, 5000, 10000, 50000]  # 500m, 2km, 5km, 10km, 50km
+                negocios_encontrados = set()
+                negocios_con_distancia = []
+                
+                for radio in radios:
+                    print(f"Buscando en radio de {radio}m...")
+                    
+                    for negocio_obj in queryset:
+                        if negocio_obj.id in negocios_encontrados:
+                            continue
+                            
+                        if negocio_obj.latitud is not None and negocio_obj.longitud is not None:
+                            distancia = haversine(lat, lon, negocio_obj.latitud, negocio_obj.longitud)
+                            
+                            if distancia <= radio:
+                                negocios_encontrados.add(negocio_obj.id)
+                                negocios_con_distancia.append((negocio_obj, distancia))
+                                print(f"  - {negocio_obj.nombre}: {round(distancia)}m")
+                    
+                    # Si encontramos suficientes negocios, parar
+                    if len(negocios_con_distancia) >= 20:
+                        break
+                
+                # Ordenar por distancia
+                negocios_con_distancia.sort(key=lambda x: x[1])
+                
+                # Convertir a JSON
+                for negocio_obj, distancia in negocios_con_distancia:
+                    negocio_data = {
+                        'id': negocio_obj.id,
+                        'nombre': negocio_obj.nombre,
+                        'direccion': negocio_obj.direccion,
+                        'ciudad': negocio_obj.ciudad,
+                        'barrio': negocio_obj.barrio,
+                        'rating': 4.5,
+                        'total_resenias': 10,
+                        'categoria': 'Barbería',
+                        'portada_url': negocio_obj.portada.url if negocio_obj.portada else None,
+                        'url': f'/clientes/detalle_peluquero/{negocio_obj.id}/',
+                        'distancia_m': round(distancia)
+                    }
+                    negocios_data.append(negocio_data)
+                
+                print(f"Total negocios encontrados con coordenadas: {len(negocios_data)}")
+                
+            except Exception as e:
+                print(f"Error calculando distancias: {e}")
+                import traceback
+                traceback.print_exc()
+                # Fallback: mostrar todos los negocios sin distancia
+                for negocio_obj in queryset[:20]:
+                    negocio_data = {
+                        'id': negocio_obj.id,
+                        'nombre': negocio_obj.nombre,
+                        'direccion': negocio_obj.direccion,
+                        'ciudad': negocio_obj.ciudad,
+                        'barrio': negocio_obj.barrio,
+                        'rating': 4.5,
+                        'total_resenias': 10,
+                        'categoria': 'Barbería',
+                        'portada_url': negocio_obj.portada.url if negocio_obj.portada else None,
+                        'url': f'/clientes/detalle_peluquero/{negocio_obj.id}/',
+                        'distancia_m': None
+                    }
+                    negocios_data.append(negocio_data)
+        else:
+            print(f"=== BÚSQUEDA SIN COORDENADAS ===")
+            print("Sin coordenadas - mostrando todos los negocios")
+            for negocio_obj in queryset[:50]:  # Limitar a 50 para no sobrecargar
+                negocio_data = {
+                    'id': negocio_obj.id,
+                    'nombre': negocio_obj.nombre,
+                    'direccion': negocio_obj.direccion,
+                    'ciudad': negocio_obj.ciudad,
+                    'barrio': negocio_obj.barrio,
+                    'rating': 4.5,
+                    'total_resenias': 10,
+                    'categoria': 'Barbería',
+                    'portada_url': negocio_obj.portada.url if negocio_obj.portada else None,
+                    'url': f'/clientes/detalle_peluquero/{negocio_obj.id}/',
+                    'distancia_m': None
+                }
+                negocios_data.append(negocio_data)
+        
+        print(f"Total negocios procesados: {len(negocios_data)}")
+        
+        return JsonResponse({
+            'negocios': negocios_data,
+            'total_resultados': len(negocios_data),
+            'parametros_busqueda': {
+                'ubicacion': ubicacion,
+                'lat': request.GET.get('lat'),
+                'lon': request.GET.get('lon'),
+                'servicio': servicio
+            }
+        })
+        
+    except Exception as e:
+        print(f"ERROR EN API: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        logger.error(f"Error en búsqueda AJAX de negocios: {str(e)}")
+        return JsonResponse({
+            'negocios': [],
+            'total_resultados': 0,
+            'error': 'Error en la búsqueda'
+        }, status=500)
+
+@csrf_exempt
+@require_GET
+def google_places_autocomplete(request):
+    """Proxy para autocompletado de Google Places (evita CORS)"""
+    try:
+        query = request.GET.get('input', '').strip()
+        if not query or len(query) < 3:
+            return JsonResponse({'predictions': []})
+        
+        # Parámetros para la API de Google Places
+        params = {
+            'input': query,
+            'key': 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg',
+            'language': 'es',
+            'components': 'country:co',
+            'types': 'geocode'
+        }
+        
+        # Llamar a la API de Google Places
+        url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+        response = requests.get(url, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'error': 'Error en API de Google Places'}, status=500)
+            
+    except Exception as e:
+        logger.error(f"Error en autocompletado de Google Places: {str(e)}")
+        return JsonResponse({'error': 'Error interno del servidor'}, status=500)
+
+@csrf_exempt
+@require_GET
+def google_places_details(request):
+    """Proxy para obtener detalles de Google Places (evita CORS)"""
+    try:
+        place_id = request.GET.get('place_id')
+        if not place_id:
+            return JsonResponse({'error': 'place_id requerido'}, status=400)
+        
+        # Parámetros para la API de Google Places
+        params = {
+            'place_id': place_id,
+            'key': 'AIzaSyAn0n-nfpaAcvWeEWRg7iGIgNxC9X1FYHg',
+            'language': 'es'
+        }
+        
+        # Llamar a la API de Google Places
+        url = 'https://maps.googleapis.com/maps/api/place/details/json'
+        response = requests.get(url, params=params)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse(data)
+        else:
+            return JsonResponse({'error': 'Error en API de Google Places'}, status=500)
+            
+    except Exception as e:
+        logger.error(f"Error obteniendo detalles de Google Places: {str(e)}")
+        return JsonResponse({'error': 'Error interno del servidor'}, status=500)

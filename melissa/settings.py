@@ -94,6 +94,7 @@ MIDDLEWARE = [
     'cuentas.middleware.UserTypeMiddleware',
     'cuentas.middleware.RateLimitMiddleware',
     'cuentas.middleware.ActivityLoggingMiddleware',
+    'clientes.middleware.ActividadUsuarioMiddleware',
 ]
 
 ROOT_URLCONF = 'melissa.urls'

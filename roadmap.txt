@@ -62,6 +62,15 @@
 - ✅ Métricas por cliente
 - ✅ Dashboard de super admin
 - ✅ Reportes mensuales
+- ✅ Sistema de tracking de actividades de usuarios
+  - Registro automático de visitas a negocios
+  - Almacenamiento en BD para usuarios autenticados
+  - localStorage para usuarios no autenticados
+  - Sección "Visto recientemente" dinámica
+  - Middleware para detección automática de actividades
+  - API híbrida para combinar datos locales y del servidor
+  - Límites inteligentes de almacenamiento (100 BD, 20 localStorage)
+  - Análisis de escalabilidad para miles de usuarios
 
 ### 📧 Sistema de Emails
 - ✅ Configuración SMTP
@@ -139,9 +148,20 @@
 ### 🎨 Experiencia de Usuario
 - [ ] Onboarding mejorado
 - [ ] Tutoriales interactivos
-- [ ] Búsqueda avanzada con filtros
+- ✅ Búsqueda avanzada con filtros
+  - Búsqueda AJAX dinámica en la home
+  - Resultados en tiempo real debajo de la barra de búsqueda
+  - Formato visual consistente con las secciones de la home
+  - Búsqueda por ubicación (Google Maps API)
+  - Búsqueda por servicio y nombre de negocio
+  - Filtrado por proximidad geográfica
+  - Loading states y manejo de errores
 - [ ] Geolocalización precisa
 - [ ] Modo offline básico
+- ✅ Personalización basada en actividades del usuario
+  - Sección "Visto recientemente" para usuarios autenticados
+  - Recomendaciones dinámicas basadas en historial
+  - Experiencia personalizada para usuarios no autenticados
 
 ---
 
@@ -180,9 +200,9 @@
 ### 📊 Métricas de Progreso
 - **Funcionalidades Core**: 85% completado
 - **Seguridad**: 90% completado
-- **UI/UX**: 70% completado
+- **UI/UX**: 75% completado (+5% por personalización)
 - **Integraciones**: 60% completado
-- **Escalabilidad**: 40% completado
+- **Escalabilidad**: 45% completado (+5% por sistema de actividades)
 
 
 

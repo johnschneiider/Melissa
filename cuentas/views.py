@@ -145,11 +145,11 @@ class LoginPersonalizadoView(View):
         if user.is_superuser or getattr(user, 'tipo', None) == 'super_admin':
             return redirect('dashboard_super_admin')
         elif getattr(user, 'tipo', None) == 'cliente':
-            return redirect('clientes:dashboard')
+            return redirect('inicio')  # Redirige a la raíz
         elif getattr(user, 'tipo', None) == 'profesional':
             return redirect('profesionales:panel')
         elif getattr(user, 'tipo', None) == 'negocio':
-            return redirect('negocios:mis_negocios')
+            return redirect('negocios:panel')  # Redirige al panel de negocio
         else:
             return redirect('inicio')
 

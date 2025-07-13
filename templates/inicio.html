@@ -44,7 +44,7 @@
                 <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
                 <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
             </div>
-            <button class="btn btn-pink ms-3 d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button">
+            <button id="btn-buscar-desktop" class="btn btn-pink ms-3 d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button" onclick="buscarNegocios(); console.log('Botón clickeado desde onclick');">
                 <i class="bi bi-search"></i>
             </button>
         </div>
@@ -66,6 +66,34 @@
 </div>
 {% endif %}
 
+<!-- Debug visual para verificar que JS funciona -->
+<div id="debug-js" class="alert alert-info mt-3" style="display: none;">
+    <strong>Debug:</strong> JavaScript cargado correctamente
+</div>
+
+<!-- Contenedor para resultados de búsqueda dinámica -->
+<div id="resultados-busqueda" class="mt-4" style="display: none;">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="fw-bold mb-0" id="titulo-resultados">Resultados de búsqueda</h3>
+                    <button id="limpiar-busqueda" class="btn btn-outline-secondary btn-sm" onclick="limpiarResultadosBusqueda()">
+                        <i class="bi bi-x-circle me-1"></i>Limpiar
+                    </button>
+                </div>
+                <div id="negocios-resultados" class="d-flex gap-3 overflow-auto flex-nowrap">
+                    <!-- Los negocios se cargarán aquí dinámicamente -->
+                </div>
+                <div id="sin-resultados" class="text-center py-4" style="display: none;">
+                    <i class="bi bi-search fs-1 text-muted mb-3"></i>
+                    <p class="text-muted">No se encontraron negocios con los criterios de búsqueda.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
         <div class="mt-5 mb-4">
             <span class="fw-bold" style="font-size:1.5rem; letter-spacing:1px;color:var(--color-mint-green);font-family:var(--font-ui);">{{ total_reservas|intcomma }}</span>
             <span style="font-size:1.2rem; color:var(--color-champagne-beige);">citas reservadas</span>
@@ -81,136 +109,173 @@
 {% if user.is_authenticated and is_cliente %}
 <section class="inicio-cliente-section py-5">
   <div class="container">
-    <div class="row g-4">
-      <!-- Próximas citas -->
-      <div class="col-12 col-lg-6">
+    <!-- Próximas citas -->
+    {% if tiene_proximas_reservas %}
+    <div class="row mb-4 carrusel-cnt">
+      <div class="col-12">
         <h3 class="fw-bold mb-3">Próximas citas</h3>
-        {% if proximas_reservas %}
-          <div class="d-flex flex-wrap gap-4">
-            {% for reserva in proximas_reservas %}
-              <div class="card shadow border-0 rounded-4 proxima-cita-card mb-3" style="max-width:340px;min-width:260px;background:var(--color-smoke-white);color:var(--color-black-deep);">
-                <div class="position-relative rounded-top-4 overflow-hidden" style="height:120px;">
-                  {% if reserva.peluquero.logo %}
-                    <img src="{{ reserva.peluquero.logo.url }}" alt="{{ reserva.peluquero.nombre }}" class="w-100 h-100 object-fit-cover" style="object-fit:cover;">
-                  {% else %}
-                    <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light" style="font-size:2rem;">{{ reserva.peluquero.nombre|slice:':1' }}</div>
-                  {% endif %}
-                  <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient-dark" style="background:linear-gradient(180deg,rgba(0,0,0,0.45) 60%,rgba(0,0,0,0.0) 100%);"></div>
-                  <div class="position-absolute top-0 start-0 p-2">
-                    <span class="badge bg-light text-dark shadow-sm px-3 py-2 fw-bold" style="font-size:1rem;opacity:0.95;">
-                      {% with delta=reserva.fecha|date:'U'|add:reserva.hora_inicio|time:'U'|add:'-now' %}
-                        {% if reserva.fecha == today %}
-                          En {{ reserva.hora_inicio|time:'H:i'|timesince:now|cut:'h' }}
-                        {% else %}
-                          {{ reserva.fecha|date:'d M' }}
-                        {% endif %}
-                      {% endwith %}
-                    </span>
+        <div class="d-flex gap-4 overflow-auto flex-nowrap">
+          {% for reserva in proximas_reservas %}
+            <a href="{% url 'clientes:detalle_peluquero' reserva.peluquero.id %}" class="text-decoration-none" style="color:inherit;">
+              <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+                {% if reserva.peluquero.portada %}
+                  <img src="{{ reserva.peluquero.portada.url }}" alt="{{ reserva.peluquero.nombre }}" class="object-fit-cover w-100" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                    <i class="bi bi-shop fs-1 text-muted"></i>
                   </div>
-                  <div class="position-absolute bottom-0 start-0 w-100 px-3 pb-2">
-                    <span class="fw-bold text-white" style="font-size:1.2rem;text-shadow:0 2px 8px rgba(0,0,0,0.25);">{{ reserva.peluquero.nombre }}</span>
+                {% endif %}
+                <div class="negocio-nombre">{{ reserva.peluquero.nombre }}</div>
+                <div class="negocio-rating">{{ reserva.peluquero.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ reserva.peluquero.total_resenias }})</span></div>
+                <div class="negocio-direccion">{{ reserva.peluquero.direccion }}</div>
+                {% if reserva.peluquero.categoria %}
+                  <span class="negocio-badge">{{ reserva.peluquero.categoria }}</span>
+                {% else %}
+                  <span class="negocio-badge">Salón de belleza</span>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Visto recientemente -->
+    {% if tiene_negocios_vistos %}
+    <div class="row mb-4 carrusel-cnt">
+      <div class="col-12">
+        <h3 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Visto recientemente</h3>
+        <div class="d-flex gap-4 overflow-auto flex-nowrap">
+          {% for negocio in negocios_vistos %}
+            <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none" style="color:inherit;">
+              <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+                {% if negocio.portada %}
+                  <img src="{{ negocio.portada.url }}" alt="{{ negocio.nombre }}" class="object-fit-cover w-100" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                    <i class="bi bi-shop fs-1 text-muted"></i>
                   </div>
+                {% endif %}
+                <div class="negocio-nombre">{{ negocio.nombre }}</div>
+                <div class="negocio-rating">{{ negocio.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ negocio.total_resenias }})</span></div>
+                <div class="negocio-direccion">{{ negocio.direccion }}</div>
+                {% if negocio.categoria %}
+                  <span class="negocio-badge">{{ negocio.categoria }}</span>
+                {% else %}
+                  <span class="negocio-badge">Salón de belleza</span>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Recomendado para ti -->
+    {% if tiene_recomendados %}
+    <div class="row mb-4 carrusel-cnt">
+      <div class="col-12">
+        <h3 class="fw-bold mb-3"><i class="bi bi-stars me-2"></i>Recomendado para ti</h3>
+        <div class="d-flex gap-4 overflow-auto flex-nowrap">
+          {% for negocio in negocios_recomendados %}
+            <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none" style="color:inherit;">
+              <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+                {% if negocio.portada %}
+                  <img src="{{ negocio.portada.url }}" alt="{{ negocio.nombre }}" class="object-fit-cover w-100" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                    <i class="bi bi-shop fs-1 text-muted"></i>
+                  </div>
+                {% endif %}
+                <div class="negocio-nombre">{{ negocio.nombre }}</div>
+                <div class="negocio-rating">{{ negocio.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ negocio.total_resenias }})</span></div>
+                <div class="negocio-direccion">{{ negocio.direccion }}</div>
+                {% if negocio.categoria %}
+                  <span class="negocio-badge">{{ negocio.categoria }}</span>
+                {% else %}
+                  <span class="negocio-badge">Salón de belleza</span>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Carrusel de negocios general y top valorados -->
+{% if todos_negocios %}
+<section class="negocios-section py-5" style="background:#fff;">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-center" style="color:#222;">Explora nuestros negocios</h2>
+    <div class="negocios-carrusel-container carrusel-cnt">
+      <div class="negocios-carrusel d-flex gap-3 overflow-auto flex-nowrap">
+        {% for negocio in todos_negocios %}
+          <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none" style="color:inherit;">
+            <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+              {% if negocio.portada %}
+                <img src="{{ negocio.portada.url }}" class="object-fit-cover w-100" alt="{{ negocio.nombre }}" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                  <i class="bi bi-shop fs-1 text-muted"></i>
                 </div>
-                <div class="card-body pb-3 pt-2">
-                  <div class="mb-1 text-muted small">
-                    Hoy a las {{ reserva.hora_inicio|time:'g:i a' }}<br>
-                    {{ reserva.servicio.duracion }} min &bull; {{ reserva.servicio.precio|default:'gratis' }} &bull; {{ reserva.servicio.servicio.nombre|truncatechars:32 }}
-                  </div>
-                  <a href="https://www.google.com/maps/search/?api=1&query={{ reserva.peluquero.latitud }},{{ reserva.peluquero.longitud }}" target="_blank" class="btn btn-outline-secondary btn-sm rounded-pill mt-2">Cómo llegar</a>
-                </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="text-muted">No tienes próximas reservas.</div>
-        {% endif %}
-      </div>
-      <!-- Volver a reservar -->
-      <div class="col-12 col-lg-6">
-        <div class="card shadow-sm h-100">
-          <div class="card-body">
-            <h4 class="fw-bold mb-3"><i class="bi bi-arrow-repeat me-2"></i>Volver a reservar</h4>
-            {% if historial_reservas %}
-              <ul class="list-group list-group-flush">
-                {% for reserva in historial_reservas|slice:':3' %}
-                  <li class="list-group-item d-flex align-items-center justify-content-between reserva-card" style="background:transparent;">
-                    <div>
-                      <div class="fw-semibold">{{ reserva.peluquero.nombre }}</div>
-                      <div class="small text-muted">{{ reserva.fecha|date:'d/m/Y' }}</div>
-                      <div class="small">{{ reserva.servicio.servicio.nombre }}</div>
-                    </div>
-                    <a href="{% url 'clientes:reservar_negocio' reserva.peluquero.id %}" class="btn btn-outline-primary btn-sm">Reservar</a>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <div class="text-muted">Aún no tienes historial de reservas.</div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      <!-- Visto recientemente -->
-      <div class="col-12 col-lg-6">
-        <div class="card shadow-sm h-100 mt-4">
-          <div class="card-body">
-            <h4 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Visto recientemente</h4>
-            {% if negocios_vistos %}
-              <div class="d-flex flex-wrap gap-3">
-                {% for negocio in negocios_vistos|slice:':3' %}
-                  <div class="card p-2" style="min-width: 160px; background:var(--color-graphite-gray);color:var(--color-smoke-white);">
-                    <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none text-light">
-                      {% if negocio.logo %}
-                        <img src="{{ negocio.logo.url }}" class="rounded-circle mb-2" style="width:48px;height:48px;object-fit:cover;">
-                      {% else %}
-                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-2" style="width:48px;height:48px;">
-                          <i class="bi bi-shop fs-4 text-muted"></i>
-                        </div>
-                      {% endif %}
-                      <div class="fw-semibold">{{ negocio.nombre }}</div>
-                      <div class="small text-muted">{{ negocio.direccion }}</div>
-                    </a>
-                  </div>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="text-muted">No hay negocios vistos recientemente.</div>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-      <!-- Recomendado para ti -->
-      <div class="col-12 col-lg-6">
-        <div class="card shadow-sm h-100 mt-4">
-          <div class="card-body">
-            <h4 class="fw-bold mb-3"><i class="bi bi-stars me-2"></i>Recomendado para ti</h4>
-            {% if negocios_recomendados %}
-              <div class="d-flex flex-wrap gap-3">
-                {% for negocio in negocios_recomendados|slice:':3' %}
-                  <div class="card p-2" style="min-width: 160px; background:var(--color-mint-green);color:var(--color-black-deep);">
-                    <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none text-dark">
-                      {% if negocio.logo %}
-                        <img src="{{ negocio.logo.url }}" class="rounded-circle mb-2" style="width:48px;height:48px;object-fit:cover;">
-                      {% else %}
-                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mb-2" style="width:48px;height:48px;">
-                          <i class="bi bi-shop fs-4 text-muted"></i>
-                        </div>
-                      {% endif %}
-                      <div class="fw-semibold">{{ negocio.nombre }}</div>
-                      <div class="small text-muted">{{ negocio.direccion }}</div>
-                    </a>
-                  </div>
-                {% endfor %}
-              </div>
-            {% else %}
-              <div class="text-muted">No hay recomendaciones por ahora.</div>
-            {% endif %}
-          </div>
-        </div>
+              {% endif %}
+              <div class="negocio-nombre">{{ negocio.nombre }}</div>
+              <div class="negocio-rating">{{ negocio.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ negocio.total_resenias }})</span></div>
+              <div class="negocio-direccion">{{ negocio.direccion }}</div>
+              {% if negocio.categoria %}
+                <span class="negocio-badge">{{ negocio.categoria }}</span>
+              {% else %}
+                <span class="negocio-badge">Salón de belleza</span>
+              {% endif %}
+            </div>
+          </a>
+        {% endfor %}
       </div>
     </div>
   </div>
 </section>
-{% else %}
+{% endif %}
+
+{% if top_negocios %}
+<section class="top-negocios-section py-5" style="background:#fff;">
+  <div class="container">
+    <h2 class="fw-bold mb-4 text-center" style="color:#222;">Los mejor valorados</h2>
+    <div class="top-negocios-carrusel-container carrusel-cnt">
+      <div class="top-negocios-carrusel d-flex gap-3 overflow-auto flex-nowrap">
+        {% for negocio in top_negocios %}
+          <a href="{% url 'clientes:detalle_peluquero' negocio.id %}" class="text-decoration-none" style="color:inherit;">
+            <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+              {% if negocio.portada %}
+                <img src="{{ negocio.portada.url }}" class="object-fit-cover w-100" alt="{{ negocio.nombre }}" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+              {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                  <i class="bi bi-shop fs-1 text-muted"></i>
+                </div>
+              {% endif %}
+              <div class="negocio-nombre">{{ negocio.nombre }}</div>
+              <div class="negocio-rating">{{ negocio.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ negocio.total_resenias }})</span></div>
+              <div class="negocio-direccion">{{ negocio.direccion }}</div>
+              {% if negocio.categoria %}
+                <span class="negocio-badge">{{ negocio.categoria }}</span>
+              {% else %}
+                <span class="negocio-badge">Salón de belleza</span>
+              {% endif %}
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if not user.is_authenticated or not is_cliente %}
 <!-- Sección original de características para no clientes -->
 <section class="features-section py-5">
     <div class="container">
@@ -470,6 +535,70 @@
         display: flex !important;
     }
 }
+
+/* Estilos para resultados de búsqueda */
+#resultados-busqueda {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(80,80,120,0.08);
+    margin-top: 2rem;
+    padding: 2rem;
+}
+
+#resultados-busqueda .negocio-card {
+    border-radius: 1.2rem;
+    box-shadow: 0 4px 24px rgba(80,80,120,0.08);
+    transition: box-shadow 0.2s, transform 0.2s;
+    border: none;
+    overflow: hidden;
+    background: #fff;
+    padding: 1rem;
+}
+
+#resultados-busqueda .negocio-card:hover {
+    box-shadow: 0 8px 32px rgba(80,80,120,0.18);
+    transform: translateY(-4px) scale(1.02);
+}
+
+#resultados-busqueda .negocio-nombre {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #222;
+    margin: 0.5rem 0;
+}
+
+#resultados-busqueda .negocio-rating {
+    font-size: 0.95rem;
+    color: #ffc107;
+    margin-bottom: 0.3rem;
+}
+
+#resultados-busqueda .negocio-direccion {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+#resultados-busqueda .negocio-badge {
+    background: var(--color-mint-green);
+    color: var(--color-black-deep);
+    padding: 0.3rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+#resultados-busqueda .negocio-distancia {
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.3rem;
+}
+
+#resultados-busqueda .negocio-distancia i {
+    color: var(--color-mint-green);
+    margin-right: 0.2rem;
+}
 @media (min-width: 768px) {
     .search-bar-mobile {
         display: none !important;
@@ -660,38 +789,34 @@ function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, 
             sugerenciasDiv.innerHTML = '';
             return;
         }
-        const url = `https://places.googleapis.com/v1/places:autocomplete?key=${API_KEY}`;
-        const body = {
-            input: query,
-            languageCode: 'es',
-            regionCode: 'CO',
-        };
+        
+        // Usar nuestro proxy del backend para evitar CORS
+        const url = `/clientes/api/google-places-autocomplete/?input=${encodeURIComponent(query)}`;
+        
         try {
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
+            const resp = await fetch(url);
             const data = await resp.json();
-            if (data.suggestions && data.suggestions.length > 0) {
+            
+            if (data.predictions && data.predictions.length > 0) {
                 sugerenciasDiv.innerHTML = '';
-                data.suggestions.forEach(sug => {
-                    const pred = sug.placePrediction || sug;
-                    let main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : '';
-                    let city = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
+                data.predictions.forEach(pred => {
+                    let main = pred.structured_formatting ? pred.structured_formatting.main_text : '';
+                    let secondary = pred.structured_formatting ? pred.structured_formatting.secondary_text : '';
                     let depto = '';
-                    if (city && city.includes(',')) {
-                        const parts = city.split(',');
-                        city = parts[0].trim();
+                    
+                    if (secondary && secondary.includes(',')) {
+                        const parts = secondary.split(',');
+                        secondary = parts[0].trim();
                         depto = parts.slice(1).join(',').trim();
                     }
+                    
                     const item = document.createElement('button');
                     item.type = 'button';
                     item.className = 'list-group-item list-group-item-action px-3 py-3 text-start border-0';
                     item.style.cssText = 'transition: all 0.2s ease; border-bottom: 1px solid #f8f9fa;';
                     item.innerHTML = `
                         <div class='fw-bold text-dark mb-1' style='font-size: 0.95rem;'>${main}</div>
-                        <div class='small text-muted mb-1' style='font-size: 0.85rem;'>${city}</div>
+                        <div class='small text-muted mb-1' style='font-size: 0.85rem;'>${secondary}</div>
                         <div class='small text-muted' style='font-size: 0.8rem;'>${depto}</div>
                     `;
                     item.onmouseenter = function() {
@@ -702,55 +827,94 @@ function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, 
                         this.style.backgroundColor = 'white';
                         this.style.transform = 'translateX(0)';
                     };
-                    item.onclick = () => seleccionarSugerencia(pred, `${main}, ${city}${depto ? ', ' + depto : ''}`);
+                    item.onclick = () => seleccionarSugerencia(pred, `${main}, ${secondary}${depto ? ', ' + depto : ''}`);
                     sugerenciasDiv.appendChild(item);
                 });
             } else {
                 sugerenciasDiv.innerHTML = '';
             }
         } catch (err) {
+            console.error('Error en autocompletado:', err);
             sugerenciasDiv.innerHTML = '';
         }
     }
     async function seleccionarSugerencia(pred, textoMostrado) {
         sugerenciasDiv.innerHTML = '';
-        let placeId = pred.placeId || (pred.place && pred.place.replace(/^places\//, '')) || null;
+        
+        // Debug: mostrar qué estamos recibiendo
+        console.log('Pred recibido:', pred);
+        console.log('Texto mostrado:', textoMostrado);
+        
+        // Con la API clásica, el placeId está directamente en pred.place_id
+        let placeId = pred.place_id;
+        
+        console.log('PlaceId extraído:', placeId);
+        
         let texto = textoMostrado;
         if (!placeId) {
+            console.error('No se pudo obtener placeId');
             limpiarCampos();
             return;
         }
+        
         input.value = texto;
         placeIdSeleccionado = placeId;
-        // Obtener detalles del lugar
-        const url = `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?key=${API_KEY}&languageCode=es`;
+        
+        // Obtener detalles del lugar usando nuestro proxy del backend
+        const url = `/clientes/api/google-places-details/?place_id=${encodeURIComponent(placeId)}`;
+        console.log('URL para obtener detalles:', url);
+        
         try {
             const resp = await fetch(url);
+            console.log('Respuesta de Google Places:', resp.status);
+            
+            if (!resp.ok) {
+                throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+            }
+            
             const data = await resp.json();
+            console.log('Datos de Google Places:', data);
+            
             let ciudad = '';
             let barrio = '';
             let lat = '';
             let lon = '';
-            if (data.addressComponents) {
-                data.addressComponents.forEach(function(component) {
+            
+            if (data.result && data.result.geometry && data.result.geometry.location) {
+                lat = data.result.geometry.location.lat;
+                lon = data.result.geometry.location.lng;
+            }
+            if (data.result && data.result.address_components) {
+                data.result.address_components.forEach(function(component) {
                     if (component.types.includes('locality')) {
-                        ciudad = component.longText;
+                        ciudad = component.long_name;
                     }
                     if (component.types.includes('sublocality') || component.types.includes('neighborhood')) {
-                        barrio = component.longText;
+                        barrio = component.long_name;
                     }
                 });
             }
-            if (data.location) {
-                lat = data.location.latitude;
-                lon = data.location.longitude;
-            }
+            
+            console.log('Valores extraídos:', { ciudad, barrio, lat, lon });
+            
+            console.log('=== DEBUG CAMPOS ===');
+            console.log('ciudadInput:', ciudadInput);
+            console.log('barrioInput:', barrioInput);
+            console.log('latInput:', latInput);
+            console.log('lonInput:', lonInput);
+            
             ciudadInput.value = ciudad;
             barrioInput.value = barrio;
             latInput.value = lat;
             lonInput.value = lon;
             seleccionValida = true;
+            
+            console.log('=== DESPUÉS DE ASIGNAR ===');
+            console.log('Lat asignada:', latInput.value);
+            console.log('Lon asignada:', lonInput.value);
+            console.log('Campos actualizados. Lat:', latInput.value, 'Lon:', lonInput.value);
         } catch (err) {
+            console.error('Error obteniendo detalles del lugar:', err);
             limpiarCampos();
         }
     }
@@ -1095,38 +1259,268 @@ setupServicioAutocomplete('servicio-autocomplete-mobile', 'sugerencias-servicio-
 setupNegocioAutocomplete('negocio-autocomplete', 'sugerencias-negocio');
 setupNegocioAutocomplete('negocio-autocomplete-mobile', 'sugerencias-negocio-mobile');
 
-// Búsqueda combinada y flexible
+// Búsqueda combinada y flexible con AJAX
 function buscarNegocios() {
+    console.log('Función buscarNegocios ejecutada');
+    
     const ubicacionInput = document.getElementById('ubicacion-autocomplete');
     const lat = document.getElementById('ubicacion-lat').value;
     const lon = document.getElementById('ubicacion-lon').value;
     const servicio = document.getElementById('servicio-autocomplete').value;
     const negocio = document.getElementById('negocio-autocomplete').value;
-    let url = '/clientes/buscar/?';
-    if (ubicacionInput.value && lat && lon && !servicio && !negocio) {
-        // Solo ubicación: buscar negocios a 500m
-        url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radio=500`;
+    
+    console.log('=== DEBUG CAMPOS EN BUSCAR NEGOCIOS ===');
+    console.log('ubicacionInput:', ubicacionInput);
+    console.log('Campo lat:', document.getElementById('ubicacion-lat'));
+    console.log('Campo lon:', document.getElementById('ubicacion-lon'));
+    console.log('Valor lat leído:', lat);
+    console.log('Valor lon leído:', lon);
+    
+    console.log('Valores de búsqueda:', {
+        ubicacion: ubicacionInput ? ubicacionInput.value : 'no encontrado',
+        lat: lat,
+        lon: lon,
+        servicio: servicio,
+        negocio: negocio
+    });
+    
+    // Construir parámetros de búsqueda
+    const params = new URLSearchParams();
+    
+    // PRIORIDAD: Si hay coordenadas, usarlas para búsqueda por radio
+    if (lat && lon) {
+        params.append('lat', lat);
+        params.append('lon', lon);
+        console.log('Búsqueda con coordenadas por radio');
+    } else if (ubicacionInput && ubicacionInput.value) {
+        // Fallback: si no hay coordenadas, usar ubicación textual
+        params.append('ubicacion', ubicacionInput.value);
+        console.log('Búsqueda por ubicación textual (sin coordenadas)');
+    }
+    
+    // Agregar filtros adicionales si existen
+    if (servicio) {
+        params.append('servicio', servicio);
+    }
+    if (negocio) {
+        params.append('negocio', negocio);
+    }
+    
+    console.log('Parámetros de búsqueda:', params.toString());
+    
+    // Mostrar loading
+    mostrarLoadingBusqueda();
+    
+    // Realizar búsqueda AJAX
+    const url = `/clientes/api/buscar-negocios/?${params.toString()}`;
+    console.log('URL de búsqueda:', url);
+    
+    fetch(url)
+        .then(response => {
+            console.log('Respuesta recibida:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos recibidos:', data);
+            ocultarLoadingBusqueda();
+            mostrarResultadosBusqueda(data);
+        })
+        .catch(error => {
+            console.error('Error en búsqueda:', error);
+            ocultarLoadingBusqueda();
+            mostrarErrorBusqueda();
+        });
+}
+
+// Función para mostrar loading
+function mostrarLoadingBusqueda() {
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    const negociosDiv = document.getElementById('negocios-resultados');
+    const sinResultadosDiv = document.getElementById('sin-resultados');
+    
+    resultadosDiv.style.display = 'block';
+    negociosDiv.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Buscando...</span>
+                </div>
+                <p class="text-muted">Buscando negocios...</p>
+            </div>
+        </div>
+    `;
+    sinResultadosDiv.style.display = 'none';
+}
+
+// Función para ocultar loading
+function ocultarLoadingBusqueda() {
+    const negociosDiv = document.getElementById('negocios-resultados');
+    negociosDiv.innerHTML = '';
+}
+
+// Función para mostrar resultados
+function mostrarResultadosBusqueda(data) {
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    const negociosDiv = document.getElementById('negocios-resultados');
+    const sinResultadosDiv = document.getElementById('sin-resultados');
+    const tituloDiv = document.getElementById('titulo-resultados');
+    
+    if (data.error) {
+        mostrarErrorBusqueda();
+        return;
+    }
+    
+    if (data.negocios && data.negocios.length > 0) {
+        // Construir título con parámetros de búsqueda
+        let titulo = `Resultados de búsqueda`;
+        if (data.parametros_busqueda) {
+            const params = data.parametros_busqueda;
+            if (params.ubicacion) titulo += ` en ${params.ubicacion}`;
+            if (params.servicio) titulo += ` - ${params.servicio}`;
+            if (params.negocio) titulo += ` - ${params.negocio}`;
+        }
+        titulo += ` (${data.total_resultados} encontrados)`;
+        tituloDiv.textContent = titulo;
+        
+        // Renderizar negocios
+        negociosDiv.innerHTML = '';
+        data.negocios.forEach(negocio => {
+            const negocioCard = crearNegocioCard(negocio);
+            negociosDiv.appendChild(negocioCard);
+        });
+        
+        resultadosDiv.style.display = 'block';
+        sinResultadosDiv.style.display = 'none';
+        
+        // Scroll suave a los resultados
+        resultadosDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } else {
-        if (ubicacionInput.value && lat && lon) {
-            url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&`;
-        } else if (ubicacionInput.value && (!lat || !lon)) {
-            // Si no hay lat/lon, enviar ubicacion textual
-            url += `ubicacion=${encodeURIComponent(ubicacionInput.value)}&`;
-        }
-        if (servicio) {
-            url += `servicio=${encodeURIComponent(servicio)}&`;
-        }
-        if (negocio) {
-            url += `negocio=${encodeURIComponent(negocio)}&`;
+        mostrarSinResultados();
+    }
+}
+
+// Función para crear tarjeta de negocio (mismo formato que la home)
+function crearNegocioCard(negocio) {
+    const card = document.createElement('a');
+    card.href = negocio.url;
+    card.className = 'text-decoration-none';
+    card.style.cssText = 'color:inherit; min-width:320px; max-width:320px; flex-shrink:0;';
+    
+    const portadaUrl = negocio.portada_url || '';
+    const imagenHtml = portadaUrl ? 
+        `<img src="${portadaUrl}" alt="${negocio.nombre}" class="object-fit-cover w-100" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">` :
+        `<div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+            <i class="bi bi-shop fs-1 text-muted"></i>
+        </div>`;
+    
+    card.innerHTML = `
+        <div class="card negocio-card">
+            ${imagenHtml}
+            <div class="negocio-nombre">${negocio.nombre}</div>
+            <div class="negocio-rating">${negocio.rating} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">(${negocio.total_resenias})</span></div>
+            <div class="negocio-direccion">${negocio.direccion}</div>
+            <span class="negocio-badge">${negocio.categoria}</span>
+            ${negocio.distancia ? `<div class="negocio-distancia"><i class="bi bi-geo-alt"></i> ${negocio.distancia}m</div>` : ''}
+        </div>
+    `;
+    
+    return card;
+}
+
+// Función para mostrar sin resultados
+function mostrarSinResultados() {
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    const negociosDiv = document.getElementById('negocios-resultados');
+    const sinResultadosDiv = document.getElementById('sin-resultados');
+    const tituloDiv = document.getElementById('titulo-resultados');
+    
+    tituloDiv.textContent = 'Resultados de búsqueda';
+    negociosDiv.innerHTML = '';
+    sinResultadosDiv.style.display = 'block';
+    resultadosDiv.style.display = 'block';
+}
+
+// Función para mostrar error
+function mostrarErrorBusqueda() {
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    const negociosDiv = document.getElementById('negocios-resultados');
+    const sinResultadosDiv = document.getElementById('sin-resultados');
+    const tituloDiv = document.getElementById('titulo-resultados');
+    
+    tituloDiv.textContent = 'Error en la búsqueda';
+    negociosDiv.innerHTML = `
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 200px;">
+            <div class="text-center">
+                <i class="bi bi-exclamation-triangle text-warning fs-1 mb-3"></i>
+                <p class="text-muted">Ocurrió un error al buscar. Por favor, intenta nuevamente.</p>
+            </div>
+        </div>
+    `;
+    sinResultadosDiv.style.display = 'none';
+    resultadosDiv.style.display = 'block';
+}
+
+// Función para limpiar resultados de búsqueda
+function limpiarResultadosBusqueda() {
+    const resultadosDiv = document.getElementById('resultados-busqueda');
+    resultadosDiv.style.display = 'none';
+    
+    // Limpiar campos de búsqueda
+    const ubicacionInput = document.getElementById('ubicacion-autocomplete');
+    const servicioInput = document.getElementById('servicio-autocomplete');
+    const negocioInput = document.getElementById('negocio-autocomplete');
+    
+    if (ubicacionInput) ubicacionInput.value = '';
+    if (servicioInput) servicioInput.value = '';
+    if (negocioInput) negocioInput.value = '';
+    
+    // Limpiar campos ocultos
+    const latInput = document.getElementById('ubicacion-lat');
+    const lonInput = document.getElementById('ubicacion-lon');
+    if (latInput) latInput.value = '';
+    if (lonInput) lonInput.value = '';
+}
+
+// Mostrar debug visual
+document.addEventListener('DOMContentLoaded', function() {
+    const debugDiv = document.getElementById('debug-js');
+    if (debugDiv) {
+        debugDiv.style.display = 'block';
+        setTimeout(() => {
+            debugDiv.style.display = 'none';
+        }, 3000);
+    }
+});
+
+// Asignar búsqueda al botón
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, buscando botón de búsqueda...');
+    const btnBuscar = document.getElementById('btn-buscar-desktop');
+    console.log('Botón encontrado:', btnBuscar);
+    
+    if (btnBuscar) {
+        console.log('Botón de búsqueda encontrado, agregando event listener');
+        btnBuscar.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Botón de búsqueda clickeado');
+            buscarNegocios();
+        });
+        console.log('Event listener agregado al botón');
+    } else {
+        console.error('Botón de búsqueda no encontrado');
+        // Intentar con selector alternativo
+        const btnBuscarAlt = document.querySelector('.search-bar-elevated-custom .btn-pink');
+        console.log('Botón alternativo encontrado:', btnBuscarAlt);
+        if (btnBuscarAlt) {
+            console.log('Usando botón alternativo');
+            btnBuscarAlt.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Botón de búsqueda clickeado (alternativo)');
+                buscarNegocios();
+            });
         }
     }
-    window.location.href = url;
-}
-// Asignar búsqueda al botón
-const btnBuscar = document.querySelector('.search-bar-elevated-custom .btn-pink');
-if (btnBuscar) {
-    btnBuscar.addEventListener('click', buscarNegocios);
-}
+});
 
 function buscarNegociosMobile() {
     const ubicacionInput = document.getElementById('ubicacion-autocomplete-mobile');
@@ -1134,23 +1528,50 @@ function buscarNegociosMobile() {
     const lon = document.getElementById('ubicacion-lon-mobile').value;
     const servicio = document.getElementById('servicio-autocomplete-mobile').value;
     const negocio = document.getElementById('negocio-autocomplete-mobile').value;
-    let url = '/clientes/buscar/?';
-    if (ubicacionInput.value && lat && lon && !servicio && !negocio) {
-        url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&radio=500`;
-    } else {
-        if (ubicacionInput.value && lat && lon) {
-            url += `lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&`;
-        } else if (ubicacionInput.value && (!lat || !lon)) {
-            url += `ubicacion=${encodeURIComponent(ubicacionInput.value)}&`;
-        }
-        if (servicio) {
-            url += `servicio=${encodeURIComponent(servicio)}&`;
-        }
-        if (negocio) {
-            url += `negocio=${encodeURIComponent(negocio)}&`;
-        }
+    
+    // Construir parámetros de búsqueda
+    const params = new URLSearchParams();
+    
+    // PRIORIDAD: Si hay coordenadas, usarlas para búsqueda por radio
+    if (lat && lon) {
+        params.append('lat', lat);
+        params.append('lon', lon);
+        console.log('Búsqueda móvil con coordenadas por radio');
+    } else if (ubicacionInput && ubicacionInput.value) {
+        // Fallback: si no hay coordenadas, usar ubicación textual
+        params.append('ubicacion', ubicacionInput.value);
+        console.log('Búsqueda móvil por ubicación textual (sin coordenadas)');
     }
-    window.location.href = url;
+    
+    // Agregar filtros adicionales si existen
+    if (servicio) {
+        params.append('servicio', servicio);
+    }
+    if (negocio) {
+        params.append('negocio', negocio);
+    }
+    
+    // Cerrar modal móvil
+    const modal = bootstrap.Modal.getInstance(document.getElementById('busquedaModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Mostrar loading
+    mostrarLoadingBusqueda();
+    
+    // Realizar búsqueda AJAX
+    fetch(`/clientes/api/buscar-negocios/?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            ocultarLoadingBusqueda();
+            mostrarResultadosBusqueda(data);
+        })
+        .catch(error => {
+            console.error('Error en búsqueda móvil:', error);
+            ocultarLoadingBusqueda();
+            mostrarErrorBusqueda();
+        });
 }
 // Asignar búsqueda al botón mobile
 const btnBuscarMobile = document.querySelector('#busquedaModal .btn-pink');
@@ -1276,5 +1697,160 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 15px 40px rgba(0,0,0,0.3);
 }
 </style>
+<style>
+/* Unificación de estilo para todas las tarjetas de negocios */
+.negocio-card, .top-negocio-card, .proxima-cita-card, .inicio-cliente-section .card, .inicio-cliente-section .list-group-item {
+    border: 1px solid #e0e0e0 !important;
+    box-shadow: none !important;
+    border-radius: 1.2rem !important;
+    background: #fff !important;
+    padding: 1.1rem 1.2rem 1.2rem 1.2rem !important;
+    margin-bottom: 0.3rem;
+    color: #222 !important;
+}
+.negocio-card .card, .top-negocio-card .card {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+}
+.negocio-card .card-img-top, .top-negocio-card .card-img-top, .object-fit-cover {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-top-left-radius: 1.2rem;
+    border-top-right-radius: 1.2rem;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.negocio-card .negocio-nombre, .top-negocio-card .negocio-nombre, .fw-bold {
+    font-size: 1.15rem;
+    font-weight: 500 !important;
+    margin-bottom: 0.2rem;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.negocio-card .negocio-rating, .top-negocio-card .negocio-rating {
+    font-size: 1.01rem;
+    color: #222;
+    font-weight: 400;
+    margin-bottom: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.negocio-card .negocio-direccion, .top-negocio-card .negocio-direccion, .small, .text-muted {
+    font-size: 0.97rem;
+    color: #888 !important;
+    margin-bottom: 0.4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.negocio-card .negocio-badge, .top-negocio-card .negocio-badge {
+    display: inline-block;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 0.92rem;
+    border-radius: 0.7rem;
+    padding: 0.18em 0.9em;
+    font-weight: 500;
+    margin-top: 0.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+/* Ocultar scrollbar horizontal visualmente */
+.negocios-carrusel, .top-negocios-carrusel, .inicio-cliente-section .d-flex.overflow-auto {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE 10+ */
+}
+.negocios-carrusel::-webkit-scrollbar, .top-negocios-carrusel::-webkit-scrollbar, .inicio-cliente-section .d-flex.overflow-auto::-webkit-scrollbar {
+    display: none;
+}
+</style>
+<style>
+.carrusel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: #fff;
+  border: 1.5px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border 0.2s;
+  font-size: 1.5rem;
+  color: #222;
+  opacity: 0.92;
+}
+.carrusel-nav-btn:active {
+  background: #f7f7ff;
+  border-color: #bdbdbd;
+}
+.carrusel-nav-btn.carrusel-nav-left { left: -18px; }
+.carrusel-nav-btn.carrusel-nav-right { right: -18px; }
+.carrusel-nav-btn[disabled] { opacity: 0.3; pointer-events: none; }
+.carrusel-nav-btn svg { pointer-events: none; }
+.carrusel-cnt { position: relative; }
+</style>
+<script>
+function setupCarruselNav(containerSelector, carruselSelector) {
+  document.querySelectorAll(containerSelector).forEach(function(container) {
+    const carrusel = container.querySelector(carruselSelector);
+    if (!carrusel) return;
+    // Crear botones
+    let btnLeft = document.createElement('button');
+    btnLeft.className = 'carrusel-nav-btn carrusel-nav-left';
+    btnLeft.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>';
+    let btnRight = document.createElement('button');
+    btnRight.className = 'carrusel-nav-btn carrusel-nav-right';
+    btnRight.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
+    btnLeft.style.display = 'none';
+    btnRight.style.display = 'none';
+    container.appendChild(btnLeft);
+    container.appendChild(btnRight);
+    // Función para actualizar visibilidad
+    function updateBtns() {
+      btnLeft.style.display = carrusel.scrollLeft > 10 ? 'flex' : 'none';
+      btnRight.style.display = (carrusel.scrollWidth - carrusel.clientWidth - carrusel.scrollLeft) > 10 ? 'flex' : 'none';
+    }
+    // Scroll suave
+    btnLeft.onclick = function() {
+      carrusel.scrollBy({ left: -carrusel.clientWidth * 0.8, behavior: 'smooth' });
+    };
+    btnRight.onclick = function() {
+      carrusel.scrollBy({ left: carrusel.clientWidth * 0.8, behavior: 'smooth' });
+    };
+    // Actualizar al hacer scroll
+    carrusel.addEventListener('scroll', updateBtns);
+    // Actualizar al cargar
+    setTimeout(updateBtns, 300);
+    // Actualizar al redimensionar
+    window.addEventListener('resize', updateBtns);
+  });
+}
+document.addEventListener('DOMContentLoaded', function() {
+  setupCarruselNav('.negocios-carrusel-container', '.negocios-carrusel');
+  setupCarruselNav('.top-negocios-carrusel-container', '.top-negocios-carrusel');
+  setupCarruselNav('.inicio-cliente-section .row.mb-4', '.d-flex.overflow-auto');
+});
+</script>
 {% endblock %}
+
+<!-- Script para cargar negocios vistos recientemente desde localStorage -->
+{% if not user.is_authenticated %}
+<script src="{% static 'js/base/cargar_recientes.js' %}"></script>
+{% endif %}
 {% endblock %} 

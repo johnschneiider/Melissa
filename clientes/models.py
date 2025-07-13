@@ -7,6 +7,71 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 import logging
 
+class ActividadUsuario(models.Model):
+    """Modelo para registrar todas las actividades de los usuarios"""
+    TIPOS_ACTIVIDAD = [
+        ('visita_negocio', 'Visita a negocio'),
+        ('reserva_creada', 'Reserva creada'),
+        ('reserva_cancelada', 'Reserva cancelada'),
+        ('reserva_completada', 'Reserva completada'),
+        ('calificacion_creada', 'Calificación creada'),
+        ('busqueda_realizada', 'Búsqueda realizada'),
+        ('login', 'Inicio de sesión'),
+        ('logout', 'Cierre de sesión'),
+        ('registro', 'Registro de usuario'),
+        ('perfil_actualizado', 'Perfil actualizado'),
+    ]
+    
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='actividades')
+    tipo = models.CharField(max_length=50, choices=TIPOS_ACTIVIDAD)
+    objeto_id = models.PositiveIntegerField(null=True, blank=True, help_text='ID del objeto relacionado (negocio, reserva, etc.)')
+    objeto_tipo = models.CharField(max_length=50, null=True, blank=True, help_text='Tipo de objeto relacionado')
+    descripcion = models.TextField(blank=True)
+    datos_adicionales = models.JSONField(default=dict, blank=True, help_text='Datos adicionales en formato JSON')
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-fecha_creacion']
+        verbose_name = 'Actividad de Usuario'
+        verbose_name_plural = 'Actividades de Usuario'
+        indexes = [
+            models.Index(fields=['usuario', 'tipo', '-fecha_creacion']),
+            models.Index(fields=['objeto_tipo', 'objeto_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.get_tipo_display()} - {self.fecha_creacion}"
+    
+    @classmethod
+    def registrar_actividad(cls, usuario, tipo, objeto_id=None, objeto_tipo=None, 
+                          descripcion='', datos_adicionales=None, request=None):
+        """Método de clase para registrar una actividad"""
+        if not usuario.is_authenticated:
+            return None
+            
+        # Limitar datos adicionales para evitar sobrecarga
+        if datos_adicionales and len(str(datos_adicionales)) > 1000:
+            datos_adicionales = {'error': 'Datos truncados por tamaño'}
+        
+        # Limpiar descripción si es muy larga
+        if len(descripcion) > 500:
+            descripcion = descripcion[:497] + '...'
+        
+        actividad = cls(
+            usuario=usuario,
+            tipo=tipo,
+            objeto_id=objeto_id,
+            objeto_tipo=objeto_tipo,
+            descripcion=descripcion,
+            datos_adicionales=datos_adicionales or {},
+            ip_address=request.META.get('REMOTE_ADDR') if request else None,
+            user_agent=request.META.get('HTTP_USER_AGENT', '')[:500] if request else ''
+        )
+        actividad.save()
+        return actividad
+
 class Reserva(models.Model):
     cliente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reservas_cliente')
     peluquero = models.ForeignKey(Negocio, on_delete=models.CASCADE, related_name='reservas_peluquero')

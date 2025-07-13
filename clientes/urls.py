@@ -24,6 +24,10 @@ from .views import (
     autocompletar_negocios,
     buscar_negocios,
     disponibilidad_dias,
+    api_negocios_vistos_recientes,
+    api_buscar_negocios,
+    google_places_autocomplete,
+    google_places_details,
 )
 
 app_name = 'clientes'
@@ -58,4 +62,8 @@ urlpatterns = [
 
 urlpatterns += [
     path('api/disponibilidad-dias/', disponibilidad_dias, name='api_disponibilidad_dias'),
+    path('api/negocios-vistos-recientes/', api_negocios_vistos_recientes, name='api_negocios_vistos_recientes'),
+    path('api/buscar-negocios/', api_buscar_negocios, name='api_buscar_negocios'),
+    path('api/google-places-autocomplete/', google_places_autocomplete, name='google_places_autocomplete'),
+    path('api/google-places-details/', google_places_details, name='google_places_details'),
 ]

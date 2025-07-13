@@ -491,6 +491,11 @@ document.addEventListener('DOMContentLoaded', detectCity);
   {% block extra_js %}
   <script src="{% static 'js/base/notificaciones.js' %}"></script>
   {% endblock %}
+  
+  <!-- Script de actividades de usuario (para no autenticados) -->
+  {% if not user.is_authenticated %}
+  <script src="{% static 'js/base/actividad_usuario.js' %}"></script>
+  {% endif %}
   <script>
     // Loader global
     function showLoader() { document.getElementById('global-loader').style.display = 'flex'; }

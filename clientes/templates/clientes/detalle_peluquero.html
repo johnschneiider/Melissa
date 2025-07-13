@@ -67,7 +67,7 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
 {% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-5" data-negocio-id="{{ negocio.id }}" data-negocio-nombre="{{ negocio.nombre }}">
     <!-- Portada y logo -->
     <div class="position-relative mb-4" style="height: 240px; border-radius: 1.5rem; overflow: hidden; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
         {% if negocio.portada %}

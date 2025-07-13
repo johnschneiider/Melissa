@@ -63,39 +63,102 @@ class Command(BaseCommand):
                 neg_user.save()
             
             nombre_negocio = nombres_negocios[i-1]
+            # Direcciones reales de Cali para los 10 negocios demo
             direcciones = [
-                'Av. Corrientes 1234, Buenos Aires',
-                'Calle Florida 567, CABA',
-                'Av. Santa Fe 890, Palermo',
-                'Calle Serrano 456, Villa Crespo',
-                'Av. Córdoba 789, Recoleta',
-                'Calle Thames 321, Palermo Soho',
-                'Av. Scalabrini Ortiz 654, Palermo',
-                'Calle Armenia 987, Palermo Hollywood',
-                'Av. Dorrego 147, Villa Crespo',
-                'Calle Fitz Roy 258, Palermo'
+                'Cra. 29 #42a-10, Cali, Valle del Cauca',
+                'Cra. 27d #72u-18, Omar Torrijos, Cali, Valle del Cauca',
+                'Cl 41 #42d-09, Republica De Israel, Cali, Valle del Cauca',
+                "Daniel's Peluqueros, Cra. 41b #30a-11, Ciudad Modelo, Cali, Valle del Cauca",
+                'Cra 28D1, Cali, Valle del Cauca',
+                'Cra. 40b #31b 42, Ciudad Modelo, Cali, Valle del Cauca',
+                'Cra 56 # 18A - 80 C.C. Galerias Santiago Plaza Sotano Local 83, Cali, Valle del Cauca',
+                'Cl. 27 #19, Ciudad Modelo, Cali, Valle del Cauca',
+                'Cra. 46 #45-12, Mariano Ramos, Cali, Valle del Cauca',
+                'Cra. 41E #37-25, Union de Vivienda Popular, Cali, Valle del Cauca',
             ]
             
-            negocio, _ = Negocio.objects.get_or_create(nombre=nombre_negocio, propietario=neg_user, defaults={
+            # Coordenadas reales para cada dirección
+            coordenadas = [
+                (3.437220, -76.522499),  # Cra. 29 #42a-10
+                (3.453000, -76.529000),  # Cra. 27d #72u-18
+                (3.440800, -76.522900),  # Cl 41 #42d-09
+                (3.435900, -76.529800),  # Daniel's Peluqueros
+                (3.441200, -76.523500),  # Cra 28D1
+                (3.437800, -76.527200),  # Cra. 40b #31b 42
+                (3.420556, -76.522224),  # Cra 56 # 18A - 80...
+                (3.445000, -76.530000),  # Cl. 27 #19
+                (3.430000, -76.520000),  # Cra. 46 #45-12
+                (3.450000, -76.535000),  # Cra. 41E #37-25
+            ]
+
+            negocio, created = Negocio.objects.get_or_create(nombre=nombre_negocio, propietario=neg_user, defaults={
                 'direccion': direcciones[i-1],
-                'ciudad': 'Buenos Aires',
-                'barrio': ['Palermo', 'Villa Crespo', 'Recoleta', 'CABA'][i % 4],
-                'latitud': -34.6037 + (i * 0.01),
-                'longitud': -58.3816 + (i * 0.01),
+                'ciudad': 'Cali',
+                'barrio': '',
+                'latitud': coordenadas[i-1][0],
+                'longitud': coordenadas[i-1][1],
             })
+            # Si el negocio ya existe, actualizar los datos básicos y coordenadas
+            if not created:
+                negocio.direccion = direcciones[i-1]
+                negocio.ciudad = 'Cali'
+                negocio.latitud = coordenadas[i-1][0]
+                negocio.longitud = coordenadas[i-1][1]
+                negocio.save()
             
-            # Asignar logo y portada si no existen
-            if not negocio.logo:
-                logo_path = os.path.join(settings.BASE_DIR, 'logos_negocios', '25231.png')
-                if os.path.exists(logo_path):
-                    with open(logo_path, 'rb') as f:
-                        negocio.logo.save(f'logo_negocio_{i}.png', File(f), save=False)
+            # Asignar logo y portada reales desde la carpeta de imágenes demo
+            logo_index = (i - 1) % 10  # Para usar negocio0.png a negocio9.jpeg
+            portada_index = (i - 1) % 10  # Para usar negocio0.png a negocio9.jpg
             
-            if not negocio.portada:
-                portada_path = os.path.join(settings.BASE_DIR, 'portadas_peluqueros', 'Imagenhjj-1.png')
-                if os.path.exists(portada_path):
-                    with open(portada_path, 'rb') as f:
-                        negocio.portada.save(f'portada_negocio_{i}.png', File(f), save=False)
+            # Extensiones reales de logo según la carpeta
+            logo_extensiones_reales = [
+                'png',    # negocio0
+                'png',    # negocio1
+                'jpeg',   # negocio2
+                'jpeg',   # negocio3
+                'jpeg',   # negocio4
+                'jpeg',   # negocio5
+                'png',    # negocio6
+                'jpeg',   # negocio7
+                'jpeg',   # negocio8
+                'jpeg',   # negocio9
+            ]
+            logo_ext = logo_extensiones_reales[logo_index]
+            logo_filename = f'negocio{logo_index}.{logo_ext}'
+            
+            # Asignar logo (forzar asignación incluso si ya existe)
+            logo_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'poblar_db', 'negocios', 'logos', logo_filename)
+            if os.path.exists(logo_path):
+                with open(logo_path, 'rb') as f:
+                    negocio.logo.save(f'logo_negocio_{i}.{logo_ext}', File(f), save=False)
+                    self.stdout.write(f'Logo asignado: {logo_filename} para {negocio.nombre}')
+            else:
+                self.stdout.write(self.style.WARNING(f'Logo no encontrado: {logo_path}'))
+            
+            # Extensiones reales de portada según la carpeta
+            portada_extensiones_reales = [
+                'png',    # negocio0
+                'jpeg',   # negocio1
+                'png',    # negocio2
+                'jpg',    # negocio3
+                'jpg',    # negocio4
+                'jpg',    # negocio5
+                'jpeg',   # negocio6
+                'jpeg',   # negocio7
+                'jpg',    # negocio8
+                'png',    # negocio9
+            ]
+            portada_ext = portada_extensiones_reales[portada_index]
+            portada_filename = f'negocio{portada_index}.{portada_ext}'
+            
+            # Asignar portada (forzar asignación incluso si ya existe)
+            portada_path = os.path.join(settings.BASE_DIR, 'static', 'images', 'poblar_db', 'negocios', 'portada', portada_filename)
+            if os.path.exists(portada_path):
+                with open(portada_path, 'rb') as f:
+                    negocio.portada.save(f'portada_negocio_{i}.{portada_ext}', File(f), save=False)
+                    self.stdout.write(f'Portada asignada: {portada_filename} para {negocio.nombre}')
+            else:
+                self.stdout.write(self.style.WARNING(f'Portada no encontrada: {portada_path}'))
             
             negocio.save()
             negocios.append(negocio)

@@ -18,9 +18,15 @@ class CustomAccountAdapter(DefaultAccountAdapter):
                 # Como UsuarioPersonalizado extiende User, accedemos directamente
                 if hasattr(request.user, 'tipo'):
                     if request.user.tipo == 'cliente':
-                        return reverse('clientes:dashboard')
+                        return reverse('inicio')  # Redirige a la raíz
+                    elif request.user.tipo == 'negocio':
+                        return reverse('negocios:panel')  # Redirige al panel de negocio
+                    elif request.user.tipo == 'profesional':
+                        return reverse('profesionales:panel')
+                    elif request.user.tipo == 'super_admin':
+                        return reverse('dashboard_super_admin')
                     else:
-                        return reverse('negocios:mis_negocios')
+                        return reverse('inicio')
                 else:
                     # Si no tiene tipo, redirigir a seleccionar
                     return reverse('cuentas:seleccionar_tipo_google')
