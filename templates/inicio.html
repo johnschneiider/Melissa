@@ -24,7 +24,6 @@
         <!-- Desktop/Tablet: barra extendida -->
         <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;background:var(--color-graphite-gray);color:var(--color-smoke-white);">
             <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Ubicación</label>
                 <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
                 <div id="sugerencias-ubicacion" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
                 <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
@@ -34,13 +33,11 @@
             </div>
             <div class="search-separator"></div>
             <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Servicio</label>
                 <input type="text" id="servicio-autocomplete" class="form-control" placeholder="¿Qué servicio?" autocomplete="off" />
                 <div id="sugerencias-servicio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
             </div>
             <div class="search-separator"></div>
             <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <label class="form-label fw-bold text-muted mb-1 ms-1 small" style="font-size: 0.95rem;">Negocio</label>
                 <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
                 <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
             </div>
@@ -48,11 +45,32 @@
                 <i class="bi bi-search"></i>
             </button>
         </div>
-        <!-- Mobile: barra compacta que abre modal -->
+        <!-- Mobile: barra en columna con 3 filas -->
         <div class="d-block d-md-none">
-            <div class="search-bar-mobile rounded-pill shadow mx-auto d-flex align-items-center px-3 py-3 justify-content-center w-100" style="max-width: 100%; min-height: 54px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background:var(--color-graphite-gray);color:var(--color-smoke-white);" data-bs-toggle="modal" data-bs-target="#busquedaModal">
-                <i class="bi bi-search fs-4 text-muted me-2"></i>
-                <span class="text-muted flex-grow-1 text-center" style="font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">¿Qué reserva buscar hoy?</span>
+            <div class="search-bar-mobile-custom bg-white shadow mx-auto px-3 py-3 position-relative" style="max-width: 100%; min-height: auto; background:var(--color-graphite-gray);color:var(--color-smoke-white);">
+                <div class="d-flex flex-column gap-2">
+                    <div class="position-relative">
+                        <input type="text" id="ubicacion-autocomplete-mobile" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
+                        <div id="sugerencias-ubicacion-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+                        <input type="hidden" id="ubicacion-ciudad-mobile" name="ciudad" />
+                        <input type="hidden" id="ubicacion-barrio-mobile" name="barrio" />
+                        <input type="hidden" id="ubicacion-lat-mobile" name="lat" />
+                        <input type="hidden" id="ubicacion-lon-mobile" name="lon" />
+                    </div>
+                    <div class="position-relative">
+                        <input type="text" id="servicio-autocomplete-mobile" class="form-control" placeholder="¿Qué servicio?" autocomplete="off" />
+                        <div id="sugerencias-servicio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+                    </div>
+                    <div class="position-relative">
+                        <input type="text" id="negocio-autocomplete-mobile" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
+                        <div id="sugerencias-negocio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+                    </div>
+                    <div class="d-flex justify-content-center mt-2">
+                        <button id="btn-buscar-mobile" class="btn btn-pink d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button" onclick="buscarNegocios(); console.log('Botón mobile clickeado');">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
