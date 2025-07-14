@@ -12,82 +12,50 @@
     <div class="hero-bg-gradient position-absolute top-0 start-0 w-100 h-100" style="z-index:0;background:linear-gradient(135deg,var(--color-black-deep) 60%,var(--color-graphite-gray) 100%);"></div>
 
     <div class="container position-relative" style="z-index:1;">
-        <h1 class="fw-bold display-1 mb-4 text-center w-100 mx-auto animated-hero-title" style="font-family: var(--font-ui); color: var(--color-smoke-white); margin-top: 3.5rem;">
+        <h1 class="hero-title fw-bold mb-4 text-center w-100 mx-auto animated-hero-title" style="font-family: var(--font-ui); color: var(--color-smoke-white); margin-top: 3.5rem;">
             Reserva con tus peluquerias<br />
             <span id="frase-rotativa">o descubre tu favorita</span>
         </h1>
 
 <br><br>
 <!-- Buscador principal elevado (responsive) -->
-<section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px;">
+<section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px; ">
     <div class="container">
         <!-- Desktop/Tablet: barra extendida -->
-        <div class="d-none d-md-flex search-bar-elevated-custom bg-white rounded-pill shadow mx-auto align-items-center justify-content-between px-4 py-2 position-relative" style="max-width: 700px; min-height: 60px;background:var(--color-graphite-gray);color:var(--color-smoke-white);">
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <input type="text" id="ubicacion-autocomplete" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
-                <div id="sugerencias-ubicacion" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+        <div class="search-bar-elevated-custom search-bar-modern d-flex align-items-center justify-content-between px-3 py-2" style="background: #fff; border-radius: 2.5rem; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10); border: 0.01rem solid #747474; gap: 0.5rem; position: relative; min-height: 56px;">
+            <!-- Campo: Servicio -->
+            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
+                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-search"></i></span>
+                <input type="text" id="servicio-autocomplete" placeholder="¿Qué servicio?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
+                <div id="sugerencias-servicio" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem; background: white;"></div>
+            </div>
+            <div class="vr mx-2" style="height: 32px; width: 1.5px; background: #ececec; border-radius: 1px;"></div>
+            <!-- Campo: Ubicación -->
+            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
+                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-geo-alt"></i></span>
+                <input type="text" id="ubicacion-autocomplete" placeholder="¿Dónde buscar?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
+                <div id="sugerencias-ubicacion" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem;  background: white;"></div>
                 <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
                 <input type="hidden" id="ubicacion-barrio" name="barrio" />
                 <input type="hidden" id="ubicacion-lat" name="lat" />
-                <input type="hidden" id="ubicacion-lon" name="lon" />
+                <input type="hidden" id="ubicacion-lng" name="lng" />
             </div>
-            <div class="search-separator"></div>
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <input type="text" id="servicio-autocomplete" class="form-control" placeholder="¿Qué servicio?" autocomplete="off" />
-                <div id="sugerencias-servicio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
+            <div class="vr mx-2" style="height: 32px; width: 1.5px; background: #ececec; border-radius: 1px;"></div>
+            <!-- Campo: Negocio -->
+            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
+                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-shop"></i></span>
+                <input type="text" id="negocio-autocomplete" placeholder="¿Qué peluquería?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
+                <div id="sugerencias-negocio" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem;  background: white;"></div>
             </div>
-            <div class="search-separator"></div>
-            <div class="d-flex flex-column justify-content-center align-items-start flex-grow-1 px-2 position-relative" style="min-width: 160px;">
-                <input type="text" id="negocio-autocomplete" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
-                <div id="sugerencias-negocio" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-            </div>
-            <button id="btn-buscar-desktop" class="btn btn-pink ms-3 d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button" onclick="buscarNegocios(); console.log('Botón clickeado desde onclick');">
-                <i class="bi bi-search"></i>
-            </button>
+            <button id="btn-buscar-desktop" class="btn btn-dark ms-3 px-4 py-2 fw-bold" type="button" style="border-radius: 2rem; font-size: 1.08rem;">Buscar</button>
         </div>
-        <!-- Mobile: barra en columna con 3 filas -->
-        <div class="d-block d-md-none">
-            <div class="search-bar-mobile-custom bg-white shadow mx-auto px-3 py-3 position-relative" style="max-width: 100%; min-height: auto; background:var(--color-graphite-gray);color:var(--color-smoke-white);">
-                <div class="d-flex flex-column gap-2">
-                    <div class="position-relative">
-                        <input type="text" id="ubicacion-autocomplete-mobile" class="form-control" placeholder="¿Dónde buscar?" autocomplete="off" />
-                        <div id="sugerencias-ubicacion-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-                        <input type="hidden" id="ubicacion-ciudad-mobile" name="ciudad" />
-                        <input type="hidden" id="ubicacion-barrio-mobile" name="barrio" />
-                        <input type="hidden" id="ubicacion-lat-mobile" name="lat" />
-                        <input type="hidden" id="ubicacion-lon-mobile" name="lon" />
-                    </div>
-                    <div class="position-relative">
-                        <input type="text" id="servicio-autocomplete-mobile" class="form-control" placeholder="¿Qué servicio?" autocomplete="off" />
-                        <div id="sugerencias-servicio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-                    </div>
-                    <div class="position-relative">
-                        <input type="text" id="negocio-autocomplete-mobile" class="form-control" placeholder="¿Qué peluquería?" autocomplete="off" />
-                        <div id="sugerencias-negocio-mobile" class="list-group position-absolute" style="z-index: 1000; max-width: 350px; min-width: 260px; top: 100%; left: 0; margin-top: 5px; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid #e9ecef; background: white;"></div>
-                    </div>
-                    <div class="d-flex justify-content-center mt-2">
-                        <button id="btn-buscar-mobile" class="btn btn-pink d-flex align-items-center justify-content-center rounded-circle" style="background: #ff3366; color: #fff; width: 44px; height: 44px; box-shadow: 0 2px 8px rgba(255,51,102,0.10); font-size: 1.3rem;" type="button" onclick="buscarNegocios(); console.log('Botón mobile clickeado');">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 </section>
 
-{% if user.is_authenticated and is_cliente %}
-<div class="d-flex justify-content-center mt-4">
-    <a href="{% url 'clientes:dashboard' %}" class="btn btn-primary btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);">
-        <i class="bi bi-calendar-plus me-2"></i>Reservar ahora
-    </a>
-</div>
-{% endif %}
 
-<!-- Debug visual para verificar que JS funciona -->
-<div id="debug-js" class="alert alert-info mt-3" style="display: none;">
-    <strong>Debug:</strong> JavaScript cargado correctamente
-</div>
+
+
 
 <!-- Contenedor para resultados de búsqueda dinámica -->
 <div id="resultados-busqueda" class="mt-4" style="display: none;">
@@ -346,82 +314,7 @@
 </section>
 {% endif %}
 
-<!-- Video Section -->
-<section class="video-section py-5" style="background:var(--color-black-deep);color:var(--color-smoke-white);">
-    <div class="container">
-        <div class="row text-center mb-5">
-            <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold mb-4" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
-                    Conoce <span class="text-accent" style="color:var(--color-mint-green);">Melissa</span> en acción
-                </h2>
-                <p class="lead mb-5" style="color:var(--color-smoke-white);font-family:var(--font-ui);">
-                    Descubre cómo nuestra plataforma revoluciona la gestión de peluquerías
-                </p>
-            </div>
-        </div>
-        
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-          <meta charset="UTF-8">
-          <title>Video autoplay</title>
-          <style>
-            .video-container {
-              border-radius: 1rem;
-              overflow: hidden;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-              max-width: 800px;
-              margin: 2rem auto;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="video-container">
-            <iframe
-              width="100%"
-              height="450"
-              src="https://www.youtube.com/embed/0M3uF7qgG4w?autoplay=1&mute=1&loop=1&playlist=0M3uF7qgG4w&controls=0&modestbranding=1&rel=0"
-              title="Melissa - Plataforma de Gestión para Peluquerías"
-              frameborder="0"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowfullscreen
-              style="border: none; border-radius: 1rem;">
-            </iframe>
-          </div>
-        </body>
-        </html>
-        
-          
-        
-    </div>
-</section>
 
-<!-- CTA Section -->
-<section class="cta-section py-5">
-    <div class="container text-center">
-        <h2 class="fw-bold mb-4 cta-title">
-            ¿Listo para transformar tu peluquería?
-        </h2>
-        <p class="mb-5 opacity-90 cta-desc">
-            Únete a cientos de peluquerías que ya confían en Melissa
-        </p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'cuentas:registro_unificado' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-champagne-beige);color:var(--color-black-deep);border:none;">
-                <i class="bi bi-rocket-takeoff me-2"></i>Comenzar Gratis
-            </a>
-        {% else %}
-            {% if is_cliente %}
-                <a href="{% url 'clientes:dashboard' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);border:none;">
-                    <i class="bi bi-search me-2"></i>Explorar Negocios
-                </a>
-            {% elif is_negocio %}
-                <a href="{% url 'negocios:crear_negocio' %}" class="btn btn-warning btn-lg px-5 py-3 fw-bold" style="background:var(--color-mint-green);color:var(--color-black-deep);border:none;">
-                    <i class="bi bi-plus-circle me-2"></i>Crear mi Negocio
-                </a>
-            {% endif %}
-        {% endif %}
-    </div>
-</section>
 
 <!-- Hero Section */
 .hero-section {
@@ -948,7 +841,7 @@ function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, 
     });
 }
 // Inicializar para desktop y mobile
-setupUbicacionAutocomplete('ubicacion-autocomplete', 'sugerencias-ubicacion', 'ubicacion-ciudad', 'ubicacion-barrio', 'ubicacion-lat', 'ubicacion-lon');
+setupUbicacionAutocomplete('ubicacion-autocomplete', 'sugerencias-ubicacion', 'ubicacion-ciudad', 'ubicacion-barrio', 'ubicacion-lat', 'ubicacion-lng');
 setupUbicacionAutocomplete('ubicacion-autocomplete-mobile', 'sugerencias-ubicacion-mobile', 'ubicacion-ciudad-mobile', 'ubicacion-barrio-mobile', 'ubicacion-lat-mobile', 'ubicacion-lon-mobile');
 // Autocompletado de servicios (desktop)
 const servicioInput = document.getElementById('servicio-autocomplete');
@@ -959,7 +852,7 @@ function fetchServiciosDesktop(query = '', lat = null, lon = null) {
         url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
     } else {
         const latField = document.getElementById('ubicacion-lat');
-        const lonField = document.getElementById('ubicacion-lon');
+        const lonField = document.getElementById('ubicacion-lng');
         if (latField && lonField && latField.value && lonField.value) {
             url += `&lat=${encodeURIComponent(latField.value)}&lon=${encodeURIComponent(lonField.value)}`;
         }
@@ -981,7 +874,7 @@ if (servicioInput && serviciosList) {
     });
     servicioInput.addEventListener('focus', function() {
         const latField = document.getElementById('ubicacion-lat');
-        const lonField = document.getElementById('ubicacion-lon');
+        const lonField = document.getElementById('ubicacion-lng');
         if ((!latField || !latField.value) && (!lonField || !lonField.value)) {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
@@ -1050,7 +943,7 @@ const negociosDropdown = document.getElementById('negocios-cercanos-dropdown');
 const negocioInput = document.getElementById('negocio-autocomplete');
 servicioInput.addEventListener('focus', function() {
     const latField = document.getElementById('ubicacion-lat');
-    const lonField = document.getElementById('ubicacion-lon');
+    const lonField = document.getElementById('ubicacion-lng');
     if ((!latField || !latField.value) && (!lonField || !lonField.value)) {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -1091,7 +984,7 @@ document.addEventListener('click', function(e) {
 const negociosList = document.getElementById('negocios-list');
 function fetchNegocios(query = '') {
     const lat = document.getElementById('ubicacion-lat').value;
-    const lon = document.getElementById('ubicacion-lon').value;
+    const lon = document.getElementById('ubicacion-lng').value;
     const servicio = document.getElementById('servicio-autocomplete').value;
     let url = `/clientes/api/autocompletar-negocios/?q=${encodeURIComponent(query)}`;
     if (lat && lon) {
@@ -1283,14 +1176,14 @@ function buscarNegocios() {
     
     const ubicacionInput = document.getElementById('ubicacion-autocomplete');
     const lat = document.getElementById('ubicacion-lat').value;
-    const lon = document.getElementById('ubicacion-lon').value;
+    const lon = document.getElementById('ubicacion-lng').value;
     const servicio = document.getElementById('servicio-autocomplete').value;
     const negocio = document.getElementById('negocio-autocomplete').value;
     
     console.log('=== DEBUG CAMPOS EN BUSCAR NEGOCIOS ===');
     console.log('ubicacionInput:', ubicacionInput);
     console.log('Campo lat:', document.getElementById('ubicacion-lat'));
-    console.log('Campo lon:', document.getElementById('ubicacion-lon'));
+    console.log('Campo lon:', document.getElementById('ubicacion-lng'));
     console.log('Valor lat leído:', lat);
     console.log('Valor lon leído:', lon);
     
@@ -1494,7 +1387,7 @@ function limpiarResultadosBusqueda() {
     
     // Limpiar campos ocultos
     const latInput = document.getElementById('ubicacion-lat');
-    const lonInput = document.getElementById('ubicacion-lon');
+    const lonInput = document.getElementById('ubicacion-lng');
     if (latInput) latInput.value = '';
     if (lonInput) lonInput.value = '';
 }
