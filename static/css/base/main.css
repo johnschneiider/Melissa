@@ -334,6 +334,10 @@ footer.bg-light {
   .search-bar-elevated-custom .search-separator {
     display: none;
   }
+  .navbar-toggler, .navbar-toggler span, .navbar-toggler i, .navbar-toggler svg {
+    color: #111 !important;
+    fill: #111 !important;
+  }
 } 
 
 @media (max-width: 768px) {
@@ -384,5 +388,17 @@ footer.bg-light {
   body:not(.light-mode) #userDropdownMobile .bi-person-circle {
     color: #fff !important;
     fill: #fff !important;
+  }
+} 
+
+@media (max-width: 768px) {
+  #menu-mobile-btn .bi-list {
+    color: #111 !important;
+    fill: #111 !important;
+    font-size: 2.5rem !important;
+    background: transparent !important;
+    border-radius: 0.5rem !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 } 

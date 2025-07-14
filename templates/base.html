@@ -162,15 +162,11 @@
     </div>
     <!-- Mobile header: logo left, luna/sol, avatar o hamburguesa -->
     <div class="d-flex d-md-none align-items-center w-100 justify-content-between px-3" style="min-height:56px;">
-      <a href="{% url 'inicio' %}" class="brand logo-text" style="font-size:1.5rem;">Melissa</a>
+      <a href="{% url 'inicio' %}" class="brand logo-text d-flex align-items-center" style="font-size:1.5rem;">Melissa</a>
       <div class="d-flex align-items-center gap-2">
-        <!-- Eliminar botón de modo claro/oscuro mobile -->
-        <!-- <button id="toggle-theme-mobile" class="btn d-flex align-items-center justify-content-center me-1" title="Cambiar modo claro/oscuro" aria-label="Cambiar modo claro/oscuro" style="background:transparent;">
-          <span id="theme-icon-mobile" style="font-size:1.3rem;">🌙</span>
-        </button> -->
         {% if user.is_authenticated %}
-        <div class="dropdown">
-          <a class="btn d-flex align-items-center justify-content-center p-0" href="#" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background:transparent;border:none;box-shadow:none;font-size:2rem;">
+        <div class="dropdown d-flex align-items-center">
+          <a class="btn d-flex align-items-center justify-content-center p-0" href="#" id="userDropdownMobile" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background:transparent; border:none;box-shadow:none;font-size:2rem;">
             <i class="bi bi-person-circle"></i>
           </a>
           <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdownMobile">
@@ -218,11 +214,10 @@
             <li><a class="dropdown-item" href="{% url 'account_logout' %}"><i class="bi bi-box-arrow-right"></i> Cerrar Sesión</a></li>
           </ul>
         </div>
-        {% else %}
-        <button id="menu-mobile-btn" class="btn d-flex align-items-center justify-content-center p-0" style="background:transparent;border:none;box-shadow:none;font-size:2rem;" aria-label="Abrir menú">
-          <i class="bi bi-list"></i>
-        </button>
         {% endif %}
+        <button id="menu-mobile-btn" class="btn d-flex align-items-center justify-content-center p-0" aria-label="Abrir menú" style="margin-top: -4px;">
+          <i class="bi bi-list" style="color: #000 !important; font-size: 1.8rem;"></i>
+        </button>
       </div>
     </div>
     <!-- Modal menú móvil -->
