@@ -146,6 +146,39 @@
     </div>
     {% endif %}
 
+    <!-- Citas reservadas -->
+    {% if reservas_cliente %}
+    <div class="row mb-4 carrusel-cnt">
+      <div class="col-12">
+        <h3 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Mis citas reservadas</h3>
+        <div class="d-flex gap-4 overflow-auto flex-nowrap">
+          {% for reserva in reservas_cliente %}
+            <a href="{% url 'clientes:detalle_peluquero' reserva.peluquero.id %}" class="text-decoration-none" style="color:inherit;">
+              <div class="card negocio-card flex-shrink-0" style="min-width:320px;max-width:320px;">
+                {% if reserva.peluquero.portada %}
+                  <img src="{{ reserva.peluquero.portada.url }}" alt="{{ reserva.peluquero.nombre }}" class="object-fit-cover w-100" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                {% else %}
+                  <div class="d-flex align-items-center justify-content-center bg-light" style="height:160px;border-top-left-radius:1.2rem;border-top-right-radius:1.2rem;">
+                    <i class="bi bi-shop fs-1 text-muted"></i>
+                  </div>
+                {% endif %}
+                <div class="negocio-nombre">{{ reserva.peluquero.nombre }}</div>
+                <div class="negocio-rating">{{ reserva.peluquero.rating|floatformat:1 }} <i class="bi bi-star-fill" style="font-size:1em;"></i> <span style="font-weight:400; color:#888;">({{ reserva.peluquero.total_resenias }})</span></div>
+                <div class="negocio-direccion">{{ reserva.peluquero.direccion }}</div>
+                <div class="small text-muted mb-1">{{ reserva.fecha|date:"d/m/Y" }} - {{ reserva.hora_inicio|time:"H:i" }}</div>
+                {% if reserva.peluquero.categoria %}
+                  <span class="negocio-badge">{{ reserva.peluquero.categoria }}</span>
+                {% else %}
+                  <span class="negocio-badge">Salón de belleza</span>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Visto recientemente -->
     {% if tiene_negocios_vistos %}
     <div class="row mb-4 carrusel-cnt">

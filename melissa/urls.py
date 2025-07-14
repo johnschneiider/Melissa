@@ -52,6 +52,15 @@ def inicio(request):
             total_resenias=Count('calificaciones')
         ).filter(total_resenias__gte=1).order_by('-rating', '-total_resenias')[:10]
 
+        # Reservas pendientes y confirmadas del cliente (todas, no solo próximas)
+        reservas_cliente = Reserva.objects.filter(
+            cliente=request.user,
+            estado__in=['pendiente', 'confirmado']
+        ).select_related('peluquero', 'profesional', 'servicio').order_by('-fecha', '-hora_inicio')
+
+        # Total de reservas del cliente autenticado
+        total_reservas = Reserva.objects.filter(cliente=request.user).count()
+
         context = {
             'is_cliente': True,
             'proximas_reservas': proximas_reservas,
@@ -60,6 +69,8 @@ def inicio(request):
             'negocios_recomendados': negocios_recomendados,
             'todos_negocios': todos_negocios,
             'top_negocios': top_negocios,
+            'reservas_cliente': reservas_cliente,
+            'total_reservas': total_reservas,
             # Flags para mostrar/ocultar secciones
             'tiene_proximas_reservas': proximas_reservas.exists(),
             'tiene_historial': historial_reservas.exists(),
