@@ -14,26 +14,26 @@
 }
 
 body {
-  background: var(--color-black-deep);
-  color: #FFFFFF;
+  background: #fff !important;
+  color: #181818 !important;
   font-family: var(--font-ui);
 }
 
 .header, header {
-  background: var(--color-black-deep);
-  color: #FFFFFF;
+  background: #fff !important;
+  color: #181818 !important;
 }
 
 footer {
-  background: var(--color-graphite-gray);
-  color: #FFFFFF;
+  background: #f5f5f5 !important;
+  color: #181818 !important;
 }
 
 .card, .tarjeta, .box, .modal-content {
-  background: var(--color-graphite-gray);
-  color: #FFFFFF;
+  background: #fff !important;
+  color: #181818 !important;
   border-radius: 1rem;
-  border: none;
+  border: 1px solid #e0e0e0;
 }
 
 .btn-primary, .btn-success, .btn-accent, .btn-mint {

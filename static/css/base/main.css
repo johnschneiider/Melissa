@@ -1,9 +1,14 @@
-body {
-  background: var(--color-warm-sand);
-  color: var(--color-deep-charcoal);
-  font-family: var(--font-sans-content);
-  font-size: 1.05rem;
-  line-height: 1.6;
+body, html, main {
+  background: #fff !important;
+  color: #222 !important;
+  font-family: var(--font-ui) !important;
+}
+* {
+  color: #222 !important;
+  font-family: var(--font-ui) !important;
+}
+.bg-black, .bg-dark, .bg-graphite, .bg-deep, .bg-charcoal {
+  background: #fff !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
