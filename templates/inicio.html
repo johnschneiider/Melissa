@@ -19,39 +19,62 @@
 
 <br><br>
 <!-- Buscador principal elevado (responsive) -->
-<section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px; ">
-    <div class="container">
-        <!-- Desktop/Tablet: barra extendida -->
-        <div class="search-bar-elevated-custom search-bar-modern d-flex align-items-center justify-content-between px-3 py-2" style="background: #fff; border-radius: 2.5rem; box-shadow: 0 4px 24px rgba(102, 126, 234, 0.10); border: 0.01rem solid #747474; gap: 0.5rem; position: relative; min-height: 56px;">
-            <!-- Campo: Servicio -->
-            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
-                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-search"></i></span>
-                <input type="text" id="servicio-autocomplete" placeholder="¿Qué servicio?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
-                <div id="sugerencias-servicio" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem; background: white;"></div>
-            </div>
-            <div class="vr mx-2" style="height: 32px; width: 1.5px; background: #ececec; border-radius: 1px;"></div>
-            <!-- Campo: Ubicación -->
-            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
-                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-geo-alt"></i></span>
-                <input type="text" id="ubicacion-autocomplete" placeholder="¿Dónde buscar?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
-                <div id="sugerencias-ubicacion" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem;  background: white;"></div>
-                <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
-                <input type="hidden" id="ubicacion-barrio" name="barrio" />
-                <input type="hidden" id="ubicacion-lat" name="lat" />
-                <input type="hidden" id="ubicacion-lng" name="lng" />
-            </div>
-            <div class="vr mx-2" style="height: 32px; width: 1.5px; background: #ececec; border-radius: 1px;"></div>
-            <!-- Campo: Negocio -->
-            <div class="search-input-group d-flex align-items-center position-relative flex-grow-1" style="min-width: 180px;">
-                <span class="input-icon ms-2 me-2" style="color: #888; font-size: 1.2rem;"><i class="bi bi-shop"></i></span>
-                <input type="text" id="negocio-autocomplete" placeholder="¿Qué peluquería?" autocomplete="off" class="form-control border-0 bg-transparent shadow-none px-0" style="font-size: 1.08rem; min-width: 0;" />
-                <div id="sugerencias-negocio" class="list-group position-absolute w-100 mt-1" style="z-index: 1000; left: 0; top: 100%; border-radius: 1rem;  background: white;"></div>
-            </div>
-            <button id="btn-buscar-desktop" class="btn btn-dark ms-3 px-4 py-2 fw-bold" type="button" style="border-radius: 2rem; font-size: 1.08rem;">Buscar</button>
+<section class="search-bar-section position-relative w-100 d-flex justify-content-center" style="z-index: 10; margin-top: -30px;">
+    <div class="container" style="max-width: 400px;">
+      <div class="search-bar-elevated-custom search-bar-modern d-flex flex-column gap-3 p-4"
+           style="background: #fff; border-radius: 1.5rem; box-shadow: 0 0 12px rgba(0,0,0,0.06); border: 1px solid #e0e0e0;">
+        
+        <!-- Servicio -->
+        <div class="search-input-group d-flex align-items-center position-relative"
+             style="background: #fff; border: 1px solid #dcdcdc; border-radius: 0.75rem; padding: 0.7rem 1rem; gap: 0.5rem;">
+          <i class="bi bi-search text-muted" style="font-size: 1.2rem;"></i>
+          <input type="text" id="servicio-autocomplete" placeholder="Todos los tratamientos" autocomplete="off"
+                 class="form-control border-0 bg-transparent shadow-none px-0"
+                 style="font-size: 0.95rem; min-width: 0;" />
+          <div id="sugerencias-servicio" class="list-group position-absolute w-100 mt-1"
+               style="z-index: 1000; left: 0; top: 100%; border-radius: 0.75rem; background: white;"></div>
         </div>
-
+  
+        <!-- Ubicación -->
+        <div class="search-input-group d-flex align-items-center position-relative"
+             style="background: #fff; border: 1px solid #dcdcdc; border-radius: 0.75rem; padding: 0.7rem 1rem; gap: 0.5rem;">
+          <i class="bi bi-geo-alt text-muted" style="font-size: 1.2rem;"></i>
+          <input type="text" id="ubicacion-autocomplete" placeholder="Ubicación actual" autocomplete="off"
+                 class="form-control border-0 bg-transparent shadow-none px-0"
+                 style="font-size: 0.95rem; min-width: 0;" />
+          <div id="sugerencias-ubicacion" class="list-group position-absolute w-100 mt-1"
+               style="z-index: 1000; left: 0; top: 100%; border-radius: 0.75rem; background: white;"></div>
+          <input type="hidden" id="ubicacion-ciudad" name="ciudad" />
+          <input type="hidden" id="ubicacion-barrio" name="barrio" />
+          <input type="hidden" id="ubicacion-lat" name="lat" />
+          <input type="hidden" id="ubicacion-lng" name="lng" />
+        </div>
+  
+        <!-- Negocio -->
+        <div class="search-input-group d-flex align-items-center position-relative"
+             style="background: #fff; border: 1px solid #dcdcdc; border-radius: 0.75rem; padding: 0.7rem 1rem; gap: 0.5rem;">
+          <i class="bi bi-shop text-muted" style="font-size: 1.2rem;"></i>
+          <input type="text" id="negocio-autocomplete" placeholder="Cualquier peluquería" autocomplete="off"
+                 class="form-control border-0 bg-transparent shadow-none px-0"
+                 style="font-size: 0.95rem; min-width: 0;" />
+          <div id="sugerencias-negocio" class="list-group position-absolute w-100 mt-1"
+               style="z-index: 1000; left: 0; top: 100%; border-radius: 0.75rem; background: white;"></div>
+        </div>
+  
+        <!-- Botón -->
+        <button id="btn-buscar-mobile"
+                class="btn fw-bold text-white"
+                style="background: #2ecc71; border-radius: 0.75rem; font-size: 1rem; padding: 0.7rem;"
+                type="button"
+                onclick="buscarNegocios(); console.log('Botón mobile clickeado');">
+          Buscar Fresha
+        </button>
+      </div>
     </div>
-</section>
+  </section>
+  
+  
+  
 
 
 
@@ -842,7 +865,6 @@ function setupUbicacionAutocomplete(inputId, sugerenciasId, ciudadId, barrioId, 
 }
 // Inicializar para desktop y mobile
 setupUbicacionAutocomplete('ubicacion-autocomplete', 'sugerencias-ubicacion', 'ubicacion-ciudad', 'ubicacion-barrio', 'ubicacion-lat', 'ubicacion-lng');
-setupUbicacionAutocomplete('ubicacion-autocomplete-mobile', 'sugerencias-ubicacion-mobile', 'ubicacion-ciudad-mobile', 'ubicacion-barrio-mobile', 'ubicacion-lat-mobile', 'ubicacion-lon-mobile');
 // Autocompletado de servicios (desktop)
 const servicioInput = document.getElementById('servicio-autocomplete');
 const serviciosList = document.getElementById('servicios-list');
@@ -909,77 +931,6 @@ if (servicioInput && serviciosList) {
         }
     });
 }
-// Autocompletado de servicios (mobile)
-const servicioInputMobile = document.getElementById('servicio-autocomplete-mobile');
-const serviciosListMobile = document.getElementById('servicios-list-mobile');
-function fetchServiciosMobile(query = '') {
-    const lat = document.getElementById('ubicacion-lat-mobile').value;
-    const lon = document.getElementById('ubicacion-lon-mobile').value;
-    let url = `/clientes/api/autocompletar-servicios/?q=${encodeURIComponent(query)}`;
-    if (lat && lon) {
-        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-    }
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            serviciosListMobile.innerHTML = '';
-            (data.servicios || []).forEach(servicio => {
-                const option = document.createElement('option');
-                option.value = servicio;
-                serviciosListMobile.appendChild(option);
-            });
-        });
-}
-if (servicioInputMobile && serviciosListMobile) {
-    servicioInputMobile.addEventListener('input', function() {
-        fetchServiciosMobile(servicioInputMobile.value);
-    });
-    servicioInputMobile.addEventListener('focus', function() {
-        fetchServiciosMobile('');
-    });
-}
-// Mostrar negocios cercanos en dropdown visual al hacer focus en servicio
-const negociosDropdown = document.getElementById('negocios-cercanos-dropdown');
-const negocioInput = document.getElementById('negocio-autocomplete');
-servicioInput.addEventListener('focus', function() {
-    const latField = document.getElementById('ubicacion-lat');
-    const lonField = document.getElementById('ubicacion-lng');
-    if ((!latField || !latField.value) && (!lonField || !lonField.value)) {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                fetch(`/clientes/api/negocios-cercanos/?lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        negociosDropdown.innerHTML = '';
-                        if ((data.negocios || []).length > 0) {
-                            negociosDropdown.classList.add('show');
-                            (data.negocios || []).forEach(negocio => {
-                                const item = document.createElement('button');
-                                item.type = 'button';
-                                item.className = 'dropdown-item d-flex justify-content-between align-items-center';
-                                item.innerHTML = `<span>${negocio.nombre}</span><span class='badge bg-primary ms-2'>${Math.round(negocio.distancia)} m</span>`;
-                                item.onclick = function() {
-                                    negocioInput.value = negocio.nombre;
-                                    negociosDropdown.classList.remove('show');
-                                };
-                                negociosDropdown.appendChild(item);
-                            });
-                        } else {
-                            negociosDropdown.classList.remove('show');
-                        }
-                    });
-            });
-        }
-    } else {
-        negociosDropdown.classList.remove('show');
-    }
-});
-// Ocultar dropdown si se hace click fuera
-document.addEventListener('click', function(e) {
-    if ((typeof servicioInput !== 'undefined' && servicioInput && !servicioInput.contains(e.target)) && (typeof negociosDropdown !== 'undefined' && negociosDropdown && !negociosDropdown.contains(e.target))) {
-        negociosDropdown.classList.remove('show');
-    }
-});
 // Autocompletado de negocios
 const negociosList = document.getElementById('negocios-list');
 function fetchNegocios(query = '') {
@@ -1010,39 +961,6 @@ if (negocioInput && negociosList) {
     });
     negocioInput.addEventListener('focus', function() {
         fetchNegocios('');
-    });
-}
-// Autocompletado de negocios (mobile)
-const negocioInputMobile = document.getElementById('negocio-autocomplete-mobile');
-const negociosListMobile = document.getElementById('negocios-list-mobile');
-function fetchNegociosMobile(query = '') {
-    const lat = document.getElementById('ubicacion-lat-mobile').value;
-    const lon = document.getElementById('ubicacion-lon-mobile').value;
-    const servicio = document.getElementById('servicio-autocomplete-mobile').value;
-    let url = `/clientes/api/autocompletar-negocios/?q=${encodeURIComponent(query)}`;
-    if (lat && lon) {
-        url += `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`;
-    }
-    if (servicio) {
-        url += `&servicio=${encodeURIComponent(servicio)}`;
-    }
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            negociosListMobile.innerHTML = '';
-            (data.negocios || []).forEach(negocio => {
-                const option = document.createElement('option');
-                option.value = negocio.nombre;
-                negociosListMobile.appendChild(option);
-            });
-        });
-}
-if (negocioInputMobile && negociosListMobile) {
-    negocioInputMobile.addEventListener('input', function() {
-        fetchNegociosMobile(negocioInputMobile.value);
-    });
-    negocioInputMobile.addEventListener('focus', function() {
-        fetchNegociosMobile('');
     });
 }
 // Autocompletado para servicios
@@ -1432,63 +1350,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 });
-
-function buscarNegociosMobile() {
-    const ubicacionInput = document.getElementById('ubicacion-autocomplete-mobile');
-    const lat = document.getElementById('ubicacion-lat-mobile').value;
-    const lon = document.getElementById('ubicacion-lon-mobile').value;
-    const servicio = document.getElementById('servicio-autocomplete-mobile').value;
-    const negocio = document.getElementById('negocio-autocomplete-mobile').value;
-    
-    // Construir parámetros de búsqueda
-    const params = new URLSearchParams();
-    
-    // PRIORIDAD: Si hay coordenadas, usarlas para búsqueda por radio
-    if (lat && lon) {
-        params.append('lat', lat);
-        params.append('lon', lon);
-        console.log('Búsqueda móvil con coordenadas por radio');
-    } else if (ubicacionInput && ubicacionInput.value) {
-        // Fallback: si no hay coordenadas, usar ubicación textual
-        params.append('ubicacion', ubicacionInput.value);
-        console.log('Búsqueda móvil por ubicación textual (sin coordenadas)');
-    }
-    
-    // Agregar filtros adicionales si existen
-    if (servicio) {
-        params.append('servicio', servicio);
-    }
-    if (negocio) {
-        params.append('negocio', negocio);
-    }
-    
-    // Cerrar modal móvil
-    const modal = bootstrap.Modal.getInstance(document.getElementById('busquedaModal'));
-    if (modal) {
-        modal.hide();
-    }
-    
-    // Mostrar loading
-    mostrarLoadingBusqueda();
-    
-    // Realizar búsqueda AJAX
-    fetch(`/clientes/api/buscar-negocios/?${params.toString()}`)
-        .then(response => response.json())
-        .then(data => {
-            ocultarLoadingBusqueda();
-            mostrarResultadosBusqueda(data);
-        })
-        .catch(error => {
-            console.error('Error en búsqueda móvil:', error);
-            ocultarLoadingBusqueda();
-            mostrarErrorBusqueda();
-        });
-}
-// Asignar búsqueda al botón mobile
-const btnBuscarMobile = document.querySelector('#busquedaModal .btn-pink');
-if (btnBuscarMobile) {
-    btnBuscarMobile.addEventListener('click', buscarNegociosMobile);
-}
 
 // Video Section Styles
 document.addEventListener('DOMContentLoaded', function() {
