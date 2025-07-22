@@ -4,6 +4,29 @@
 {% block title %}Mi Perfil - Melissa{% endblock %}
 
 {% block content %}
+<style>
+  .username-suggestion-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff !important;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    border: 2px solid #667eea;
+    padding: 0.7em 1.2em;
+    margin: 0.4em 0;
+    display: block;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.10);
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    font-size: 1.08em;
+    text-align: center;
+  }
+  .username-suggestion-badge:hover {
+    box-shadow: 0 4px 16px rgba(102,126,234,0.25);
+    transform: translateY(-2px) scale(1.07);
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    border-color: #764ba2;
+  }
+</style>
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-lg-4 mb-4">
@@ -11,26 +34,39 @@
                 <div class="card-body d-flex flex-column align-items-center">
                     <div class="position-relative mb-3">
                         <img src="https://ui-avatars.com/api/?name={{ user.first_name }}+{{ user.last_name }}&background=random" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #eee;">
-                        <button id="btn-editar-perfil" class="btn btn-link position-absolute top-0 end-0 text-decoration-none" style="font-size:0.95rem;">Editar</button>
                     </div>
                     <h3 class="fw-bold text-center mb-3">{{ user.first_name }} {{ user.last_name }}</h3>
                     <hr class="w-100 mb-3">
                     <div class="w-100">
                         <form id="form-editar-perfil" method="post" style="display:none;">
                             {% csrf_token %}
-                            {{ form.as_p }}
+                            <div class="mb-1">
+                                <label for="id_username"><strong>Nombre de usuario</strong></label><br>
+                                {{ form.username }}
+                                <div id="username-feedback" class="mt-1"></div>
+                            </div>
+                            {{ form.first_name.label_tag }}{{ form.first_name }}
+                            {{ form.last_name.label_tag }}{{ form.last_name }}
+                            {{ form.telefono.label_tag }}{{ form.telefono }}
+                            {{ form.email.label_tag }}{{ form.email }}
+                            {{ form.fecha_nacimiento.label_tag }}{{ form.fecha_nacimiento }}
+                            {{ form.genero.label_tag }}{{ form.genero }}
                             <div class="d-flex justify-content-between mt-3">
                                 <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
                                 <button type="button" id="btn-cancelar-edicion" class="btn btn-outline-secondary btn-sm">Cancelar</button>
                             </div>
                         </form>
                         <div id="info-perfil">
+                            <p class="mb-1"><strong>Nombre de usuario</strong><br>{{ user.username|default:"-" }}</p>
                             <p class="mb-1"><strong>Nombre</strong><br>{{ user.first_name|default:"-" }}</p>
                             <p class="mb-1"><strong>Apellido</strong><br>{{ user.last_name|default:"-" }}</p>
                             <p class="mb-1"><strong>Número de teléfono</strong><br>{{ user.telefono|default:"-" }}</p>
                             <p class="mb-1"><strong>Email</strong><br>{{ user.email|default:"-" }}</p>
                             <p class="mb-1"><strong>Fecha de nacimiento</strong><br>{{ user.fecha_nacimiento|default:"-" }}</p>
                             <p class="mb-1"><strong>Género</strong><br>{{ user.genero|default:"-" }}</p>
+                            <button id="btn-editar-perfil" class="btn btn-primary w-100 mt-3 fw-bold d-flex align-items-center justify-content-center" style="font-size:1.1rem; padding: 0.7rem 0;">
+                                <i class="bi bi-pencil-square me-2"></i> Editar mi información
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -81,5 +117,40 @@
     infoPerfil.style.display = '';
     btnEditar.style.display = '';
   });
+</script>
+<script>
+const usernameInput = document.getElementById('id_username');
+const feedbackDiv = document.getElementById('username-feedback');
+if (usernameInput) {
+  let lastValue = usernameInput.value;
+  usernameInput.addEventListener('input', function() {
+    const username = usernameInput.value.trim();
+    if (!username) {
+      feedbackDiv.innerHTML = '';
+      return;
+    }
+    fetch(`/cuentas/api/username-disponible/?username=${encodeURIComponent(username)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (!data.disponible) {
+          let html = '<span class="username-status-msg text-danger fw-bold">Ese nombre de usuario ya existe.</span>';
+          if (data.sugerencias && data.sugerencias.length > 0) {
+            html += '<div class="mt-2 mb-2" style="color:#444;font-size:1em;">¿Te gustaría ayuda? Aquí tienes algunas ideas de nombre que puedes elegir si quieres:</div>';
+            html += '<div class="mb-2">' + data.sugerencias.map(s => `<span class='username-suggestion-badge'>${s}</span>`).join('') + '</div>';
+          }
+          feedbackDiv.innerHTML = html;
+          // Permitir click en sugerencias
+          feedbackDiv.querySelectorAll('span.username-suggestion-badge').forEach(badge => {
+            badge.addEventListener('click', () => {
+              usernameInput.value = badge.textContent;
+              usernameInput.dispatchEvent(new Event('input'));
+            });
+          });
+        } else {
+          feedbackDiv.innerHTML = '<span class="username-status-msg text-success fw-bold">Nombre de usuario disponible.</span>';
+        }
+      });
+  });
+}
 </script>
 {% endblock %} 

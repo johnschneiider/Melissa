@@ -30,6 +30,8 @@ from django_ratelimit.decorators import ratelimit
 from clientes.models import Reserva
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.text import slugify
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -1094,6 +1096,30 @@ def control_reservas(request):
         'max_reservas': max_reservas,
         'resumen': resumen,
     })
+
+def sugerencias_username(base_username, max_sugerencias=3):
+    base = slugify(base_username).replace('-', '')[:15]
+    sugerencias = []
+    for i in range(1, 100):
+        sugerido = f"{base}{random.randint(1,9999)}"
+        if not UsuarioPersonalizado.objects.filter(username=sugerido).exists():
+            sugerencias.append(sugerido)
+        if len(sugerencias) >= max_sugerencias:
+            break
+    return sugerencias
+
+from django.views.decorators.http import require_GET
+
+@require_GET
+def api_username_disponible(request):
+    username = request.GET.get('username', '').strip()
+    if not username:
+        return JsonResponse({'disponible': False, 'sugerencias': []})
+    existe = UsuarioPersonalizado.objects.filter(username=username).exists()
+    sugerencias = []
+    if existe:
+        sugerencias = sugerencias_username(username)
+    return JsonResponse({'disponible': not existe, 'sugerencias': sugerencias})
 
 
 

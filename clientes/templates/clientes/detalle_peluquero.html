@@ -5,11 +5,17 @@
 
 {% block extra_css %}
 <style>
-body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .pro-puesto, .pro-rating, .list-unstyled, .btn, .card-title, .fw-bold, .fw-semibold, .fw-normal, .fw-light, .h1, .h2, .h3, .h4, .h5, .h6, p, a, span, li, ul, div {
-  font-family: var(--font-ui) !important;
+:root {
+  --primary-color: #6f42c1;
+  --secondary-color: #0dcaf0;
+  --neutral-text: #181818;
+  --neutral-muted: #444;
 }
-.bg-app-gradient, body {
-  background: var(--color-smoke-white, #f5f5f5);
+body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .pro-puesto, .pro-rating, .list-unstyled, .btn, .card-title, .fw-bold, .fw-semibold, .fw-normal, .fw-light, .h1, .h2, .h3, .h4, .h5, .h6, p, a, span, li, ul, div {
+  color: var(--neutral-text) !important;
+}
+.text-muted, .small, small {
+  color: var(--neutral-muted) !important;
 }
 .card, .form-card {
   background: #fff !important;
@@ -45,18 +51,48 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
 }
 .equipo-circular .pro-puesto {
   font-size: 0.85rem;
-  color: #888;
+  color: var(--secondary-color);
   text-align: center;
   margin-bottom: 0.1rem;
 }
 .equipo-circular .pro-rating {
   font-size: 0.95rem;
-  color: #222;
+  color: var(--primary-color);
   background: #f5f5f5;
   border-radius: 1em;
   padding: 0.1em 0.7em;
   font-weight: 500;
   margin-bottom: 0.2rem;
+}
+.bg-app-gradient, body {
+  background: #f8f9fa;
+}
+.btn-primary, .btn-primary:focus, .btn-primary:active {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+.btn-outline-primary {
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
+}
+.text-primary, .text-primary-emphasis {
+  color: var(--primary-color) !important;
+}
+.text-secondary {
+  color: var(--secondary-color) !important;
+}
+.shadow-lg {
+  box-shadow: 0 8px 24px rgba(111,66,193,0.12) !important;
+}
+.btn-dark, .btn-dark:focus, .btn-dark:active {
+  background: #181818 !important;
+  color: #fff !important;
+  border: none;
 }
 @media (max-width: 600px) {
   .equipo-circular { gap: 1.2rem; }
@@ -94,6 +130,12 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
                         <div class="mb-2 text-muted">
                             <i class="bi bi-geo-alt"></i> {{ negocio.direccion }}
                         </div>
+                        <!-- Botón para ir al panel de reserva -->
+                        <div class="mb-3">
+                            <a class="btn btn-primary fw-bold shadow-sm px-4 py-2" style="font-size:1.15rem; border-radius:0.7rem; letter-spacing:0.5px;" href="{% url 'clientes:reservar_negocio' negocio.id %}">
+                                <i class="bi bi-calendar-plus me-1"></i> Reservar un turno
+                            </a>
+                        </div>
                         {% if promedio_calificacion %}
                             <div class="d-flex align-items-center gap-2 mb-2">
                                 <span class="fw-bold">{{ promedio_calificacion|floatformat:1 }}</span>
@@ -123,7 +165,13 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
                         <div class="row g-3">
                             {% for img in negocio.imagenes.all %}
                             <div class="col-6 col-md-4 col-lg-3">
-                                <img src="{{ img.imagen.url }}" alt="{{ img.titulo }}" class="img-fluid rounded shadow-sm" style="object-fit:cover; width:100%; height:160px;">
+                                {% if img.imagen %}
+                                    <img src="{{ img.imagen.url }}" alt="{{ img.titulo }}" class="img-fluid rounded shadow-sm" style="object-fit:cover; width:100%; height:160px;">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center rounded shadow-sm" style="width:100%; height:160px; color:#aaa; font-size:2rem;">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
@@ -133,7 +181,7 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
                     <div class="mb-4">
                         <h4 class="fw-bold mb-2">Servicios disponibles:</h4>
                         {% for s in negocio.servicios_negocio.all %}
-                        <div class="card mb-2 p-2 d-flex flex-row align-items-center justify-content-between">
+                        <div class="card mb-2 p-2 d-flex flex-row align-items-center justify-content-between" style="border-left: 4px solid var(--primary-color);">
                             <div>
                                 <div class="fw-semibold">{{ s.servicio.nombre|upper }}</div>
                                 <div class="text-muted small">{{ s.duracion }} min · desde ${{ s.precio }}</div>
@@ -141,7 +189,7 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
                             <a href="{% url 'clientes:reservar_negocio' negocio.id %}?servicio={{ s.id }}" class="btn btn-outline-dark btn-sm" style="border:none;">Reservar</a>
                         </div>
                         {% endfor %}
-                        <a href="#" class="btn btn-outline-dark btn-sm mt-2" style="border:none;">Ver todo</a>
+                        <a href="#" class="btn btn-outline-primary btn-sm mt-2" style="border-radius:0.7rem;">Ver todo</a>
                     </div>
                     <!-- Equipo -->
                     <div class="mb-4">
@@ -196,7 +244,7 @@ body, .container, .card, .form-card, .equipo-circular, .pro-card, .pro-nombre, .
             </div>
         </div>
         <!-- Panel de reserva -->
-        <div class="col-lg-4">
+        <div class="col-lg-4" id="panel-reserva">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h5 class="card-title mb-0">

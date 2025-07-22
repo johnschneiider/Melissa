@@ -310,33 +310,31 @@ def confirmacion_reserva(request, reserva_id):
 
 @require_GET
 def horarios_disponibles(request, negocio_id):
+    import logging
+    logger = logging.getLogger('clientes')
     try:
         negocio = get_object_or_404(Negocio, id=negocio_id, activo=True)
         fecha = request.GET.get('fecha')
         servicio_negocio_id = request.GET.get('servicio_negocio_id')
         profesional_id = request.GET.get('profesional_id')
         duracion = None
-        
-        # Log de depuración
-        logger.info(f"horarios_disponibles - negocio_id: {negocio_id}, fecha: {fecha}, profesional_id: {profesional_id}, servicio_id: {servicio_negocio_id}")
-        
+        logger.info(f"[HORARIOS DISPONIBLES] Params: negocio_id={negocio_id}, fecha={fecha}, profesional_id={profesional_id}, servicio_negocio_id={servicio_negocio_id}")
         if servicio_negocio_id:
             try:
                 servicio_negocio = ServicioNegocio.objects.get(id=servicio_negocio_id, negocio=negocio)
                 duracion = servicio_negocio.duracion
-                logger.info(f"Servicio encontrado: {servicio_negocio.servicio.nombre}, duración: {duracion}")
+                logger.info(f"[HORARIOS DISPONIBLES] Servicio encontrado: {servicio_negocio.servicio.nombre}, duración: {duracion}")
             except ServicioNegocio.DoesNotExist:
-                logger.warning(f"ServicioNegocio no encontrado: {servicio_negocio_id}")
+                logger.warning(f"[HORARIOS DISPONIBLES] ServicioNegocio no encontrado: {servicio_negocio_id}")
                 pass
         if not fecha or not profesional_id:
-            logger.warning(f"Faltan parámetros: fecha={fecha}, profesional_id={profesional_id}")
+            logger.warning(f"[HORARIOS DISPONIBLES] Faltan parámetros: fecha={fecha}, profesional_id={profesional_id}")
             return JsonResponse({'error': 'Fecha y profesional requeridos'}, status=400)
         try:
             fecha_obj = datetime.strptime(fecha, '%Y-%m-%d').date()
         except (ValueError, TypeError):
-            logger.warning(f"Formato de fecha inválido: {fecha}")
+            logger.warning(f"[HORARIOS DISPONIBLES] Formato de fecha inválido: {fecha}")
             return JsonResponse({'error': 'Formato de fecha inválido'}, status=400)
-        # Verificar si es festivo
         co_holidays = holidays.CountryHoliday('CO')
         nombre_dia = fecha_obj.strftime('%A')
         nombre_dia_es = {
@@ -349,53 +347,40 @@ def horarios_disponibles(request, negocio_id):
             'Sunday': 'domingo'
         }.get(nombre_dia, nombre_dia)
         es_festivo = fecha_obj in co_holidays or nombre_dia_es == 'domingo'
-        
-        logger.info(f"Día de la semana: {nombre_dia} -> {nombre_dia_es}, es_festivo: {es_festivo}")
-        
+        logger.info(f"[HORARIOS DISPONIBLES] Día de la semana: {nombre_dia} -> {nombre_dia_es}, es_festivo: {es_festivo}")
         if es_festivo:
-            logger.info("Es festivo, no hay horarios disponibles")
+            logger.info("[HORARIOS DISPONIBLES] Es festivo, no hay horarios disponibles")
             return JsonResponse({'disponibles': [], 'festivo': True})
-        # Buscar horario del profesional para ese día
         profesional = get_object_or_404(Profesional, id=profesional_id)
-        logger.info(f"Profesional encontrado: {profesional.nombre_completo}")
-        
-        horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
-        logger.info(f"Horario del profesional para {nombre_dia_es}: {horario_prof}")
-        
+        logger.info(f"[HORARIOS DISPONIBLES] Profesional encontrado: {profesional.nombre_completo} (ID: {profesional.id})")
+        logger.info(f"[HORARIOS DISPONIBLES] Buscando horario_prof para dia_semana={nombre_dia_es}, profesional_id={profesional_id}")
+        horarios_qs = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es)
+        logger.info(f"[HORARIOS DISPONIBLES] Horarios encontrados para ese día: {[str(h) for h in horarios_qs]}")
+        horario_prof = horarios_qs.filter(disponible=True).first()
+        logger.info(f"[HORARIOS DISPONIBLES] horario_prof (después de filtrar disponible=True): {horario_prof}")
         if not horario_prof:
-            # Log todos los horarios del profesional para depuración
             todos_horarios = HorarioProfesional.objects.filter(profesional=profesional)
-            logger.info(f"Todos los horarios del profesional: {list(todos_horarios)}")
+            logger.info(f"[HORARIOS DISPONIBLES] Todos los horarios del profesional: {list(todos_horarios)}")
             return JsonResponse({'disponibles': [], 'festivo': False})
-        
         inicio = horario_prof.hora_inicio
         fin = horario_prof.hora_fin
         duracion_turno = duracion or 30
-        
-        logger.info(f"Horario: {inicio} - {fin}, duración turno: {duracion_turno}")
-        
-        # Obtener reservas existentes para este profesional, negocio y día
+        logger.info(f"[HORARIOS DISPONIBLES] Horario: {inicio} - {fin}, duración turno: {duracion_turno}")
         reservas = Reserva.objects.filter(
             peluquero=negocio,
             profesional=profesional,
             fecha=fecha_obj,
             estado__in=['pendiente', 'confirmado']
         ).values_list('hora_inicio', 'hora_fin')
-        
-        logger.info(f"Reservas existentes: {list(reservas)}")
-        
-        # Generar slots
+        logger.info(f"[HORARIOS DISPONIBLES] Reservas existentes: {list(reservas)}")
         horarios_disponibles = []
         inicio_minutos = inicio.hour * 60 + inicio.minute
         fin_minutos = fin.hour * 60 + fin.minute
         tiempo_actual = inicio_minutos
-        
-        logger.info(f"Generando slots desde {inicio_minutos} hasta {fin_minutos} minutos")
-        
+        logger.info(f"[HORARIOS DISPONIBLES] Generando slots desde {inicio_minutos} hasta {fin_minutos} minutos")
         while tiempo_actual + duracion_turno <= fin_minutos:
             hora_inicio = time(tiempo_actual // 60, tiempo_actual % 60)
             hora_fin = time((tiempo_actual + duracion_turno) // 60, (tiempo_actual + duracion_turno) % 60)
-            # Verificar si este slot está ocupado
             ocupado = False
             for reserva_inicio, reserva_fin in reservas:
                 if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
@@ -408,15 +393,13 @@ def horarios_disponibles(request, negocio_id):
                     'duracion': duracion_turno
                 })
             tiempo_actual += duracion_turno
-        
-        logger.info(f"Slots generados: {len(horarios_disponibles)}")
-        
+        logger.info(f"[HORARIOS DISPONIBLES] Slots generados: {len(horarios_disponibles)}")
         return JsonResponse({
             'disponibles': horarios_disponibles,
             'festivo': False
         })
     except Exception as e:
-        logger.error(f"Error en horarios_disponibles: {str(e)}")
+        logger.error(f"[HORARIOS DISPONIBLES] Error: {str(e)}")
         return JsonResponse({'error': 'Error interno del servidor'}, status=500)
 
 @require_GET
@@ -630,14 +613,90 @@ def reservar_negocio(request, negocio_id):
     if request.method == 'POST':
         logger.info(f"POST recibido en reservar_negocio - negocio_id: {negocio_id}")
         form = ReservaNegocioForm(request.POST, negocio=negocio, profesional_preseleccionado=profesional_preseleccionado)
-        
         logger.info(f"Formulario creado - válido: {form.is_valid()}")
         if not form.is_valid():
             logger.warning(f"Formulario inválido - errores: {form.errors}")
             logger.warning(f"Datos POST: {request.POST}")
-        
         if form.is_valid():
             try:
+                servicio = form.cleaned_data.get('servicio')
+                profesional = form.cleaned_data.get('profesional')
+                fecha = form.cleaned_data.get('fecha')
+                hora_inicio = form.cleaned_data.get('hora_inicio')
+                notas = form.cleaned_data.get('notas', '')
+                logger.info(f"Datos del formulario - servicio: {servicio}, profesional: {profesional}, fecha: {fecha}, hora_inicio: {hora_inicio}")
+                # Validar que todos los campos requeridos estén presentes
+                if not fecha or not hora_inicio:
+                    logger.error("Fecha o hora_inicio faltantes")
+                    form.add_error(None, "Debes seleccionar una fecha y un horario para tu reserva.")
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
+                    })
+                # Validar que el profesional esté disponible en ese horario
+                from profesionales.models import HorarioProfesional
+                import holidays
+                co_holidays = holidays.CountryHoliday('CO')
+                nombre_dia = fecha.strftime('%A')
+                nombre_dia_es = {
+                    'Monday': 'lunes',
+                    'Tuesday': 'martes',
+                    'Wednesday': 'miercoles',
+                    'Thursday': 'jueves',
+                    'Friday': 'viernes',
+                    'Saturday': 'sabado',
+                    'Sunday': 'domingo'
+                }.get(nombre_dia, nombre_dia)
+                es_festivo = fecha in co_holidays or nombre_dia_es == 'domingo'
+                if es_festivo:
+                    form.add_error(None, "El profesional no trabaja en días festivos o domingos. Por favor, elige otra fecha.")
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
+                    })
+                horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
+                if not horario_prof:
+                    form.add_error(None, "El profesional no trabaja ese día. Por favor, elige otra fecha.")
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
+                    })
+                # Validar que el horario no esté ocupado
+                reservas = Reserva.objects.filter(
+                    peluquero=negocio,
+                    profesional=profesional,
+                    fecha=fecha,
+                    estado__in=['pendiente', 'confirmado']
+                ).values_list('hora_inicio', 'hora_fin')
+                duracion = servicio.duracion if servicio else 30
+                from datetime import datetime, timedelta
+                hora_inicio_dt = datetime.combine(fecha, hora_inicio)
+                hora_fin_dt = hora_inicio_dt + timedelta(minutes=duracion)
+                hora_fin = hora_fin_dt.time()
+                for reserva_inicio, reserva_fin in reservas:
+                    if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                        form.add_error(None, "¡Ups! Alguien más ya reservó ese horario. Por favor, elige otro disponible.")
+                        return render(request, 'clientes/reservar_negocio.html', {
+                            'negocio': negocio,
+                            'servicios': servicios,
+                            'form': form,
+                            'profesional_preseleccionado': profesional_preseleccionado,
+                            'fecha_preseleccionada': fecha_preseleccionada,
+                            'disponibilidad': {},
+                        })
+                # ... existing code ...
                 # Obtener los datos del formulario
                 servicio = form.cleaned_data.get('servicio')
                 profesional = form.cleaned_data.get('profesional')
@@ -650,25 +709,75 @@ def reservar_negocio(request, negocio_id):
                 # Validar que todos los campos requeridos estén presentes
                 if not fecha or not hora_inicio:
                     logger.error("Fecha o hora_inicio faltantes")
-                    messages.error(request, 'Fecha y hora son obligatorios.')
+                    form.add_error(None, "Debes seleccionar una fecha y un horario para tu reserva.")
                     return render(request, 'clientes/reservar_negocio.html', {
                         'negocio': negocio,
                         'servicios': servicios,
                         'form': form,
                         'profesional_preseleccionado': profesional_preseleccionado,
                         'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
                     })
-                
-                # Calcular hora_fin usando la duración del servicio
-                hora_fin = None
-                if servicio and hora_inicio:
-                    duracion = servicio.duracion
-                    from datetime import datetime, timedelta
-                    hora_inicio_dt = datetime.combine(fecha, hora_inicio)
-                    hora_fin_dt = hora_inicio_dt + timedelta(minutes=duracion)
-                    hora_fin = hora_fin_dt.time()
-                    logger.info(f"Hora fin calculada: {hora_fin}")
-                
+                # Validar que el profesional esté disponible en ese horario
+                from profesionales.models import HorarioProfesional
+                import holidays
+                co_holidays = holidays.CountryHoliday('CO')
+                nombre_dia = fecha.strftime('%A')
+                nombre_dia_es = {
+                    'Monday': 'lunes',
+                    'Tuesday': 'martes',
+                    'Wednesday': 'miercoles',
+                    'Thursday': 'jueves',
+                    'Friday': 'viernes',
+                    'Saturday': 'sabado',
+                    'Sunday': 'domingo'
+                }.get(nombre_dia, nombre_dia)
+                es_festivo = fecha in co_holidays or nombre_dia_es == 'domingo'
+                if es_festivo:
+                    form.add_error(None, "El profesional no trabaja en días festivos o domingos. Por favor, elige otra fecha.")
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
+                    })
+                horario_prof = HorarioProfesional.objects.filter(profesional=profesional, dia_semana=nombre_dia_es, disponible=True).first()
+                if not horario_prof:
+                    form.add_error(None, "El profesional no trabaja ese día. Por favor, elige otra fecha.")
+                    return render(request, 'clientes/reservar_negocio.html', {
+                        'negocio': negocio,
+                        'servicios': servicios,
+                        'form': form,
+                        'profesional_preseleccionado': profesional_preseleccionado,
+                        'fecha_preseleccionada': fecha_preseleccionada,
+                        'disponibilidad': {},
+                    })
+                # Validar que el horario no esté ocupado
+                reservas = Reserva.objects.filter(
+                    peluquero=negocio,
+                    profesional=profesional,
+                    fecha=fecha,
+                    estado__in=['pendiente', 'confirmado']
+                ).values_list('hora_inicio', 'hora_fin')
+                duracion = servicio.duracion if servicio else 30
+                from datetime import datetime, timedelta
+                hora_inicio_dt = datetime.combine(fecha, hora_inicio)
+                hora_fin_dt = hora_inicio_dt + timedelta(minutes=duracion)
+                hora_fin = hora_fin_dt.time()
+                for reserva_inicio, reserva_fin in reservas:
+                    if not (hora_fin <= reserva_inicio or hora_inicio >= reserva_fin):
+                        form.add_error(None, "¡Ups! Alguien más ya reservó ese horario. Por favor, elige otro disponible.")
+                        return render(request, 'clientes/reservar_negocio.html', {
+                            'negocio': negocio,
+                            'servicios': servicios,
+                            'form': form,
+                            'profesional_preseleccionado': profesional_preseleccionado,
+                            'fecha_preseleccionada': fecha_preseleccionada,
+                            'disponibilidad': {},
+                        })
+                # ... existing code ...
                 # Crear la reserva
                 reserva = Reserva(
                     cliente=request.user,
@@ -1701,3 +1810,60 @@ def google_places_details(request):
     except Exception as e:
         logger.error(f"Error obteniendo detalles de Google Places: {str(e)}")
         return JsonResponse({'error': 'Error interno del servidor'}, status=500)
+
+@require_GET
+def profesionales_por_servicio(request, negocio_id):
+    """Vista AJAX para obtener profesionales que ofrecen un servicio específico"""
+    print(f"DEBUG: profesionales_por_servicio llamado con negocio_id={negocio_id}")
+    servicio_id = request.GET.get('servicio_id')
+    print(f"DEBUG: servicio_id={servicio_id}")
+    
+    if not servicio_id:
+        print("DEBUG: No hay servicio_id, retornando lista vacía")
+        return JsonResponse({'profesionales': []})
+    
+    try:
+        negocio = Negocio.objects.get(id=negocio_id, activo=True)
+        print(f"DEBUG: Negocio encontrado: {negocio.nombre}")
+        
+        servicio_negocio = negocio.servicios_negocio.get(id=servicio_id)
+        print(f"DEBUG: Servicio encontrado: {servicio_negocio.servicio.nombre}")
+        
+        # Obtener profesionales que ofrecen este servicio
+        from profesionales.models import Profesional
+        
+        # Primero, verificar si hay profesionales matriculados en este negocio
+        profesionales_matriculados = Profesional.objects.filter(
+            matriculaciones__negocio=negocio,
+            matriculaciones__estado='aprobada'
+        )
+        print(f"DEBUG: Profesionales matriculados en este negocio: {profesionales_matriculados.count()}")
+        
+        # Luego, verificar si hay profesionales que ofrecen este servicio
+        profesionales_con_servicio = Profesional.objects.filter(
+            servicios=servicio_negocio.servicio
+        )
+        print(f"DEBUG: Profesionales con este servicio: {profesionales_con_servicio.count()}")
+        
+        # Finalmente, la intersección
+        profesionales = Profesional.objects.filter(
+            matriculaciones__negocio=negocio,
+            matriculaciones__estado='aprobada',
+            servicios=servicio_negocio.servicio,
+            disponible=True
+        ).distinct().values('id', 'nombre_completo')
+        
+        print(f"DEBUG: Profesionales encontrados: {list(profesionales)}")
+        
+        return JsonResponse({
+            'profesionales': list(profesionales)
+        })
+    except Negocio.DoesNotExist:
+        print(f"DEBUG: Negocio {negocio_id} no encontrado")
+        return JsonResponse({'profesionales': []})
+    except negocio.servicios_negocio.model.DoesNotExist:
+        print(f"DEBUG: Servicio {servicio_id} no encontrado")
+        return JsonResponse({'profesionales': []})
+    except Exception as e:
+        print(f"DEBUG: Error inesperado: {str(e)}")
+        return JsonResponse({'profesionales': []})

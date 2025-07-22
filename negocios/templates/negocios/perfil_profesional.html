@@ -3,6 +3,18 @@
 {% block title %}Perfil Profesional - Melissa{% endblock %}
 
 {% block content %}
+<style>
+.btn-outline-primary {
+    color: #181818 !important;
+    border-color: #181818 !important;
+}
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background: #181818 !important;
+    color: #fff !important;
+    border-color: #181818 !important;
+}
+</style>
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -23,7 +35,7 @@
                         </div>
                         <div class="col-md-8">
                             <h3 class="fw-bold mb-1">{{ profesional.nombre_completo }}</h3>
-                            <span class="badge bg-primary mb-2">{{ profesional.especialidad }}</span>
+                            <span class="badge mb-2" style="background: var(--color-mint-green); color: var(--color-black-deep);">{{ profesional.especialidad }}</span>
                             {% if profesional.servicios.all %}
                             <div class="mb-2">
                                 <span class="fw-bold">Servicios:</span>
@@ -55,7 +67,7 @@
             <!-- Sección de Horarios Asignados -->
             {% if horarios %}
             <div class="card shadow-lg border-0 rounded-4 mt-4">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header" style="background: var(--color-mint-green); color: var(--color-black-deep);">
                     <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Horarios Asignados</h5>
                 </div>
                 <div class="card-body">

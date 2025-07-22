@@ -28,6 +28,7 @@ from .views import (
     api_buscar_negocios,
     google_places_autocomplete,
     google_places_details,
+    profesionales_por_servicio,
 )
 
 app_name = 'clientes'
@@ -58,6 +59,7 @@ urlpatterns = [
     path('api/autocompletar-servicios/', autocompletar_servicios, name='autocompletar_servicios'),
     path('api/negocios-cercanos/', negocios_cercanos, name='negocios_cercanos'),
     path('api/autocompletar-negocios/', autocompletar_negocios, name='autocompletar_negocios'),
+    path('api/profesionales-por-servicio/<int:negocio_id>/', profesionales_por_servicio, name='profesionales_por_servicio'),
 ]
 
 urlpatterns += [

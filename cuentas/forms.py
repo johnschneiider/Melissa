@@ -110,18 +110,15 @@ class FeedbackForm(forms.ModelForm):
             ('otro', 'Otro'),
         ],
         required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        initial='sugerencia'
     )
     
-    prioridad = forms.ChoiceField(
-        choices=[
-            ('baja', 'Baja'),
-            ('media', 'Media'),
-            ('alta', 'Alta'),
-            ('urgente', 'Urgente'),
-        ],
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
+    # Ocultamos el campo prioridad y lo dejamos por defecto en 'baja'
+    prioridad = forms.CharField(
+        widget=forms.HiddenInput(),
+        initial='baja',
+        required=False
     )
     
     titulo = forms.CharField(
@@ -129,7 +126,7 @@ class FeedbackForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Título del ticket (ej: Problema con las reservas)'
+            'placeholder': 'Título de la sugerencia (ej: Problemas con las reservas)'
         })
     )
     
@@ -148,11 +145,12 @@ class FeedbackForm(forms.ModelForm):
             'mensaje': forms.Textarea(attrs={
                 'class': 'form-control', 
                 'rows': 4,
-                'placeholder': 'Describe detalladamente tu feedback, problema o sugerencia...'
+                'placeholder': 'Escribe aquí tu problema o idea con palabras simples'
             }),
             'imagen': forms.ClearableFileInput(attrs={
                 'class': 'form-control',
-                'accept': 'image/*'
+                'accept': 'image/*',
+                'placeholder': 'Sube una foto (opcional)'
             }),
         }
         
@@ -196,9 +194,11 @@ class EditarPerfilClienteForm(forms.ModelForm):
     class Meta:
         model = UsuarioPersonalizado
         fields = [
+            'username',
             'first_name', 'last_name', 'telefono', 'email', 'fecha_nacimiento', 'genero'
         ]
         widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellido'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Teléfono'}),
